@@ -1,0 +1,12 @@
+ktor:
+    application:
+        modules:
+            - de.axl.ApplicationKt.module
+    deployment:
+        host: 127.0.0.1
+        port: 8080
+jwt:
+  issuer: ""
+  audience: "space-audience"
+  realm: "space"
+  secret: ""
