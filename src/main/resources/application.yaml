@@ -6,10 +6,10 @@ ktor:
     host: 127.0.0.1
     port: 8080
 jwt:
-  issuer: "$SPACE_HOST"
+  issuer: ""
   audience: "space-audience"
   realm: "space"
-  secret: "$SPACE_SECRET"
+  secret: ""
 space:
   swagger:
     enabled: true
