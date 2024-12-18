@@ -35,8 +35,10 @@ jobs:
 
     - name: Build with Gradle Wrapper
       run: ./gradlew buildFatJar
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
+    - name: Release jar
+    - uses: ncipollo/release-action@v1
       with:
-        name: space-server
-        path: build/libs/space-server-all.jar
+        name: ${{ env.GITHUB_REF_NAME }}
+        tag: ${{ env.GITHUB_REF_NAME }}
+        artifacts: "build/libs/*.jar"
+        token: ${{ secrets.GITHUB_TOKEN }}
