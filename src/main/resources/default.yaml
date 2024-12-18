@@ -12,7 +12,7 @@ jwt:
   secret: ""
 space:
   swagger:
-    enabled: true
+    enabled: false
   paths:
     base: "data"
     upload: "upload"

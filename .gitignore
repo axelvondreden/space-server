@@ -39,3 +39,4 @@ out/
 *.pdf
 *.db
 /http-client.private.env.json
+/src/main/resources/custom.yaml
