@@ -35,14 +35,11 @@ jobs:
 
     - name: Build with Gradle Wrapper
       run: ./gradlew buildFatJar
-      
-    #- uses: actions/upload-artifact@v4
-    #  with:
-    #    name: space-server
-    #    path: build/libs/space-server-all.jar
 
     - name: Release
       uses: softprops/action-gh-release@v2
       with:
         files: |
-          build/libs/space-server-all.jar
+          build/libs/space-server.jar
+          src/main/resources/application.yaml
+          src/main/resources/logback.xml
