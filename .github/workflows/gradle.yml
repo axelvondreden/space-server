@@ -9,9 +9,8 @@ name: Java CI with Gradle
 
 on:
   push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    tags:
+    - "*"
 
 jobs:
   build:
@@ -39,7 +38,4 @@ jobs:
     - name: Release jar
       uses: ncipollo/release-action@v1
       with:
-        name: ${{ env.GITHUB_REF_NAME }}
-        tag: ${{ env.GITHUB_REF_NAME }}
         artifacts: "build/libs/*.jar"
-        token: ${{ secrets.GITHUB_TOKEN }}
