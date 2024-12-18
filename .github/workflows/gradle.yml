@@ -41,3 +41,5 @@ jobs:
       with:
         files: |
           build/libs/space-server.jar
+          src/main/resources/application.yaml
+          src/main/resources/logback.xml
