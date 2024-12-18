@@ -42,6 +42,6 @@ jobs:
     - name: Release
       uses: softprops/action-gh-release@v2
       with:
-        token: $RELEASETOKEN
+        token: ${{ secrets.RELEASETOKEN }}
         files: |
           build/libs/space-server-all.jar
