@@ -6,7 +6,10 @@
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
 name: release
 
-on: push
+on:
+  push:
+    tags:
+      - "v*.*.*"
 
 jobs:
   build:
@@ -38,7 +41,6 @@ jobs:
 
     - name: Release
       uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/tags/')
       with:
         files: |
           build/libs/space-server-all.jar
