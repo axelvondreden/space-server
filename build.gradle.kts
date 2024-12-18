@@ -1,3 +1,4 @@
+import io.ktor.plugin.features.*
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
@@ -36,4 +37,10 @@ dependencies {
     implementation(libs.logback.classic)
     implementation(libs.ktor.server.config.yaml)
     implementation("at.favre.lib:bcrypt:0.10.2")
+}
+
+ktor {
+    fatJar {
+        archiveFileName.set("space-server.jar")
+    }
 }
