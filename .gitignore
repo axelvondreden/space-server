@@ -34,3 +34,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+*.http
+*.pdf
+*.db
+/http-client.private.env.json

@@ -1,12 +1,19 @@
 ktor:
-    application:
-        modules:
-            - de.axl.ApplicationKt.module
-    deployment:
-        host: 127.0.0.1
-        port: 8080
+  application:
+    modules:
+      - de.axl.ApplicationKt.module
+  deployment:
+    host: 127.0.0.1
+    port: 8080
 jwt:
-  issuer: ""
+  issuer: "$SPACE_HOST"
   audience: "space-audience"
   realm: "space"
-  secret: ""
+  secret: "$SPACE_SECRET"
+space:
+  swagger:
+    enabled: true
+  paths:
+    base: "data"
+    upload: "upload"
+    docs: "docs"
