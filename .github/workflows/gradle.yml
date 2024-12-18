@@ -10,10 +10,10 @@ permissions:
   contents: write
   actions: write
 
-on: push
-#  push:
-#    tags:
-#      - "v*.*.*"
+on:
+  push:
+    tags:
+      - "v*.*.*"
 
 jobs:
   build:
