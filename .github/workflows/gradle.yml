@@ -4,13 +4,13 @@
 # documentation.
 # This workflow will build a Java project with Gradle and cache/restore any dependencies to improve the workflow execution time
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
-
-name: Java CI with Gradle
+name: release
 
 on:
   push:
-    tags:
-    - "*"
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
 
 jobs:
   build:
@@ -35,7 +35,23 @@ jobs:
     - name: Build with Gradle Wrapper
       run: ./gradlew buildFatJar
       
-    - name: Release jar
-      uses: ncipollo/release-action@v1
+    - name: release
+      uses: actions/create-release@v1
+      id: create_release
       with:
-        artifacts: "build/libs/*.jar"
+        draft: false
+        prerelease: false
+        release_name: automated release
+        tag_name: ${{ github.ref }}
+        body_path: CHANGELOG.md
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+    - name: upload linux artifact
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./build/libs/space-server-all.jar
+        asset_name: space-server-all.jar
+        asset_content_type: application/gzip
