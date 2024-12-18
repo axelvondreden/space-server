@@ -35,8 +35,9 @@ jobs:
 
     - name: Build with Gradle Wrapper
       run: ./gradlew buildFatJar
+      
     - name: Release jar
-    - uses: ncipollo/release-action@v1
+      uses: ncipollo/release-action@v1
       with:
         name: ${{ env.GITHUB_REF_NAME }}
         tag: ${{ env.GITHUB_REF_NAME }}
