@@ -2,6 +2,7 @@ package de.axl
 
 import com.fasterxml.jackson.databind.SerializationFeature
 import de.axl.db.DocumentService
+import de.axl.db.ImportService
 import de.axl.db.UserService
 import de.axl.files.FileManager
 import de.axl.rest.configureRouting
@@ -36,9 +37,10 @@ fun Application.module() {
     )
     val userService = UserService(database)
     val documentService = DocumentService(database)
+    val importService = ImportService(database)
     val fileManager = FileManager(dataPath)
 
     configureSecurity()
-    configureRouting(userService, documentService, fileManager)
+    configureRouting(userService, documentService, importService, fileManager)
     configureStartup(fileManager)
 }

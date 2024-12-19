@@ -3,6 +3,7 @@ package de.axl.rest
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import de.axl.db.DocumentService
+import de.axl.db.ImportService
 import de.axl.db.UserService
 import de.axl.files.FileManager
 import de.axl.property
@@ -20,7 +21,7 @@ import java.util.*
 @Serializable
 data class LoginRequest(val username: String, val password: String)
 
-fun Application.configureRouting(userService: UserService, documentService: DocumentService, fileManager: FileManager) {
+fun Application.configureRouting(userService: UserService, documentService: DocumentService, importService: ImportService, fileManager: FileManager) {
     val swaggerEnabled = property("space.swagger.enabled").toBoolean()
 
     routing {
@@ -57,7 +58,7 @@ fun Application.configureRouting(userService: UserService, documentService: Docu
 
             usersRoute(userService)
             documentsRoute(documentService)
-            importsRoute(fileManager)
+            importsRoute(importService, fileManager)
         }
     }
 }
