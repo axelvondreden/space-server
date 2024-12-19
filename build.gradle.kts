@@ -1,5 +1,3 @@
-import io.ktor.plugin.features.*
-
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.ktor)
