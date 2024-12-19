@@ -1,36 +1,46 @@
 package de.axl.rest
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
 import de.axl.property
-import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
+import io.ktor.server.sessions.*
 
 fun Application.configureSecurity() {
-    val secret = property("jwt.secret")
-    val issuer = property("jwt.issuer")
-    val audience = property("jwt.audience")
-    val myRealm = property("jwt.realm")
+    val encryptKey = property("session.cookie.encrypt.key")
+    if (encryptKey.isBlank()) {
+        throw IllegalStateException("Session cookie encryption key is not configured")
+    }
+    val signKey = property("session.cookie.signing.key")
+    if (signKey.isBlank()) {
+        throw IllegalStateException("Session cookie signing key is not configured")
+    }
+
+    val encryptBytes = encryptKey.repeat((16 / encryptKey.length) + 1).toByteArray().take(16).toByteArray()
+    val signBytes = signKey.repeat((16 / signKey.length) + 1).toByteArray().take(16).toByteArray()
+
+    val cookieAge = property("session.cookie.age").toLongOrNull() ?: 60
+    val secure = property("session.cookie.secure").toBoolean()
+    install(Sessions) {
+        cookie<UserSession>("user_session") {
+            cookie.path = "/"
+            cookie.maxAgeInSeconds = cookieAge
+            cookie.secure = secure
+            transform(SessionTransportTransformerEncrypt(encryptBytes, signBytes))
+        }
+    }
     install(Authentication) {
-        jwt("auth-jwt") {
-            realm = myRealm
-            verifier(JWT
-                .require(Algorithm.HMAC256(secret))
-                .withAudience(audience)
-                .withIssuer(issuer)
-                .build())
-            validate { credential ->
-                if (credential.payload.getClaim("username").asString() != "") {
-                    JWTPrincipal(credential.payload)
+        session<UserSession>("auth-session") {
+            validate { session ->
+                if (session.username.isNotBlank()) {
+                    UserSession(session.username)
                 } else {
                     null
                 }
             }
-            challenge { defaultScheme, realm ->
-                call.respond(HttpStatusCode.Unauthorized, "Token is not valid or has expired")
+            challenge {
+                //call.respond(HttpStatusCode.Unauthorized, "Token is not valid or has expired")
+                call.respondRedirect("/login")
             }
         }
     }

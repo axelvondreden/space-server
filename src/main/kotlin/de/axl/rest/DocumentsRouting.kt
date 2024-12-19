@@ -7,7 +7,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun Routing.documentsRoute(documentService: DocumentService) {
+fun Route.documentsRoute(documentService: DocumentService) {
     route("/documents") {
         get {
             call.respond(HttpStatusCode.OK, documentService.findAll())

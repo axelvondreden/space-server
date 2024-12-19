@@ -7,7 +7,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun Routing.usersRoute(userService: UserService) {
+fun Route.usersRoute(userService: UserService) {
     route("/users") {
         get {
             call.respond(HttpStatusCode.OK, userService.findAll())

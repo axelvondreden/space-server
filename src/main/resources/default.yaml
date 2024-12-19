@@ -5,11 +5,14 @@ ktor:
   deployment:
     host: 127.0.0.1
     port: 8080
-jwt:
-  issuer: ""
-  audience: "space-audience"
-  realm: "space"
-  secret: ""
+session:
+  cookie:
+    age: 60 # max-age of session-cookie in seconds
+    secure: true
+    encrypt:
+      key: ""
+    signing:
+      key: ""
 space:
   swagger:
     enabled: false

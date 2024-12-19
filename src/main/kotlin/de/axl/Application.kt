@@ -29,6 +29,8 @@ fun Application.module() {
         level = Level.INFO
     }
 
+    configureSecurity()
+
     val database = Database.connect(
         url = "jdbc:h2:./space",
         user = "root",
@@ -40,7 +42,6 @@ fun Application.module() {
     val importService = ImportService(database)
     val fileManager = FileManager(dataPath)
 
-    configureSecurity()
     configureRouting(userService, documentService, importService, fileManager)
     configureStartup(fileManager)
 }

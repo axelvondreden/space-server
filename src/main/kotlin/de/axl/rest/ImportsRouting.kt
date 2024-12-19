@@ -12,7 +12,7 @@ import io.ktor.utils.io.*
 import kotlinx.io.readByteArray
 import java.io.File
 
-fun Routing.importsRoute(importService: ImportService, fileManager: FileManager) {
+fun Route.importsRoute(importService: ImportService, fileManager: FileManager) {
     post("/upload") {
         var fileName = ""
         val multipartData = call.receiveMultipart()
