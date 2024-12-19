@@ -4,10 +4,9 @@ import de.axl.dataPath
 import de.axl.files.FileManager
 import io.ktor.server.application.*
 
-fun Application.configureStartup() {
+fun Application.configureStartup(fileManager: FileManager) {
     log.info("Looking for logback config in ${System.getProperty("logback.configurationFile")}")
 
-    val fileManager = FileManager(dataPath)
     fileManager.apply {
         createFolder(dataPath)
         createFolder(dataPath, "upload")

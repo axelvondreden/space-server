@@ -19,25 +19,14 @@ import io.ktor.server.routing.*
 import io.ktor.utils.io.*
 import kotlinx.io.readByteArray
 import kotlinx.serialization.Serializable
-import org.jetbrains.exposed.sql.Database
 import java.io.File
 import java.util.*
 
 @Serializable
 data class LoginRequest(val username: String, val password: String)
 
-fun Application.configureRouting() {
+fun Application.configureRouting(userService: UserService, documentService: DocumentService, fileManager: FileManager) {
     val swaggerEnabled = property("space.swagger.enabled").toBoolean()
-
-    val database = Database.connect(
-        url = "jdbc:h2:./space",
-        user = "root",
-        driver = "org.h2.Driver",
-        password = "",
-    )
-    val userService = UserService(database)
-    val documentService = DocumentService(database)
-    val fileManager = FileManager(dataPath)
 
     routing {
         post("/login") {

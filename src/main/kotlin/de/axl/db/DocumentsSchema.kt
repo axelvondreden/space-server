@@ -15,7 +15,7 @@ data class ExposedDocument(val id: Int, val guid: String, val createdAt: Long, v
 class DocumentService(database: Database) {
     object Documents : Table() {
         val id = integer("id").autoIncrement()
-        val guid = varchar("guid", length = 50).uniqueIndex()
+        val guid = varchar("guid", length = 36).uniqueIndex()
         val createdAt = long("createdAt")
         val updatedAt = long("updatedAt").nullable()
 
