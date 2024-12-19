@@ -8,6 +8,8 @@ import kotlin.io.path.exists
 import kotlin.io.path.pathString
 
 fun Application.configureStartup() {
+    log.info("Looking for logback config in ${System.getProperty("logback.configurationFile")}")
+
     val base = property("space.paths.base")
     createFolder(base)
     createFolder(base, property("space.paths.upload"))
