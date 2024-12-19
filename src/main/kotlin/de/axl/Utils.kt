@@ -8,5 +8,7 @@ fun now(): Long = System.currentTimeMillis()
 
 fun Application.property(path: String) = environment.config.property(path).getString()
 
+val Application.dataPath get() = property("space.paths.data")
+
 
 suspend fun <T> dbQuery(block: suspend () -> T): T = newSuspendedTransaction(Dispatchers.IO) { block() }

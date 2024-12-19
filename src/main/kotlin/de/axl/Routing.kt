@@ -6,6 +6,7 @@ import de.axl.db.DocumentService
 import de.axl.db.ExposedDocument
 import de.axl.db.ExposedUser
 import de.axl.db.UserService
+import de.axl.files.FileManager
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
@@ -36,6 +37,7 @@ fun Application.configureRouting() {
     )
     val userService = UserService(database)
     val documentService = DocumentService(database)
+    val fileManager = FileManager(dataPath)
 
     routing {
         post("/login") {
@@ -181,7 +183,7 @@ fun Application.configureRouting() {
                         is PartData.FileItem -> {
                             fileName = part.originalFileName as String
                             val fileBytes = part.provider().readRemaining().readByteArray()
-                            File(property("space.paths.base") + "/" + property("space.paths.upload") + "/$fileName").writeBytes(fileBytes)
+                            File("$dataPath/upload/$fileName").writeBytes(fileBytes)
                         }
 
                         else -> {}
@@ -189,7 +191,12 @@ fun Application.configureRouting() {
                     part.dispose()
                 }
 
-                call.respondText("File $fileName was uploaded!")
+                if (fileName.isNotBlank()) {
+                    call.respondText("File $fileName was uploaded!")
+                    fileManager.handleUpload(fileName)
+                } else {
+                    call.respond(HttpStatusCode.BadRequest, "No file found in request")
+                }
             }
         }
     }
