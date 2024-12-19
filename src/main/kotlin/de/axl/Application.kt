@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import de.axl.db.DocumentService
 import de.axl.db.UserService
 import de.axl.files.FileManager
+import de.axl.rest.configureRouting
+import de.axl.rest.configureSecurity
 import de.axl.startup.configureStartup
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*

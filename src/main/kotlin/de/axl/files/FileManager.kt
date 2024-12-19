@@ -7,7 +7,7 @@ import kotlin.io.path.Path
 import kotlin.io.path.exists
 import kotlin.io.path.pathString
 
-class FileManager(private val dataPath: String) {
+class FileManager(val dataPath: String) {
 
     fun createFolder(base: String, vararg path: String) {
         val p = Path(base, *path)
