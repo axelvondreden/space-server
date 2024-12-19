@@ -1,6 +1,5 @@
 package de.axl.startup
 
-import de.axl.dataPath
 import de.axl.files.FileManager
 import io.ktor.server.application.*
 

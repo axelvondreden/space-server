@@ -13,25 +13,33 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class LoginRequest(val username: String, val password: String)
 
 fun Application.configureRouting(userService: UserService, documentService: DocumentService, importService: ImportService, fileManager: FileManager) {
     val swaggerEnabled = property("space.swagger.enabled").toBoolean()
 
     routing {
         post("/login") {
-            val user = call.receive<LoginRequest>()
-            val dbUser = userService.findByUsername(user.username)
+            val params = call.receiveParameters()
+            val username = params["username"]
+            val password = params["password"]
+            if (username.isNullOrBlank() || password.isNullOrBlank()) {
+                call.respond(HttpStatusCode.BadRequest, "Missing username or password")
+                return@post
+            }
+            val dbUser = userService.findByUsername(username)
 
-            if (dbUser == null || !userService.testPassword(dbUser, user.password)) {
-                call.respond(HttpStatusCode.Unauthorized)
+            if (dbUser == null || !userService.testPassword(dbUser, password)) {
+                log.warn("Wrong credentials used! username: $username | password: $password")
+                call.respond(HttpStatusCode.Unauthorized, "Wrong credentials")
             } else {
-                call.sessions.set(UserSession(user.username))
+                call.sessions.set(UserSession(username))
                 call.respond(HttpStatusCode.OK)
             }
+        }
+
+        get("/logout") {
+            call.sessions.clear<UserSession>()
+            call.respond(HttpStatusCode.OK)
         }
 
         if (swaggerEnabled) swaggerUI(path = "swagger")

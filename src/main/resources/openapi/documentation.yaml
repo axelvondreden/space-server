@@ -8,28 +8,36 @@ servers:
 paths:
   /login:
     post:
-      summary: Create a JWT Token for the passed credentials
+      summary: Create a session cookie
       tags:
         - Auth
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LoginRequest"
         required: true
+        content:
+          x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - password
       responses:
         "401":
           description: Unauthorized. Wrong credentials
-          content:
-            "*/*":
-              schema:
-                type: object
         "200":
-          description: "OK"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LoginResponse"
+          description: OK
+  /logout:
+    get:
+      summary: Log out of current session
+      tags:
+        - Auth
+      responses:
+        "200":
+          description: OK
 
   /hello:
     get:
@@ -364,31 +372,6 @@ components:
         - type
         - createdAt
 
-    LoginRequest:
-      type: object
-      properties:
-        username:
-          type: string
-        password:
-          type: string
-      required:
-        - username
-        - password
-
-    LoginResponse:
-      type: object
-      properties:
-        token:
-          type: string
-      required:
-        - token
-
-  securitySchemes:
-    bearerAuth: # arbitrary name for the security scheme
-      type: http
-      scheme: bearer
-      bearerFormat: JWT # optional, arbitrary value for documentation purposes
-
   responses:
     Unauthorized:
       description: Unauthorized
@@ -396,6 +379,3 @@ components:
         '*/*':
           schema:
             type: object
-
-security:
-  - bearerAuth: [ ] # use the same name as above
