@@ -46,6 +46,118 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  /upload:
+    post:
+      summary: Upload a file to be imported
+      tags:
+        - Imports
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /imports:
+    get:
+      summary: Get all imports
+      tags:
+        - Imports
+      responses:
+        "200":
+          description: Returns a list of all imports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Import"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      summary: Creates a new import
+      tags:
+        - Imports
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Import"
+      responses:
+        "201":
+          description: GUID of the import
+          content:
+            text/plain:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /imports/{guid}:
+    parameters:
+      - in: path
+        name: guid
+        required: true
+        schema:
+          type: string
+        description: GUID of import
+    get:
+      summary: Get a specific import
+      tags:
+        - Imports
+      responses:
+        "200":
+          description: Returns the specified import
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Import"
+        "404":
+          description: Import not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    put:
+      summary: Update a specific import
+      tags:
+        - Imports
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Import"
+      responses:
+        "200":
+          description: Import updated successfully
+        "404":
+          description: Import not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      summary: Delete a specific import
+      tags:
+        - Imports
+      responses:
+        "200":
+          description: Import deleted successfully
+        "404":
+          description: Import not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
   /documents:
     get:
       summary: Get all documents
@@ -124,7 +236,7 @@ paths:
         "200":
           description: Document deleted successfully
         "404":
-          description: User not found
+          description: Document not found
         "401":
           $ref: "#/components/responses/Unauthorized"
 
@@ -197,30 +309,6 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
-  /upload:
-    post:
-      summary: Upload a file to be imported
-      tags:
-        - Documents
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
-      responses:
-        "200":
-          description: OK
-          content:
-            text/plain:
-              schema:
-                type: string
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
 components:
   schemas:
     User:
@@ -252,6 +340,28 @@ components:
       required:
         - id
         - guid
+        - createdAt
+
+    Import:
+      type: object
+      properties:
+        id:
+          type: integer
+        guid:
+          type: string
+        file:
+          type: string
+        type:
+          type: string
+        createdAt:
+          type: integer
+        updatedAt:
+          type: integer
+      required:
+        - id
+        - guid
+        - file
+        - type
         - createdAt
 
     LoginRequest:
