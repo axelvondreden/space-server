@@ -1,8 +1,10 @@
 package de.axl.web
 
 import de.axl.property
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.sessions.*
 
@@ -39,8 +41,11 @@ fun Application.configureSecurity() {
                 }
             }
             challenge {
-                //call.respond(HttpStatusCode.Unauthorized, "Token is not valid or has expired")
-                call.respondRedirect("/login")
+                if (call.request.path().contains("/app")) {
+                    call.respondRedirect("/app/login")
+                } else {
+                    call.respond(HttpStatusCode.Unauthorized, "Not logged in!")
+                }
             }
         }
     }
