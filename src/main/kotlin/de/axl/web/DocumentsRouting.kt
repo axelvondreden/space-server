@@ -1,4 +1,4 @@
-package de.axl.rest
+package de.axl.web
 
 import de.axl.db.DocumentService
 import de.axl.db.ExposedDocument

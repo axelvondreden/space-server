@@ -1,4 +1,4 @@
-package de.axl.rest
+package de.axl.web
 
 import kotlinx.serialization.Serializable
 import java.security.Principal

@@ -18,21 +18,23 @@ repositories {
 }
 
 dependencies {
-    implementation(libs.ktor.server.auth)
     implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.auth)
     implementation(libs.ktor.server.host.common)
+    implementation(libs.ktor.server.tomcat.jakarta)
+    implementation(libs.ktor.server.config.yaml)
+    implementation(libs.ktor.server.content.negotiation)
+    implementation(libs.ktor.server.html.builder)
     implementation(libs.ktor.server.call.logging)
     implementation(libs.ktor.server.swagger)
-    implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.serialization.jackson)
     implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.kotlin.css)
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
     implementation(libs.h2)
-    implementation(libs.ktor.server.tomcat.jakarta)
     implementation(libs.logback.classic)
-    implementation(libs.ktor.server.config.yaml)
-    implementation("at.favre.lib:bcrypt:0.10.2")
+    implementation(libs.bcrypt)
 }
 
 ktor {
