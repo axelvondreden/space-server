@@ -3,11 +3,9 @@ package de.axl.db
 import at.favre.lib.crypto.bcrypt.BCrypt
 import de.axl.dbQuery
 import de.axl.now
-import kotlinx.coroutines.*
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 
@@ -30,20 +28,9 @@ class UserService(database: Database) {
         transaction(database) {
             SchemaUtils.create(Users)
         }
-
-        runBlocking {
-            newSuspendedTransaction(Dispatchers.IO) {
-                addAdminUser()
-            }
-        }
     }
 
-    private suspend fun addAdminUser() {
-        if (findByUsername("admin") == null) {
-            logger.info("Creating admin user")
-            create(ExposedUser("admin", "Admin", now(), null), "admin")
-        }
-    }
+
 
     suspend fun create(user: ExposedUser, passwordPlain: String): Int = dbQuery {
         Users.insert {

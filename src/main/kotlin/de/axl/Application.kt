@@ -65,5 +65,5 @@ ${"┗" + "━".repeat(if (missing % 2 == 0) missing / 2 else (missing / 2) + 1)
     val fileManager = FileManager(dataPath)
 
     configureRouting(userService, documentService, importService, fileManager)
-    configureStartup(fileManager)
+    configureStartup(userService, fileManager)
 }
