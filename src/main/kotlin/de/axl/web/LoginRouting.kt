@@ -44,6 +44,7 @@ fun Route.loginRoute(userService: UserService, logger: Logger) {
     }
 
     get("/app/login") {
-        call.respond(ThymeleafContent("login.html", emptyMap()))
+        val error = call.request.queryParameters["error"]?.toString() ?: ""
+        call.respond(ThymeleafContent("login.html", mapOf("error" to error)))
     }
 }
