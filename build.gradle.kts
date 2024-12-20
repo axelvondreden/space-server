@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "de.axl"
-version = "0.0.2"
+version = "0.0.1"
 
 application {
     mainClass.set("io.ktor.server.tomcat.jakarta.EngineMain")
