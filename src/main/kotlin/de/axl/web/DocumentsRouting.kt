@@ -3,18 +3,14 @@ package de.axl.web
 import de.axl.db.DocumentService
 import de.axl.db.ExposedDocument
 import io.ktor.http.*
-import io.ktor.server.html.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.html.body
-import kotlinx.html.div
-import kotlinx.html.h1
 
 fun Route.documentsRoute(documentService: DocumentService) {
     route("/app") {
         get {
-            call.respondHtml {
+            /*call.respondHtml {
                 body {
                     div {
                         h1 {
@@ -22,7 +18,7 @@ fun Route.documentsRoute(documentService: DocumentService) {
                         }
                     }
                 }
-            }
+            }*/
         }
     }
     route("/documents") {

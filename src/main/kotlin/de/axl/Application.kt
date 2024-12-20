@@ -13,8 +13,10 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
+import io.ktor.server.thymeleaf.*
 import org.jetbrains.exposed.sql.Database
 import org.slf4j.event.Level
+import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -33,6 +35,14 @@ fun Application.module() {
     }
     install(CallLogging) {
         level = Level.INFO
+    }
+
+    install(Thymeleaf) {
+        setTemplateResolver(ClassLoaderTemplateResolver().apply {
+            prefix = "templates/"
+            suffix = ".html"
+            characterEncoding = "utf-8"
+        })
     }
 
     val properties = Properties()
