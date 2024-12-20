@@ -12,6 +12,7 @@ import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.routing.*
 import org.jetbrains.exposed.sql.Database
 import org.slf4j.event.Level
 import java.io.InputStreamReader
@@ -24,6 +25,7 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
+    install(IgnoreTrailingSlash)
     install(ContentNegotiation) {
         jackson {
             enable(SerializationFeature.INDENT_OUTPUT)
