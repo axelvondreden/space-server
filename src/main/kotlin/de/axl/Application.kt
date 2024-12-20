@@ -5,15 +5,19 @@ import de.axl.db.DocumentService
 import de.axl.db.ImportService
 import de.axl.db.UserService
 import de.axl.files.FileManager
+import de.axl.startup.configureStartup
 import de.axl.web.configureRouting
 import de.axl.web.configureSecurity
-import de.axl.startup.configureStartup
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import org.jetbrains.exposed.sql.Database
 import org.slf4j.event.Level
+import java.io.InputStreamReader
+import java.nio.charset.StandardCharsets
+import java.util.*
+
 
 fun main(args: Array<String>) {
     io.ktor.server.tomcat.jakarta.EngineMain.main(args)
@@ -28,6 +32,22 @@ fun Application.module() {
     install(CallLogging) {
         level = Level.INFO
     }
+
+    val properties = Properties()
+    javaClass.getResourceAsStream("/de/axl/version.properties").use { stream ->
+        checkNotNull(stream) { "Version properties file does not exist" }
+        properties.load(InputStreamReader(stream, StandardCharsets.UTF_8))
+    }
+    val version = "Version ${properties.getProperty("version")}"
+    val missing = 47 - version.length
+    log.info("""
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ ▄▀▀ █▀▄ ▄▀▄ ▄▀▀ ██▀   ▄▀▀ ██▀ █▀▄ █ █ ██▀ █▀▄ ┃
+┃ ▄██ █▀  █▀█ ▀▄▄ █▄▄   ▄██ █▄▄ █▀▄ ▀▄▀ █▄▄ █▀▄ ┃
+${"┗" + "━".repeat(if (missing % 2 == 0) missing / 2 else (missing / 2) + 1) + version + "━".repeat(missing / 2) + "┛"}
+
+    """.trimIndent())
 
     configureSecurity()
 

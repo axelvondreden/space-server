@@ -42,3 +42,16 @@ ktor {
         archiveFileName.set("space-server.jar")
     }
 }
+
+val createVersionProperties by tasks.registering(WriteProperties::class) {
+    val filePath = sourceSets.main.map {
+        it.output.resourcesDir!!.resolve("de/axl/version.properties")
+    }
+    destinationFile = filePath
+
+    property("version", project.version.toString())
+}
+
+tasks.classes {
+    dependsOn(createVersionProperties)
+}
