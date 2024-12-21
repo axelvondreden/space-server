@@ -8,19 +8,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
 fun Route.documentsRoute(documentService: DocumentService) {
-    route("/app") {
-        get {
-            /*call.respondHtml {
-                body {
-                    div {
-                        h1 {
-                            +"Yay"
-                        }
-                    }
-                }
-            }*/
-        }
-    }
     route("/documents") {
         get {
             call.respond(HttpStatusCode.OK, documentService.findAll())

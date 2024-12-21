@@ -18,7 +18,7 @@ fun Route.loginRoute(userService: UserService, logger: Logger) {
         logger.info("Login request from ${if (fromUI) "UI" else "API"} for $username")
         if (username.isNullOrBlank() || password.isNullOrBlank()) {
             if (fromUI) {
-                call.respondRedirect("/app/login?error=Missing username or password")
+                call.respondRedirect("/login?error=Missing username or password")
             } else {
                 call.respond(HttpStatusCode.BadRequest, "Missing username or password")
             }
@@ -29,22 +29,27 @@ fun Route.loginRoute(userService: UserService, logger: Logger) {
         if (dbUser == null || !userService.testPassword(dbUser, password)) {
             logger.warn("Wrong credentials used! username: $username | password: $password")
             if (fromUI) {
-                call.respondRedirect("/app/login?error=Wrong credentials")
+                call.respondRedirect("/login?error=Wrong credentials")
             } else {
                 call.respond(HttpStatusCode.Unauthorized, "Wrong credentials")
             }
         } else {
             call.sessions.set(UserSession(username))
             if (fromUI) {
-                call.respondRedirect("/app")
+                call.respondRedirect("/")
             } else {
                 call.respond(HttpStatusCode.OK)
             }
         }
     }
 
-    get("/app/login") {
+    get("/login") {
         val error = call.request.queryParameters["error"]?.toString() ?: ""
         call.respond(ThymeleafContent("login.html", mapOf("error" to error)))
+    }
+
+    get("/logout") {
+        call.sessions.clear<UserSession>()
+        call.respond(HttpStatusCode.OK)
     }
 }

@@ -41,10 +41,10 @@ fun Application.configureSecurity() {
                 }
             }
             challenge {
-                if (call.request.path().contains("/app")) {
-                    call.respondRedirect("/app/login")
-                } else {
+                if (call.request.path().contains("/api")) {
                     call.respond(HttpStatusCode.Unauthorized, "Not logged in!")
+                } else {
+                    call.respondRedirect("/login")
                 }
             }
         }

@@ -5,7 +5,6 @@ import de.axl.db.ImportService
 import de.axl.db.UserService
 import de.axl.files.FileManager
 import de.axl.property
-import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.plugins.swagger.*
@@ -22,20 +21,19 @@ fun Application.configureRouting(userService: UserService, documentService: Docu
         if (swaggerEnabled) swaggerUI(path = "swagger")
 
         authenticate("auth-session") {
-            get("/hello") {
-                val session = call.sessions.get<UserSession>()
-                val username = session!!.username
-                call.respondText("Hello, $username!")
+            route("/api/v1") {
+                get("/hello") {
+                    val session = call.sessions.get<UserSession>()
+                    val username = session!!.username
+                    call.respondText("Hello, $username!")
+                }
+
+                usersRoute(userService)
+                documentsRoute(documentService)
+                importsRoute(importService, fileManager)
             }
 
-            get("/logout") {
-                call.sessions.clear<UserSession>()
-                call.respond(HttpStatusCode.OK)
-            }
-
-            usersRoute(userService)
-            documentsRoute(documentService)
-            importsRoute(importService, fileManager)
+            webappRoute()
         }
     }
 }

@@ -4,7 +4,7 @@ info:
   description: Space Server API
   version: "1.0.0"
 servers:
-- url: "/"
+- url: "/api/v1"
 paths:
   /login:
     post:
