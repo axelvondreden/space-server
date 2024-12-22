@@ -39,25 +39,6 @@ paths:
         "200":
           description: OK
 
-  /auth/password:
-    post:
-      summary: Change password for current Session-User
-      tags:
-        - Auth
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/PasswordChangeRequest"
-      responses:
-        "200":
-          description: OK
-        "400":
-          description: Empty password
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
   /upload:
     post:
       summary: Upload a file to be imported
@@ -314,6 +295,24 @@ paths:
           description: User deleted successfully
         "404":
           description: User not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /users/password:
+    put:
+      summary: Change password for current Session-User
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordChangeRequest"
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Empty password
         "401":
           $ref: "#/components/responses/Unauthorized"
 

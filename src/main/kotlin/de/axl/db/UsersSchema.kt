@@ -38,12 +38,15 @@ class UserService(database: Database, private val adminUsername: String) {
         }[Users.id]
     }
 
-    suspend fun changePassword(user: ExposedUser, oldPasswordPlain: String, newPasswordPlain: String) = dbQuery {
-        if (!testPassword(user, oldPasswordPlain)) throw Exception("Password is wrong")
-        Users.update({ Users.username eq user.username }) {
-            it[password] = BCrypt.withDefaults().hashToString(12, newPasswordPlain.toCharArray())
-            it[updatedAt] = now()
+    suspend fun changePassword(user: ExposedUser, oldPasswordPlain: String, newPasswordPlain: String): Boolean {
+        if (!testPassword(user, oldPasswordPlain)) return false
+        dbQuery {
+            Users.update({ Users.username eq user.username }) {
+                it[password] = BCrypt.withDefaults().hashToString(12, newPasswordPlain.toCharArray())
+                it[updatedAt] = now()
+            }
         }
+        return true
     }
 
     suspend fun findAll(): List<ExposedUser> {

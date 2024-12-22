@@ -31,28 +31,6 @@ fun Route.loginRoute(userService: UserService, logger: Logger) {
             call.sessions.clear<UserSession>()
             call.respond(HttpStatusCode.OK)
         }
-
-        apiRoute {
-            post("/auth/password") {
-                val changeRequest = call.receive<PasswordChangeRequest>()
-                if (changeRequest.old.isBlank() || changeRequest.new.isBlank()) {
-                    call.respond(HttpStatusCode.BadRequest, "Empty password")
-                } else {
-                    val session = call.sessions.get<UserSession>()
-                    if (session == null) {
-                        call.respond(HttpStatusCode.Unauthorized, "No session found")
-                    } else {
-                        val dbUser = userService.findByUsername(session.username)
-                        if (dbUser == null) {
-                            call.respond(HttpStatusCode.Unauthorized, "User not found")
-                        } else {
-                            userService.changePassword(dbUser, changeRequest.old, changeRequest.new)
-                            call.respond(HttpStatusCode.OK)
-                        }
-                    }
-                }
-            }
-        }
     }
 }
 
