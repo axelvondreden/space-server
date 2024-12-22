@@ -16,12 +16,18 @@
                     <a class="nav-link" th:classappend="${page == 'link'}? 'active'" href="#">Link</a>
                 </li>
             </ul>
-            <form class="d-flex" role="search" style="margin-bottom: 0">
-                <input class="form-control me-2" type="search" placeholder="Search"/>
-                <button class="btn btn-outline-success" type="submit">
-                    <i class="bi bi-search"></i>
-                </button>
-            </form>
+            <div class="flex-shrink-0 dropdown">
+                <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser2" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-person-circle rounded-circle"></i>
+                </a>
+                <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser2" data-popper-placement="bottom-end" id="navbarDropdown">
+                    <li><a class="dropdown-item" href="#">New project...</a></li>
+                    <li><a class="dropdown-item" href="#">Settings</a></li>
+                    <li><a class="dropdown-item" href="#">Profile</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#">Sign out</a></li>
+                </ul>
+            </div>
         </div>
     </div>
 </nav>
