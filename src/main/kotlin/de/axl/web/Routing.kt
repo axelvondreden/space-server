@@ -26,7 +26,7 @@ fun Application.configureRouting(userService: UserService, documentService: Docu
                 importsRoute(importService, fileManager)
             }
 
-            webappRoute()
+            webappRoute(userService, property("space.admin.user.username"))
         }
     }
 }
