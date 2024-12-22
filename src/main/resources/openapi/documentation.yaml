@@ -39,18 +39,22 @@ paths:
         "200":
           description: OK
 
-  /hello:
-    get:
-      summary: Test Endpoint
+  /auth/password:
+    post:
+      summary: Change password for current Session-User
       tags:
         - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordChangeRequest"
       responses:
         "200":
           description: OK
-          content:
-            text/plain:
-              schema:
-                type: string
+        "400":
+          description: Empty password
         "401":
           $ref: "#/components/responses/Unauthorized"
 
@@ -71,10 +75,6 @@ paths:
       responses:
         "200":
           description: OK
-          content:
-            text/plain:
-              schema:
-                type: string
         "401":
           $ref: "#/components/responses/Unauthorized"
 
@@ -319,6 +319,16 @@ paths:
 
 components:
   schemas:
+    PasswordChangeRequest:
+      type: object
+      properties:
+        old:
+          type: string
+        new:
+          type: string
+      required:
+        - old
+        - new
     User:
       type: object
       properties:
@@ -375,7 +385,3 @@ components:
   responses:
     Unauthorized:
       description: Unauthorized
-      content:
-        '*/*':
-          schema:
-            type: object

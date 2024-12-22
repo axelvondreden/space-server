@@ -1,7 +1,9 @@
 package de.axl.web
 
+import de.axl.apiRoute
 import de.axl.db.UserService
 import io.ktor.http.*
+import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -10,37 +12,13 @@ import io.ktor.server.thymeleaf.*
 import org.slf4j.Logger
 
 fun Route.loginRoute(userService: UserService, logger: Logger) {
+    apiRoute {
+        post("/login") {
+            handleLogin(userService, logger)
+        }
+    }
     post("/login") {
-        val params = call.receiveParameters()
-        val username = params["username"]
-        val password = params["password"]
-        val fromUI = params["fromui"] == "1"
-        logger.info("Login request from ${if (fromUI) "UI" else "API"} for $username")
-        if (username.isNullOrBlank() || password.isNullOrBlank()) {
-            if (fromUI) {
-                call.respondRedirect("/login?error=Missing username or password")
-            } else {
-                call.respond(HttpStatusCode.BadRequest, "Missing username or password")
-            }
-            return@post
-        }
-        val dbUser = userService.findByUsername(username)
-
-        if (dbUser == null || !userService.testPassword(dbUser, password)) {
-            logger.warn("Wrong credentials used! username: $username | password: $password")
-            if (fromUI) {
-                call.respondRedirect("/login?error=Wrong credentials")
-            } else {
-                call.respond(HttpStatusCode.Unauthorized, "Wrong credentials")
-            }
-        } else {
-            call.sessions.set(UserSession(username))
-            if (fromUI) {
-                call.respondRedirect("/")
-            } else {
-                call.respond(HttpStatusCode.OK)
-            }
-        }
+        handleLogin(userService, logger)
     }
 
     get("/login") {
@@ -48,8 +26,67 @@ fun Route.loginRoute(userService: UserService, logger: Logger) {
         call.respond(ThymeleafContent("login.html", mapOf("error" to error)))
     }
 
-    get("/logout") {
-        call.sessions.clear<UserSession>()
-        call.respond(HttpStatusCode.OK)
+    authenticate("auth-session") {
+        get("/logout") {
+            call.sessions.clear<UserSession>()
+            call.respond(HttpStatusCode.OK)
+        }
+
+        apiRoute {
+            post("/auth/password") {
+                val changeRequest = call.receive<PasswordChangeRequest>()
+                if (changeRequest.old.isBlank() || changeRequest.new.isBlank()) {
+                    call.respond(HttpStatusCode.BadRequest, "Empty password")
+                } else {
+                    val session = call.sessions.get<UserSession>()
+                    if (session == null) {
+                        call.respond(HttpStatusCode.Unauthorized, "No session found")
+                    } else {
+                        val dbUser = userService.findByUsername(session.username)
+                        if (dbUser == null) {
+                            call.respond(HttpStatusCode.Unauthorized, "User not found")
+                        } else {
+                            userService.changePassword(dbUser, changeRequest.old, changeRequest.new)
+                            call.respond(HttpStatusCode.OK)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
+
+private suspend fun RoutingContext.handleLogin(userService: UserService, logger: Logger) {
+    val params = call.receiveParameters()
+    val username = params["username"]
+    val password = params["password"]
+    val fromUI = params["fromui"] == "1"
+    logger.info("Login request from ${if (fromUI) "UI" else "API"} for $username")
+    if (username.isNullOrBlank() || password.isNullOrBlank()) {
+        if (fromUI) {
+            call.respondRedirect("/login?error=Missing username or password")
+        } else {
+            call.respond(HttpStatusCode.BadRequest, "Missing username or password")
+        }
+        return
+    }
+    val dbUser = userService.findByUsername(username)
+
+    if (dbUser == null || !userService.testPassword(dbUser, password)) {
+        logger.warn("Wrong credentials used! username: $username | password: $password")
+        if (fromUI) {
+            call.respondRedirect("/login?error=Wrong credentials")
+        } else {
+            call.respond(HttpStatusCode.Unauthorized, "Wrong credentials")
+        }
+    } else {
+        call.sessions.set(UserSession(username))
+        if (fromUI) {
+            call.respondRedirect("/")
+        } else {
+            call.respond(HttpStatusCode.OK)
+        }
+    }
+}
+
+data class PasswordChangeRequest(val old: String, val new: String)

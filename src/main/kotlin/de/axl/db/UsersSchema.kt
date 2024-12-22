@@ -41,6 +41,14 @@ class UserService(database: Database) {
         }[Users.id]
     }
 
+    suspend fun changePassword(user: ExposedUser, oldPasswordPlain: String, newPasswordPlain: String) = dbQuery {
+        if (!testPassword(user, oldPasswordPlain)) throw Exception("Password is wrong")
+        Users.update({ Users.username eq user.username }) {
+            it[password] = BCrypt.withDefaults().hashToString(12, newPasswordPlain.toCharArray())
+            it[updatedAt] = now()
+        }
+    }
+
     suspend fun findAll(): List<ExposedUser> {
         return dbQuery {
             Users.selectAll().map { ExposedUser(it[Users.username], it[Users.name], it[Users.createdAt], it[Users.updatedAt]) }
