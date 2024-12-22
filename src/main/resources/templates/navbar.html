@@ -3,14 +3,14 @@
 <body>
 <nav th:fragment="navbar (page, user)" class="navbar navbar-expand-md fixed-top navbar-dark bg-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="#">Space</a>
+        <a class="navbar-brand" href="/">Space</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggler">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarToggler">
             <ul class="navbar-nav me-auto mb-2 mb-md-0">
                 <li class="nav-item">
-                    <a class="nav-link" th:classappend="${page == 'home'}? 'active'" href="#">Home</a>
+                    <a class="nav-link" th:classappend="${page == 'home'}? 'active'" href="/">Home</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" th:classappend="${page == 'link'}? 'active'" href="#">Link</a>
@@ -23,8 +23,8 @@
                 </a>
                 <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser2" data-popper-placement="bottom-end" id="navbarDropdown">
                     <li><h6 class="dropdown-header">Settings</h6></li>
-                    <li><a class="dropdown-item" href="/settings/profile">Profile</a></li>
-                    <li><a class="dropdown-item" href="/settings/appearance">Appearance</a></li>
+                    <li><a class="dropdown-item" href="/settings/profile"><i class="bi bi-person-fill"></i>&nbsp;Profile</a></li>
+                    <li><a class="dropdown-item" href="/settings/appearance"><i class="bi bi-palette-fill"></i>&nbsp;Appearance</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="/logout">Sign out</a></li>
                 </ul>
