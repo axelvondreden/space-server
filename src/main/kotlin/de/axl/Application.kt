@@ -69,7 +69,7 @@ ${"┗" + "━".repeat(if (missing % 2 == 0) missing / 2 else (missing / 2) + 1)
         driver = "org.h2.Driver",
         password = "",
     )
-    val userService = UserService(database)
+    val userService = UserService(database, property("space.admin.user.username"))
     val documentService = DocumentService(database)
     val importService = ImportService(database)
     val fileManager = FileManager(dataPath)

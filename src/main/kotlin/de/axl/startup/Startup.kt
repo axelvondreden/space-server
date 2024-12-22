@@ -15,7 +15,7 @@ fun Application.configureStartup(userService: UserService, fileManager: FileMana
         val adminUsername = property("space.admin.user.username")
         if (userService.findByUsername(adminUsername) == null) {
             log.info("Creating admin user: $adminUsername")
-            userService.create(ExposedUser(adminUsername, "Admin", now(), null), property("space.admin.user.defaultPassword"))
+            userService.create(ExposedUser(adminUsername, "Admin", true, now(), null), property("space.admin.user.defaultPassword"))
         }
     }
 

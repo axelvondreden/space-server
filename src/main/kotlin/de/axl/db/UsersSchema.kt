@@ -7,12 +7,11 @@ import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.slf4j.LoggerFactory
 
 @Serializable
-data class ExposedUser(val username: String, val name: String?, val createdAt: Long, val updatedAt: Long?)
+data class ExposedUser(val username: String, val name: String?, val isAdmin: Boolean, val createdAt: Long, val updatedAt: Long?)
 
-class UserService(database: Database) {
+class UserService(database: Database, private val adminUsername: String) {
     object Users : Table() {
         val id = integer("id").autoIncrement()
         val username = varchar("username", length = 50)
@@ -29,8 +28,6 @@ class UserService(database: Database) {
             SchemaUtils.create(Users)
         }
     }
-
-
 
     suspend fun create(user: ExposedUser, passwordPlain: String): Int = dbQuery {
         Users.insert {
@@ -51,7 +48,7 @@ class UserService(database: Database) {
 
     suspend fun findAll(): List<ExposedUser> {
         return dbQuery {
-            Users.selectAll().map { ExposedUser(it[Users.username], it[Users.name], it[Users.createdAt], it[Users.updatedAt]) }
+            Users.selectAll().map { ExposedUser(it[Users.username], it[Users.name], it[Users.username] == adminUsername, it[Users.createdAt], it[Users.updatedAt]) }
         }
     }
 
@@ -59,7 +56,7 @@ class UserService(database: Database) {
         return dbQuery {
             Users.selectAll()
                 .where { Users.username eq username }
-                .map { ExposedUser(it[Users.username], it[Users.name], it[Users.createdAt], it[Users.updatedAt]) }
+                .map { ExposedUser(it[Users.username], it[Users.name], it[Users.username] == adminUsername, it[Users.createdAt], it[Users.updatedAt]) }
                 .singleOrNull()
         }
     }
@@ -85,9 +82,5 @@ class UserService(database: Database) {
         dbQuery {
             Users.deleteWhere { Users.username.eq(username) }
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java.declaringClass.name)
     }
 }

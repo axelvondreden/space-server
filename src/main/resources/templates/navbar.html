@@ -22,8 +22,9 @@
                     <span th:text="${user.name}"></span>
                 </a>
                 <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser2" data-popper-placement="bottom-end" id="navbarDropdown">
-                    <li><a class="dropdown-item" href="#">Settings</a></li>
-                    <li><a class="dropdown-item" href="#">Profile</a></li>
+                    <li><h6 class="dropdown-header">Settings</h6></li>
+                    <li><a class="dropdown-item" href="/settings/profile">Profile</a></li>
+                    <li><a class="dropdown-item" href="/settings/appearance">Appearance</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="/logout">Sign out</a></li>
                 </ul>
