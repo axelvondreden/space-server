@@ -1,6 +1,5 @@
 package de.axl.web
 
-import de.axl.db.ExposedUser
 import de.axl.db.UserService
 import de.axl.getUser
 import io.ktor.http.*
@@ -28,23 +27,7 @@ fun Route.usersRoute(userService: UserService) {
             }
         }
 
-        put("/{username}") {
-            val username = call.parameters["username"]
-            if (username.isNullOrBlank()) {
-                call.respond(HttpStatusCode.NotFound)
-            } else {
-                val dbUser = userService.findByUsername(username)
-                if (dbUser == null) {
-                    call.respond(HttpStatusCode.NotFound)
-                } else {
-                    val user = call.receive<ExposedUser>()
-                    userService.update(user)
-                    call.respond(HttpStatusCode.OK)
-                }
-            }
-        }
-
-        put("/password") {
+        post("/password") {
             val changeRequest = call.receive<PasswordChangeRequest>()
             if (changeRequest.old.isBlank() || changeRequest.new.isBlank()) {
                 call.respond(HttpStatusCode.BadRequest, "Empty password")
@@ -62,6 +45,21 @@ fun Route.usersRoute(userService: UserService) {
             }
         }
 
+        post("/name") {
+            val changeRequest = call.receive<NameChangeRequest>()
+            val name = changeRequest.name
+            if (name.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, "Empty username")
+            }
+            val user = getUser(userService)
+            if (user == null) {
+                call.respond(HttpStatusCode.Unauthorized, "User not found")
+            } else {
+                userService.update(user.copy(name = name))
+                call.respond(HttpStatusCode.OK)
+            }
+        }
+
         delete("/{username}") {
             val username = call.parameters["username"]
             if (username.isNullOrBlank()) {
@@ -73,3 +71,7 @@ fun Route.usersRoute(userService: UserService) {
         }
     }
 }
+
+data class PasswordChangeRequest(val old: String, val new: String)
+
+data class NameChangeRequest(val name: String)

@@ -66,5 +66,3 @@ private suspend fun RoutingContext.handleLogin(userService: UserService, logger:
         }
     }
 }
-
-data class PasswordChangeRequest(val old: String, val new: String)
