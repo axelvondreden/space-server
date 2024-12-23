@@ -22,3 +22,6 @@ space:
     enabled: false
   paths:
     data: "data"
+  love:
+    username: ""
+    password: ""

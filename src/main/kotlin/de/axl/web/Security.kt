@@ -23,6 +23,9 @@ fun Application.configureSecurity() {
 
     val cookieAge = property("session.cookie.age").toLongOrNull() ?: 60
     val secure = property("session.cookie.secure").toBoolean()
+
+    val loveUser = property("space.love.username")
+    val lovePassword = property("space.love.password")
     install(Sessions) {
         cookie<UserSession>("user_session") {
             cookie.path = "/"
@@ -45,6 +48,17 @@ fun Application.configureSecurity() {
                     call.respond(HttpStatusCode.Unauthorized, "Not logged in!")
                 } else {
                     call.respondRedirect("/login")
+                }
+            }
+        }
+
+        basic("auth-basic") {
+            realm = "Access to the '/love' path"
+            validate { credentials ->
+                if (credentials.name == loveUser && credentials.password == lovePassword) {
+                    UserIdPrincipal(credentials.name)
+                } else {
+                    null
                 }
             }
         }

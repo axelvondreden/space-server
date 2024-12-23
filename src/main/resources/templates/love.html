@@ -1,0 +1,120 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        .list-group-item {
+            transition: all 1s linear;
+            overflow: hidden; /* Ensures the content doesn't break the element when collapsed */
+        }
+
+        .description {
+            max-height: 0;
+            opacity: 0;
+            transition: max-height 1s ease-in, opacity 1s ease-in-out;
+        }
+
+        .expand {
+            opacity: 1;
+            max-height: 300px;
+        }
+
+        .item-container {
+            display: flex;
+        }
+
+        .item-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            position: absolute;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+        }
+
+        .item-content {
+            flex: 1;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<main class="container">
+    <section class="mt-5 text-center">
+        <h1 class="mb-4 text-danger" th:text="${size} + ' Reasons I Love You'"></h1>
+        <div class="list-group">
+            <div th:each="entry, stat : ${entries}" type="button" class="list-group-item list-group-item-action py-3"
+                 th:data-backgroundColor="${entry.backgroundColor}"
+                 th:data-description="${entry.description}"
+                 th:data-prefixIcon="${entry.prefixIcon}"
+                 th:data-suffixIcon="${entry.suffixIcon}"
+                 th:data-textColor="${entry.textColor}"
+                 onclick="anim(this)">
+                <div class="item-container">
+                    <div class="item-number" th:text="'#' + ${stat.count}"></div>
+                    <div class="item-content">
+                        <div style="font-size: 1.5em" th:text="${entry.text}">Test</div>
+                        <div class="description" style="font-size: 1.2em" th:text="${entry.description}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="height: 100px"></div>
+    </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script th:inline="javascript">
+    function anim(btn) {
+        if (btn.classList.contains("pressed")) {
+            return
+        } else {
+            btn.classList.add("pressed");
+        }
+        let div1 = btn.children[0].children[1].children[0];
+        let div2 = btn.children[0].children[1].children[1];
+        let divNr = btn.children[0].children[0];
+        let backgroundColor = btn.getAttribute("data-backgroundColor");
+        let description = btn.getAttribute("data-description");
+        let prefixIcon = btn.getAttribute("data-prefixIcon");
+        let suffixIcon = btn.getAttribute("data-suffixIcon");
+        let textColor = btn.getAttribute("data-textColor");
+
+        btn.style.backgroundColor = backgroundColor;
+        btn.style.color = textColor;
+        divNr.style.opacity = "1";
+
+        setTimeout(() => {
+            addIcons(div1, prefixIcon, suffixIcon);
+        }, 300);
+        setTimeout(() => {
+            addIcons(div1, prefixIcon, suffixIcon);
+        }, 600);
+        setTimeout(() => {
+            addIcons(div1, prefixIcon, suffixIcon);
+        }, 900);
+
+        if (description) {
+            setTimeout(() => {
+                div2.classList.add("expand");
+            }, 900);
+        }
+    }
+
+    function addIcons(div, prefixIcon, suffixIcon) {
+        let newText = div.innerHTML;
+        if (prefixIcon) {
+            let iconTxt = "<i class='bi bi-" + prefixIcon + "'></i>";
+            newText = iconTxt + "&nbsp;&nbsp;&nbsp;" + newText;
+        }
+        if (suffixIcon) {
+            let iconTxt = "<i class='bi bi-" + suffixIcon + "'></i>";
+            newText = newText + "&nbsp;&nbsp;&nbsp;" + iconTxt;
+        }
+        div.innerHTML = newText;
+    }
+</script>
+</body>
+</html>

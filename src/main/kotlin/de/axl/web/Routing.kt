@@ -28,5 +28,8 @@ fun Application.configureRouting(userService: UserService, documentService: Docu
 
             webappRoute(userService)
         }
+        authenticate("auth-basic") {
+            loveRoute()
+        }
     }
 }
