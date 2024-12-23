@@ -40,3 +40,4 @@ out/
 *.db
 /http-client.private.env.json
 /src/main/resources/custom.yaml
+/*.json

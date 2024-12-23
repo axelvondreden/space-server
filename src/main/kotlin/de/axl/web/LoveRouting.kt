@@ -18,7 +18,7 @@ fun Route.loveRoute() {
             return@get
         }
 
-        val loveList = jacksonObjectMapper().readValue(file, LoveList::class.java).entries//.sortedBy { rand(0, 10000) }
+        val loveList = jacksonObjectMapper().readValue(file, LoveList::class.java).entries.sortedBy { rand(0, 10000) }
         call.respond(ThymeleafContent("love.html", mapOf("entries" to loveList, "size" to loveList.size)))
     }
 }
