@@ -1,7 +1,8 @@
 package de.axl.web
 
+import de.axl.db.ExposedUser
 import de.axl.db.UserService
-import de.axl.getUser
+import de.axl.getSessionUser
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -27,12 +28,28 @@ fun Route.usersRoute(userService: UserService) {
             }
         }
 
+        put {
+            val updatedUser = call.receive<ExposedUser>()
+            val dbUser = userService.findByUsername(updatedUser.username)
+            val sessionUser = getSessionUser(userService)
+            if (sessionUser == null) {
+                call.respond(HttpStatusCode.Unauthorized, "User not authenticated")
+            } else if (dbUser == null) {
+                call.respond(HttpStatusCode.BadRequest, "User does not exist")
+            } else if (!sessionUser.isAdmin && sessionUser.username != dbUser.username) {
+                call.respond(HttpStatusCode.Forbidden, "Not allowed to update other users")
+            } else {
+                userService.update(dbUser.copy(name = updatedUser.name))
+                call.respond(HttpStatusCode.OK)
+            }
+        }
+
         post("/password") {
             val changeRequest = call.receive<PasswordChangeRequest>()
             if (changeRequest.old.isBlank() || changeRequest.new.isBlank()) {
                 call.respond(HttpStatusCode.BadRequest, "Empty password")
             } else {
-                val user = getUser(userService)
+                val user = getSessionUser(userService)
                 if (user == null) {
                     call.respond(HttpStatusCode.Unauthorized, "User not found")
                 } else {
@@ -45,20 +62,6 @@ fun Route.usersRoute(userService: UserService) {
             }
         }
 
-        post("/name") {
-            val changeRequest = call.receive<NameChangeRequest>()
-            val name = changeRequest.name
-            if (name.isBlank()) {
-                call.respond(HttpStatusCode.BadRequest, "Empty username")
-            }
-            val user = getUser(userService)
-            if (user == null) {
-                call.respond(HttpStatusCode.Unauthorized, "User not found")
-            } else {
-                userService.update(user.copy(name = name))
-                call.respond(HttpStatusCode.OK)
-            }
-        }
 
         delete("/{username}") {
             val username = call.parameters["username"]

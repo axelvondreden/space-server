@@ -245,6 +245,25 @@ paths:
                   $ref: "#/components/schemas/User"
         "401":
           $ref: "#/components/responses/Unauthorized"
+    put:
+      summary: Update an existing user
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: User does not exist
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Not allowed to update other users - can only be done by admin
 
   /users/{username}:
     parameters:
@@ -296,22 +315,6 @@ paths:
           description: OK
         "400":
           description: Empty password
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-  /users/name:
-    post:
-      summary: Change display name for current Session-User
-      tags:
-        - Users
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/NameChangeRequest"
-      responses:
-        "200":
-          description: OK
         "401":
           $ref: "#/components/responses/Unauthorized"
 

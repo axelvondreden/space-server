@@ -14,7 +14,7 @@ data class ExposedUser(val username: String, val name: String?, val isAdmin: Boo
 class UserService(database: Database, private val adminUsername: String) {
     object Users : Table() {
         val id = integer("id").autoIncrement()
-        val username = varchar("username", length = 50)
+        val username = varchar("username", length = 50).uniqueIndex()
         val name = varchar("name", length = 50).nullable()
         val password = varchar("password", length = 256)
         val createdAt = long("createdAt")

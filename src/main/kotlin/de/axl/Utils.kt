@@ -19,6 +19,6 @@ suspend fun <T> dbQuery(block: suspend () -> T): T = newSuspendedTransaction(Dis
 
 fun Route.apiRoute(build: Route.() -> Unit) = route("/api/v1") { build() }
 
-suspend fun RoutingContext.getUser(userService: UserService): ExposedUser? {
+suspend fun RoutingContext.getSessionUser(userService: UserService): ExposedUser? {
     return call.sessions.get<UserSession>()?.username?.let { userService.findByUsername(it) }
 }
