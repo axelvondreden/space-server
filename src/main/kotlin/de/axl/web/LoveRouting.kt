@@ -18,8 +18,8 @@ fun Route.loveRoute() {
             return@get
         }
 
-        val loveList = jacksonObjectMapper().readValue(file, LoveList::class.java).entries.shuffled()
-        call.respond(ThymeleafContent("love.html", mapOf("entries" to loveList, "size" to loveList.size)))
+        val loveList = jacksonObjectMapper().readValue(file, LoveList::class.java).entries//.shuffled()
+        call.respond(ThymeleafContent("love.html", mapOf("entries" to loveList, "size" to loveList.filter { !it.nsfw }.size, "sizeNsfw" to loveList.size)))
     }
 }
 
@@ -31,5 +31,6 @@ data class Love(
     val description: String? = null,
     val textColor: String? = null,
     val prefixIcon: String? = null,
-    val suffixIcon: String? = null
+    val suffixIcon: String? = null,
+    val nsfw: Boolean = false
 )
