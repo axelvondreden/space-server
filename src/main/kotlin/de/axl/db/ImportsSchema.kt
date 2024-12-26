@@ -2,6 +2,7 @@ package de.axl.db
 
 import de.axl.dbQuery
 import de.axl.now
+import de.axl.toDatetimeString
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -10,7 +11,7 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 @Serializable
-data class ExposedImport(val guid: String, val file: String, val type: String, val createdAt: Long, val updatedAt: Long?)
+data class ExposedImport(val guid: String, val file: String, val type: String, val createdAt: String, val updatedAt: String?)
 
 enum class ImportType(val type: String) {
     PDF("pdf"),
@@ -46,7 +47,7 @@ class ImportService(database: Database) {
 
     suspend fun findAll(): List<ExposedImport> {
         return dbQuery {
-            Imports.selectAll().map { ExposedImport(it[Imports.guid], it[Imports.file], it[Imports.type].type, it[Imports.createdAt], it[Imports.updatedAt]) }
+            Imports.selectAll().map { ExposedImport(it[Imports.guid], it[Imports.file], it[Imports.type].type, it[Imports.createdAt].toDatetimeString(), it[Imports.updatedAt]?.toDatetimeString()) }
         }
     }
 
@@ -54,7 +55,7 @@ class ImportService(database: Database) {
         return dbQuery {
             Imports.selectAll()
                 .where { Imports.guid eq guid }
-                .map { ExposedImport(it[Imports.guid], it[Imports.file], it[Imports.type].type, it[Imports.createdAt], it[Imports.updatedAt]) }
+                .map { ExposedImport(it[Imports.guid], it[Imports.file], it[Imports.type].type, it[Imports.createdAt].toDatetimeString(), it[Imports.updatedAt]?.toDatetimeString()) }
                 .singleOrNull()
         }
     }

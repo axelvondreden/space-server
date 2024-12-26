@@ -3,13 +3,20 @@ package de.axl.db
 import at.favre.lib.crypto.bcrypt.BCrypt
 import de.axl.dbQuery
 import de.axl.now
+import de.axl.toDatetimeString
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 
 @Serializable
-data class ExposedUser(val username: String, val name: String?, val isAdmin: Boolean, val createdAt: Long, val updatedAt: Long?)
+data class ExposedUser(
+    val username: String,
+    val name: String?,
+    val admin: Boolean = false,
+    val createdAt: String,
+    val updatedAt: String?
+)
 
 class UserService(database: Database, private val adminUsername: String) {
     object Users : Table() {
@@ -51,7 +58,7 @@ class UserService(database: Database, private val adminUsername: String) {
 
     suspend fun findAll(): List<ExposedUser> {
         return dbQuery {
-            Users.selectAll().map { ExposedUser(it[Users.username], it[Users.name], it[Users.username] == adminUsername, it[Users.createdAt], it[Users.updatedAt]) }
+            Users.selectAll().map { ExposedUser(it[Users.username], it[Users.name], it[Users.username] == adminUsername, it[Users.createdAt].toDatetimeString(), it[Users.updatedAt]?.toDatetimeString()) }
         }
     }
 
@@ -59,7 +66,7 @@ class UserService(database: Database, private val adminUsername: String) {
         return dbQuery {
             Users.selectAll()
                 .where { Users.username eq username }
-                .map { ExposedUser(it[Users.username], it[Users.name], it[Users.username] == adminUsername, it[Users.createdAt], it[Users.updatedAt]) }
+                .map { ExposedUser(it[Users.username], it[Users.name], it[Users.username] == adminUsername, it[Users.createdAt].toDatetimeString(), it[Users.updatedAt]?.toDatetimeString()) }
                 .singleOrNull()
         }
     }

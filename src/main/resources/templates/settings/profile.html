@@ -24,6 +24,14 @@
                         <label for="name" class="form-label">Display Name</label>
                         <input type="text" class="form-control" id="name" placeholder="Enter a new display name" th:value="${user.name}">
                     </div>
+                    <div class="mb-3">
+                        <span><i>Created:</i></span>
+                        <span th:text="${user.createdAt}"></span>
+                    </div>
+                    <div class="mb-3" th:if="${user.updatedAt != null}">
+                        <span><i>Updated:</i></span>
+                        <span th:text="${user.updatedAt}"></span>
+                    </div>
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary">Save</button>
                     </div>
@@ -34,7 +42,7 @@
         <div class="card mx-auto" style="max-width: 600px;">
             <div class="card-body">
                 <h3 class="text-center">Security</h3>
-                <form>
+                <form id="passwordForm">
                     <div class="mb-3">
                         <label for="passwordOld" class="form-label">Old Password</label>
                         <input type="password" class="form-control" id="passwordOld" placeholder="Enter the old password">
@@ -56,22 +64,30 @@
     </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!--suppress JSObjectNullOrUndefined -->
 <script th:inline="javascript">
+
     document.getElementById("userForm").onsubmit = function () {
+        let user = /*[[${user}]]*/ null;
         let xhr = new XMLHttpRequest();
         let name = document.getElementById("name").value;
-        let body = {name: name};
-        xhr.open("POST", "/api/v1/users/name")
+        user.name = name;
+        xhr.open("PUT", "/api/v1/users")
         xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.send(JSON.stringify(body));
+        xhr.send(JSON.stringify(user));
 
         xhr.onreadystatechange = function () {
             if (xhr.readyState === XMLHttpRequest.DONE) {
-                window.location.reload();
+                if (xhr.status === 200) {
+                    window.location.reload();
+                } else {
+                    alert("Error: " + xhr.status + " | " + xhr.responseText);
+                }
             }
         }
         return false;
     }
+
 </script>
 </body>
 </html>

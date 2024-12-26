@@ -344,12 +344,13 @@ components:
           type: string
         name:
           type: string
-        isAdmin:
+        admin:
           type: boolean
+          description: Read-only property - Changes get ignored
         createdAt:
-          type: integer
+          type: string
         updatedAt:
-          type: integer
+          type: string
       required:
         - username
         - createdAt
@@ -362,9 +363,9 @@ components:
         guid:
           type: string
         createdAt:
-          type: integer
+          type: string
         updatedAt:
-          type: integer
+          type: string
       required:
         - id
         - guid
@@ -382,9 +383,9 @@ components:
         type:
           type: string
         createdAt:
-          type: integer
+          type: string
         updatedAt:
-          type: integer
+          type: string
       required:
         - id
         - guid

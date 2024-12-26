@@ -36,8 +36,10 @@ fun Route.usersRoute(userService: UserService) {
                 call.respond(HttpStatusCode.Unauthorized, "User not authenticated")
             } else if (dbUser == null) {
                 call.respond(HttpStatusCode.BadRequest, "User does not exist")
-            } else if (!sessionUser.isAdmin && sessionUser.username != dbUser.username) {
+            } else if (!sessionUser.admin && sessionUser.username != dbUser.username) {
                 call.respond(HttpStatusCode.Forbidden, "Not allowed to update other users")
+            } else if (updatedUser.name.isNullOrBlank()) {
+                call.respond(HttpStatusCode.BadRequest, "Name must not be empty or blank")
             } else {
                 userService.update(dbUser.copy(name = updatedUser.name))
                 call.respond(HttpStatusCode.OK)
@@ -76,5 +78,3 @@ fun Route.usersRoute(userService: UserService) {
 }
 
 data class PasswordChangeRequest(val old: String, val new: String)
-
-data class NameChangeRequest(val name: String)

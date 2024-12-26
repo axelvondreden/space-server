@@ -2,6 +2,7 @@ package de.axl.db
 
 import de.axl.dbQuery
 import de.axl.now
+import de.axl.toDatetimeString
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -10,7 +11,7 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 @Serializable
-data class ExposedDocument(val id: Int, val guid: String, val createdAt: Long, val updatedAt: Long?)
+data class ExposedDocument(val id: Int, val guid: String, val createdAt: String, val updatedAt: String?)
 
 class DocumentService(database: Database) {
     object Documents : Table() {
@@ -37,7 +38,7 @@ class DocumentService(database: Database) {
 
     suspend fun findAll(): List<ExposedDocument> {
         return dbQuery {
-            Documents.selectAll().map { ExposedDocument(it[Documents.id], it[Documents.guid], it[Documents.createdAt], it[Documents.updatedAt]) }
+            Documents.selectAll().map { ExposedDocument(it[Documents.id], it[Documents.guid], it[Documents.createdAt].toDatetimeString(), it[Documents.updatedAt]?.toDatetimeString()) }
         }
     }
 
@@ -45,7 +46,7 @@ class DocumentService(database: Database) {
         return dbQuery {
             Documents.selectAll()
                 .where { Documents.guid eq guid }
-                .map { ExposedDocument(it[Documents.id], it[Documents.guid], it[Documents.createdAt], it[Documents.updatedAt]) }
+                .map { ExposedDocument(it[Documents.id], it[Documents.guid], it[Documents.createdAt].toDatetimeString(), it[Documents.updatedAt]?.toDatetimeString()) }
                 .singleOrNull()
         }
     }

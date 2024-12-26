@@ -34,6 +34,7 @@ dependencies {
     implementation(libs.h2)
     implementation(libs.logback.classic)
     implementation(libs.bcrypt)
+    implementation(libs.thymeleaf.time)
 }
 
 ktor {
