@@ -10,6 +10,7 @@ import java.time.LocalDateTime
 
 fun Route.webappRoute(userService: UserService) {
     staticResources("/styles", "styles")
+    staticResources("/scripts", "scripts")
 
     get("/") {
         val user = getSessionUser(userService) ?: return@get

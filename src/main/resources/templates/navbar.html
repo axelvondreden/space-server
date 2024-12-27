@@ -24,7 +24,17 @@
                 <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser2" data-popper-placement="bottom-end" id="navbarDropdown">
                     <li><h6 class="dropdown-header">Settings</h6></li>
                     <li><a class="dropdown-item" href="/settings/profile"><i class="bi bi-person-fill"></i>&nbsp;Profile</a></li>
-                    <li><a class="dropdown-item" href="/settings/appearance"><i class="bi bi-palette-fill"></i>&nbsp;Appearance</a></li>
+                    <li><h6 class="dropdown-header">Theme</h6></li>
+                    <li>
+                        <button type="button" class="dropdown-item d-flex" data-bs-theme-value="light">
+                            <i class="bi bi-sun-fill me-2 opacity-50"></i>Light
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" class="dropdown-item d-flex" data-bs-theme-value="dark">
+                            <i class="bi bi-moon-stars-fill me-2 opacity-50"></i>Dark
+                        </button>
+                    </li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="/logout">Sign out</a></li>
                 </ul>
