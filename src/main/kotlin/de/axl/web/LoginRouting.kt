@@ -29,7 +29,7 @@ fun Route.loginRoute(userService: UserService, logger: Logger) {
     authenticate("auth-session") {
         get("/logout") {
             call.sessions.clear<UserSession>()
-            call.respond(HttpStatusCode.OK)
+            call.respondRedirect("/")
         }
     }
 }
