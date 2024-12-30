@@ -18,6 +18,11 @@ fun Route.webappRoute(userService: UserService) {
         call.respond(ThymeleafContent("home.html", mapOf("user" to user)))
     }
 
+    get("/imports") {
+        val user = getSessionUser(userService) ?: return@get
+        call.respond(ThymeleafContent("/imports/imports.html", mapOf("user" to user)))
+    }
+
     get("/settings/profile") {
         val user = getSessionUser(userService) ?: return@get
         call.respond(ThymeleafContent("/settings/profile.html", mapOf("user" to user)))
