@@ -60,12 +60,6 @@ fun Route.importsRoute(importService: ImportService, fileManager: FileManager) {
             }
         }
 
-        post {
-            val import = call.receive<ExposedImport>()
-            val guid = importService.create(import)
-            call.respond(HttpStatusCode.Created, guid)
-        }
-
         put("/{guid}") {
             val guid = call.parameters["guid"]
             if (guid.isNullOrBlank()) {

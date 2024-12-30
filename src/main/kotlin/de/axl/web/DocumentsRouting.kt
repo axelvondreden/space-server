@@ -27,11 +27,6 @@ fun Route.documentsRoute(documentService: DocumentService) {
             }
         }
 
-        post {
-            val guid = documentService.createEmpty()
-            call.respond(HttpStatusCode.Created, guid)
-        }
-
         put("/{guid}") {
             val guid = call.parameters["guid"]
             if (guid.isNullOrBlank()) {

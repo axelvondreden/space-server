@@ -75,25 +75,6 @@ paths:
                   $ref: "#/components/schemas/Import"
         "401":
           $ref: "#/components/responses/Unauthorized"
-    post:
-      summary: Creates a new import
-      tags:
-        - Imports
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Import"
-      responses:
-        "201":
-          description: GUID of the import
-          content:
-            text/plain:
-              schema:
-                type: string
-        "401":
-          $ref: "#/components/responses/Unauthorized"
 
   /imports/{guid}:
     parameters:
@@ -161,19 +142,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Document"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-    post:
-      summary: Creates a new empty document
-      tags:
-        - Documents
-      responses:
-        "201":
-          description: GUID of the document
-          content:
-            text/plain:
-              schema:
-                type: string
         "401":
           $ref: "#/components/responses/Unauthorized"
 
