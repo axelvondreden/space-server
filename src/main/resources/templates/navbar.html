@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <body>
-<nav th:fragment="navbar (page, user)" class="navbar navbar-expand-md fixed-top navbar-dark bg-dark">
+<nav th:fragment="navbar (page, user)" class="navbar navbar-expand-md fixed-top bg-body-tertiary">
     <div class="container-fluid">
         <a class="navbar-brand" href="/">Space</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggler">
@@ -17,8 +17,8 @@
                 </li>
             </ul>
             <div class="flex-shrink-0 dropdown">
-                <a href="#" class="d-block link-light text-decoration-none dropdown-toggle" id="dropdownUser2" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-person-circle rounded-circle text-bg-dark"></i>
+                <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle" id="dropdownUser2" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-person-circle rounded-circle"></i>
                     <span th:text="${user.name}"></span>
                 </a>
                 <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser2" data-popper-placement="bottom-end" id="navbarDropdown">
