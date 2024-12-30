@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 @Serializable
-data class ExposedImport(val guid: String, val file: String, val type: String, val createdAt: String, val updatedAt: String?)
+data class ExposedImport(val guid: String, val file: String, val type: ImportType, val createdAt: String, val updatedAt: String?)
 
 enum class ImportType(val type: String) {
     PDF("pdf"),
@@ -40,14 +40,14 @@ class ImportService(database: Database) {
         Imports.insert {
             it[guid] = UUID.randomUUID().toString()
             it[file] = import.file
-            it[type] = ImportType.valueOf(import.type)
+            it[type] = import.type
             it[createdAt] = now()
         }[Imports.guid]
     }
 
     suspend fun findAll(): List<ExposedImport> {
         return dbQuery {
-            Imports.selectAll().map { ExposedImport(it[Imports.guid], it[Imports.file], it[Imports.type].type, it[Imports.createdAt].toDatetimeString(), it[Imports.updatedAt]?.toDatetimeString()) }
+            Imports.selectAll().map { ExposedImport(it[Imports.guid], it[Imports.file], it[Imports.type], it[Imports.createdAt].toDatetimeString(), it[Imports.updatedAt]?.toDatetimeString()) }
         }
     }
 
@@ -55,7 +55,7 @@ class ImportService(database: Database) {
         return dbQuery {
             Imports.selectAll()
                 .where { Imports.guid eq guid }
-                .map { ExposedImport(it[Imports.guid], it[Imports.file], it[Imports.type].type, it[Imports.createdAt].toDatetimeString(), it[Imports.updatedAt]?.toDatetimeString()) }
+                .map { ExposedImport(it[Imports.guid], it[Imports.file], it[Imports.type], it[Imports.createdAt].toDatetimeString(), it[Imports.updatedAt]?.toDatetimeString()) }
                 .singleOrNull()
         }
     }

@@ -72,7 +72,7 @@ ${"┗" + "━".repeat(if (missing % 2 == 0) missing / 2 else (missing / 2) + 1)
     val userService = UserService(database, property("space.admin.user.username"))
     val documentService = DocumentService(database)
     val importService = ImportService(database)
-    val fileManager = FileManager(dataPath)
+    val fileManager = FileManager(dataPath, importService)
 
     configureRouting(userService, documentService, importService, fileManager)
     configureStartup(userService, fileManager)

@@ -16,21 +16,15 @@ fun Route.importsRoute(importService: ImportService, fileManager: FileManager) {
     post("/upload") {
         var fileName = ""
         val multipartData = call.receiveMultipart()
-        multipartData.forEachPart { part ->
-            when (part) {
-                /*is PartData.FormItem -> {
-                    fileDescription = part.value
-                }*/
-
-                is PartData.FileItem -> {
-                    fileName = part.originalFileName as String
-                    val fileBytes = part.provider().readRemaining().readByteArray()
-                    File("${fileManager.dataPath}/upload/$fileName").writeBytes(fileBytes)
-                }
-
-                else -> {}
+        var part = multipartData.readPart()
+        while (part != null) {
+            if (part is PartData.FileItem) {
+                fileName = part.originalFileName as String
+                val fileBytes = part.provider().readRemaining().readByteArray()
+                File("${fileManager.dataPath}/upload/$fileName").writeBytes(fileBytes)
             }
             part.dispose()
+            part = multipartData.readPart()
         }
 
         if (fileName.isNotBlank()) {
