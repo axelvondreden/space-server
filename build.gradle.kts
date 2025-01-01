@@ -35,6 +35,8 @@ dependencies {
     implementation(libs.logback.classic)
     implementation(libs.bcrypt)
     implementation(libs.thymeleaf.time)
+    implementation(libs.pdfbox)
+    implementation(libs.pdfbox.tools)
 }
 
 ktor {
