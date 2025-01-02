@@ -7,11 +7,17 @@ import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.slf4j.LoggerFactory
 import java.util.*
 
 @Serializable
-data class ExposedImport(val guid: String, val file: String, val type: ImportType, val createdAt: String, val updatedAt: String?)
+data class ExposedImport(
+    val guid: String,
+    val originalFile: String,
+    val type: ImportType,
+    val pdfFileOptimized: String,
+    val createdAt: String,
+    val updatedAt: String?
+)
 
 enum class ImportType(val type: String) {
     PDF("pdf"),
@@ -22,8 +28,9 @@ class ImportService(database: Database) {
     object Imports : Table() {
         val id = integer("id").autoIncrement()
         val guid = varchar("guid", length = 36).uniqueIndex()
-        val file = varchar("file", length = 200)
+        val originalFile = varchar("originalFile", length = 200)
         val type = enumerationByName("type", 10, ImportType::class)
+        val pdfFileOptimized = varchar("pdfFileOptimized", length = 200)
         val createdAt = long("createdAt")
         val updatedAt = long("updatedAt").nullable()
 
@@ -39,15 +46,25 @@ class ImportService(database: Database) {
     suspend fun create(import: ExposedImport): String = dbQuery {
         Imports.insert {
             it[guid] = UUID.randomUUID().toString()
-            it[file] = import.file
+            it[originalFile] = import.originalFile
             it[type] = import.type
+            it[pdfFileOptimized] = import.pdfFileOptimized
             it[createdAt] = now()
         }[Imports.guid]
     }
 
     suspend fun findAll(): List<ExposedImport> {
         return dbQuery {
-            Imports.selectAll().map { ExposedImport(it[Imports.guid], it[Imports.file], it[Imports.type], it[Imports.createdAt].toDatetimeString(), it[Imports.updatedAt]?.toDatetimeString()) }
+            Imports.selectAll().map {
+                ExposedImport(
+                    it[Imports.guid],
+                    it[Imports.originalFile],
+                    it[Imports.type],
+                    it[Imports.pdfFileOptimized],
+                    it[Imports.createdAt].toDatetimeString(),
+                    it[Imports.updatedAt]?.toDatetimeString()
+                )
+            }
         }
     }
 
@@ -55,7 +72,16 @@ class ImportService(database: Database) {
         return dbQuery {
             Imports.selectAll()
                 .where { Imports.guid eq guid }
-                .map { ExposedImport(it[Imports.guid], it[Imports.file], it[Imports.type], it[Imports.createdAt].toDatetimeString(), it[Imports.updatedAt]?.toDatetimeString()) }
+                .map {
+                    ExposedImport(
+                        it[Imports.guid],
+                        it[Imports.originalFile],
+                        it[Imports.type],
+                        it[Imports.pdfFileOptimized],
+                        it[Imports.createdAt].toDatetimeString(),
+                        it[Imports.updatedAt]?.toDatetimeString()
+                    )
+                }
                 .singleOrNull()
         }
     }
@@ -72,9 +98,5 @@ class ImportService(database: Database) {
         dbQuery {
             Imports.deleteWhere { Imports.guid.eq(guid) }
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java.declaringClass.name)
     }
 }

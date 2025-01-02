@@ -346,9 +346,11 @@ components:
           type: integer
         guid:
           type: string
-        file:
+        originalFile:
           type: string
         type:
+          type: string
+        pdfFileOptimized:
           type: string
         createdAt:
           type: string
@@ -357,8 +359,9 @@ components:
       required:
         - id
         - guid
-        - file
+        - originalFile
         - type
+        - pdfFileOptimized
         - createdAt
 
   responses:

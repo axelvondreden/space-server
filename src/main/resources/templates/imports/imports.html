@@ -43,7 +43,12 @@
 
     const inputFile = document.getElementById("formFileMultiple");
     const uploadButton = document.getElementById("uploadButton");
+    const modalDiv = document.getElementById("uploadModal");
     const modal = new bootstrap.Modal("#uploadModal");
+
+    modalDiv.addEventListener("shown.bs.modal", () => {
+        inputFile.value = "";
+    });
 
     uploadButton.addEventListener("click", () => {
         for (const file of inputFile.files) {
