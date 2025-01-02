@@ -316,9 +316,9 @@ components:
           type: boolean
           description: Read-only property - Changes get ignored
         createdAt:
-          type: string
+          $ref: "#/components/schemas/LocalDateTime"
         updatedAt:
-          type: string
+          $ref: "#/components/schemas/LocalDateTime"
       required:
         - username
         - createdAt
@@ -331,9 +331,9 @@ components:
         guid:
           type: string
         createdAt:
-          type: string
+          $ref: "#/components/schemas/LocalDateTime"
         updatedAt:
-          type: string
+          $ref: "#/components/schemas/LocalDateTime"
       required:
         - id
         - guid
@@ -354,10 +354,12 @@ components:
           type: string
         text:
           type: string
+        date:
+          $ref: "#/components/schemas/LocalDate"
         createdAt:
-          type: string
+          $ref: "#/components/schemas/LocalDateTime"
         updatedAt:
-          type: string
+          $ref: "#/components/schemas/LocalDateTime"
       required:
         - id
         - guid
@@ -365,6 +367,16 @@ components:
         - type
         - pdfFileOptimized
         - createdAt
+
+    LocalDateTime:
+      type: array
+      items:
+        type: integer
+
+    LocalDate:
+      type: array
+      items:
+        type: integer
 
   responses:
     Unauthorized:
