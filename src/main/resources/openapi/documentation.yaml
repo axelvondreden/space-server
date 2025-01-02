@@ -352,6 +352,8 @@ components:
           type: string
         pdfFileOptimized:
           type: string
+        text:
+          type: string
         createdAt:
           type: string
         updatedAt:

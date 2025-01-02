@@ -25,7 +25,6 @@ fun Application.configureStartup(userService: UserService, fileManager: FileMana
         createFolder(dataPath, "docs", "pdf")
         createFolder(dataPath, "docs", "img")
         createFolder(dataPath, "docs", "thumb")
-        createFolder(dataPath, "docs", "import")
     }
 
     log.info("Startup checks completed!")

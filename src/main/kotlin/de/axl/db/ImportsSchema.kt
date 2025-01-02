@@ -15,6 +15,7 @@ data class ExposedImport(
     val originalFile: String,
     val type: ImportType,
     val pdfFileOptimized: String,
+    val text: String?,
     val createdAt: String,
     val updatedAt: String?
 )
@@ -31,6 +32,7 @@ class ImportService(database: Database) {
         val originalFile = varchar("originalFile", length = 200)
         val type = enumerationByName("type", 10, ImportType::class)
         val pdfFileOptimized = varchar("pdfFileOptimized", length = 200)
+        val text = text("text").nullable()
         val createdAt = long("createdAt")
         val updatedAt = long("updatedAt").nullable()
 
@@ -61,6 +63,7 @@ class ImportService(database: Database) {
                     it[Imports.originalFile],
                     it[Imports.type],
                     it[Imports.pdfFileOptimized],
+                    it[Imports.text],
                     it[Imports.createdAt].toDatetimeString(),
                     it[Imports.updatedAt]?.toDatetimeString()
                 )
@@ -78,6 +81,7 @@ class ImportService(database: Database) {
                         it[Imports.originalFile],
                         it[Imports.type],
                         it[Imports.pdfFileOptimized],
+                        it[Imports.text],
                         it[Imports.createdAt].toDatetimeString(),
                         it[Imports.updatedAt]?.toDatetimeString()
                     )

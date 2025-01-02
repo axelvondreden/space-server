@@ -37,6 +37,7 @@ dependencies {
     implementation(libs.thymeleaf.time)
     implementation(libs.pdfbox)
     implementation(libs.pdfbox.tools)
+    implementation("net.coobird:thumbnailator:0.4.20")
 }
 
 ktor {
