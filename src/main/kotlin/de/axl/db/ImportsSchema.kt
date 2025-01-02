@@ -56,6 +56,8 @@ class ImportService(database: Database) {
             it[originalFile] = import.originalFile
             it[type] = import.type
             it[pdfFileOptimized] = import.pdfFileOptimized
+            it[text] = import.text
+            it[date] = import.date
             it[createdAt] = LocalDateTime.now()
         }[Imports.guid]
     }

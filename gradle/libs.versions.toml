@@ -28,6 +28,7 @@ bcrypt = { module = "at.favre.lib:bcrypt", version = "0.10.2" }
 thymeleaf-time = { module = "org.thymeleaf.extras:thymeleaf-extras-java8time", version = "3.0.4.RELEASE" }
 pdfbox = { module = "org.apache.pdfbox:pdfbox", version = "3.0.3" }
 pdfbox-tools = { module = "org.apache.pdfbox:pdfbox-tools", version = "3.0.3" }
+thumbnailinator = { module = "net.coobird:thumbnailator", version = "0.4.20" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-version" }

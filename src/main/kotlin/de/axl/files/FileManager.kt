@@ -75,7 +75,7 @@ class FileManager(val dataPath: String, private val importService: ImportService
         logger.info("Creating searchable PDF")
         val dir = file.parentFile
         val name = file.name
-        runCommand(dir, "ocrmypdf --rotate-pages --deskew --clean --skip-text --language deu+eng $name $guid.pdf")
+        runCommand(dir, "ocrmypdf --rotate-pages --deskew --clean --skip-text --language deu $name $guid.pdf")
         return File(dir, "$guid.pdf")
     }
 
@@ -97,18 +97,6 @@ class FileManager(val dataPath: String, private val importService: ImportService
         Thumbnails.of(file).size(256, 256).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-256.png"))
         logger.info("Creating Thumbnail 512x512")
         Thumbnails.of(file).size(512, 512).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-512.png"))
-        logger.info("Creating Thumbnail 128W")
-        Thumbnails.of(file).width(128).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-128W.png"))
-        logger.info("Creating Thumbnail 256W")
-        Thumbnails.of(file).width(256).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-256W.png"))
-        logger.info("Creating Thumbnail 512W")
-        Thumbnails.of(file).width(512).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-512W.png"))
-        logger.info("Creating Thumbnail 128H")
-        Thumbnails.of(file).height(128).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-128H.png"))
-        logger.info("Creating Thumbnail 256H")
-        Thumbnails.of(file).height(256).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-256H.png"))
-        logger.info("Creating Thumbnail 512H")
-        Thumbnails.of(file).height(512).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-512H.png"))
     }
 
     private fun extractTextFromPdf(file: File): String {
@@ -123,17 +111,19 @@ class FileManager(val dataPath: String, private val importService: ImportService
         val lines = text.lines()
         val dates = mutableListOf<LocalDate>()
         lines.forEach { line ->
-            datePatterns.forEach { pattern ->
-                val match = pattern.find(line)
+            datePatterns.forEach { entry ->
+                val match = entry.key.find(line)
                 if (match != null) {
-                    val date = LocalDate.parse(match.value, java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                    val date = LocalDate.parse(match.value, java.time.format.DateTimeFormatter.ofPattern(entry.value))
                     logger.info("Found date: $date")
                     dates += date
                 }
             }
         }
         val datesSorted = dates.groupBy { it }.mapValues { it.value.size }
-        return datesSorted.maxByOrNull { it.value }?.key
+        val date = datesSorted.maxByOrNull { it.value }?.key
+        logger.info("Choosing date for document: $date")
+        return date
     }
 
     private fun getImage(guid: String, page: Int): File {
@@ -152,9 +142,9 @@ class FileManager(val dataPath: String, private val importService: ImportService
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java.declaringClass)
 
-        private val datePatterns = listOf(
-            Regex("(3[01]|[12][0-9]|0?[1-9])\\.(1[012]|0?[1-9])\\.(\\d{4})"),
-            Regex("(3[01]|[12][0-9]|0?[1-9])\\.(1[012]|0?[1-9])\\.(\\d{2})")
+        private val datePatterns = mapOf(
+            Regex("(3[01]|[12][0-9]|0?[1-9])\\.(1[012]|0?[1-9])\\.(\\d{4})") to "dd.MM.yyyy",
+            Regex("(3[01]|[12][0-9]|0?[1-9])\\.(1[012]|0?[1-9])\\.(\\d{2})") to "dd.MM.yy",
         )
     }
 }
