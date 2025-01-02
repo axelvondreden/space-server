@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.lang.ProcessBuilder.Redirect
 import java.nio.file.Files
+import java.time.LocalDate
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.io.path.Path
@@ -54,13 +55,15 @@ class FileManager(val dataPath: String, private val importService: ImportService
 
         val text = extractTextFromPdf(ocrPdf)
 
+        val date = findDateFromText(text)
+
         createImagesFromPdf(ocrPdf)
 
         val page1Img = getImage(guid, 1)
         createThumbnails(page1Img)
 
         logger.info("Creating import for $guid")
-        importService.create(ExposedImport(guid, originalFilename, ImportType.PDF, ocrPdf.name, text))
+        importService.create(ExposedImport(guid, originalFilename, ImportType.PDF, ocrPdf.name, text = text, date = date))
         logger.info("PDF import created")
     }
 
@@ -80,7 +83,7 @@ class FileManager(val dataPath: String, private val importService: ImportService
         val document = Loader.loadPDF(file);
         val pdfRenderer = PDFRenderer(document);
         for (i in 0 until document.numberOfPages) {
-            logger.info("Creating image from pdf page ${i + 1}")
+            logger.info("Creating image from PDF page ${i + 1}")
             var img = pdfRenderer.renderImageWithDPI(i, 300F, ImageType.RGB);
             ImageIOUtil.writeImage(img, "${dataPath}/docs/img/${file.nameWithoutExtension}-${(i + 1).toString().padStart(4, '0')}.png", 300);
         }
@@ -109,10 +112,28 @@ class FileManager(val dataPath: String, private val importService: ImportService
     }
 
     private fun extractTextFromPdf(file: File): String {
-        logger.info("Extracting text from pdf")
+        logger.info("Extracting text from PDF")
         val document = Loader.loadPDF(file);
         val text = PDFTextStripper().getText(document)
         return text.lines().filter { it.isNotBlank() }.joinToString("\n")
+    }
+
+    private fun findDateFromText(text: String): LocalDate? {
+        logger.info("Searching for date in PDF")
+        val lines = text.lines()
+        val dates = mutableListOf<LocalDate>()
+        lines.forEach { line ->
+            datePatterns.forEach { pattern ->
+                val match = pattern.find(line)
+                if (match != null) {
+                    val date = LocalDate.parse(match.value, java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                    logger.info("Found date: $date")
+                    dates += date
+                }
+            }
+        }
+        val datesSorted = dates.groupBy { it }.mapValues { it.value.size }
+        return datesSorted.maxByOrNull { it.value }?.key
     }
 
     private fun getImage(guid: String, page: Int): File {
@@ -130,5 +151,10 @@ class FileManager(val dataPath: String, private val importService: ImportService
 
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java.declaringClass)
+
+        private val datePatterns = listOf(
+            Regex("(3[01]|[12][0-9]|0?[1-9])\\.(1[012]|0?[1-9])\\.(\\d{4})"),
+            Regex("(3[01]|[12][0-9]|0?[1-9])\\.(1[012]|0?[1-9])\\.(\\d{2})")
+        )
     }
 }
