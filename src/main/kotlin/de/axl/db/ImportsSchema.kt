@@ -1,12 +1,15 @@
 package de.axl.db
 
 import de.axl.dbQuery
-import de.axl.now
-import de.axl.toDatetimeString
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.javatime.date
+import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
 
 @Serializable
@@ -15,9 +18,10 @@ data class ExposedImport(
     val originalFile: String,
     val type: ImportType,
     val pdfFileOptimized: String,
-    val text: String?,
-    val createdAt: String,
-    val updatedAt: String?
+    val text: String? = null,
+    @Contextual val date: LocalDate? = null,
+    @Contextual val createdAt: LocalDateTime = LocalDateTime.now(),
+    @Contextual val updatedAt: LocalDateTime? = null
 )
 
 enum class ImportType(val type: String) {
@@ -33,8 +37,9 @@ class ImportService(database: Database) {
         val type = enumerationByName("type", 10, ImportType::class)
         val pdfFileOptimized = varchar("pdfFileOptimized", length = 200)
         val text = text("text").nullable()
-        val createdAt = long("createdAt")
-        val updatedAt = long("updatedAt").nullable()
+        val date = date("date").nullable()
+        val createdAt = datetime("createdAt")
+        val updatedAt = datetime("updatedAt").nullable()
 
         override val primaryKey = PrimaryKey(id)
     }
@@ -51,7 +56,7 @@ class ImportService(database: Database) {
             it[originalFile] = import.originalFile
             it[type] = import.type
             it[pdfFileOptimized] = import.pdfFileOptimized
-            it[createdAt] = now()
+            it[createdAt] = LocalDateTime.now()
         }[Imports.guid]
     }
 
@@ -64,8 +69,9 @@ class ImportService(database: Database) {
                     it[Imports.type],
                     it[Imports.pdfFileOptimized],
                     it[Imports.text],
-                    it[Imports.createdAt].toDatetimeString(),
-                    it[Imports.updatedAt]?.toDatetimeString()
+                    it[Imports.date],
+                    it[Imports.createdAt],
+                    it[Imports.updatedAt]
                 )
             }
         }
@@ -82,8 +88,9 @@ class ImportService(database: Database) {
                         it[Imports.type],
                         it[Imports.pdfFileOptimized],
                         it[Imports.text],
-                        it[Imports.createdAt].toDatetimeString(),
-                        it[Imports.updatedAt]?.toDatetimeString()
+                        it[Imports.date],
+                        it[Imports.createdAt],
+                        it[Imports.updatedAt]
                     )
                 }
                 .singleOrNull()
@@ -93,7 +100,8 @@ class ImportService(database: Database) {
     suspend fun update(import: ExposedImport) {
         dbQuery {
             Imports.update({ Imports.guid eq import.guid }) {
-                it[updatedAt] = now()
+                it[date] = import.date
+                it[updatedAt] = LocalDateTime.now()
             }
         }
     }

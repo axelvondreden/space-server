@@ -60,7 +60,7 @@ class FileManager(val dataPath: String, private val importService: ImportService
         createThumbnails(page1Img)
 
         logger.info("Creating import for $guid")
-        importService.create(ExposedImport(guid, originalFilename, ImportType.PDF, ocrPdf.name, text, "", null))
+        importService.create(ExposedImport(guid, originalFilename, ImportType.PDF, ocrPdf.name, text))
         logger.info("PDF import created")
     }
 

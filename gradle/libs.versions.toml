@@ -18,8 +18,10 @@ ktor-server-call-logging = { module = "io.ktor:ktor-server-call-logging-jvm", ve
 ktor-server-swagger = { module = "io.ktor:ktor-server-swagger-jvm", version.ref = "ktor-version" }
 ktor-serialization-jackson = { module = "io.ktor:ktor-serialization-jackson-jvm", version.ref = "ktor-version" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json-jvm", version.ref = "ktor-version" }
+jackson-time = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version = "2.18.2" }
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed-version" }
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed-version" }
+exposed-time = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed-version" }
 h2 = { module = "com.h2database:h2", version.ref = "h2-version" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback-version" }
 bcrypt = { module = "at.favre.lib:bcrypt", version = "0.10.2" }

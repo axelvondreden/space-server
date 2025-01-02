@@ -2,20 +2,21 @@ package de.axl.db
 
 import at.favre.lib.crypto.bcrypt.BCrypt
 import de.axl.dbQuery
-import de.axl.now
-import de.axl.toDatetimeString
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.LocalDateTime
 
 @Serializable
 data class ExposedUser(
     val username: String,
     val name: String?,
     val admin: Boolean = false,
-    val createdAt: String,
-    val updatedAt: String?
+    @Contextual val createdAt: LocalDateTime = LocalDateTime.now(),
+    @Contextual val updatedAt: LocalDateTime? = null
 )
 
 class UserService(database: Database, private val adminUsername: String) {
@@ -24,8 +25,8 @@ class UserService(database: Database, private val adminUsername: String) {
         val username = varchar("username", length = 50).uniqueIndex()
         val name = varchar("name", length = 50).nullable()
         val password = varchar("password", length = 256)
-        val createdAt = long("createdAt")
-        val updatedAt = long("updatedAt").nullable()
+        val createdAt = datetime("createdAt")
+        val updatedAt = datetime("updatedAt").nullable()
 
         override val primaryKey = PrimaryKey(id)
     }
@@ -41,7 +42,7 @@ class UserService(database: Database, private val adminUsername: String) {
             it[username] = user.username
             it[name] = user.name
             it[password] = BCrypt.withDefaults().hashToString(12, passwordPlain.toCharArray())
-            it[createdAt] = now()
+            it[createdAt] = LocalDateTime.now()
         }[Users.id]
     }
 
@@ -50,7 +51,7 @@ class UserService(database: Database, private val adminUsername: String) {
         dbQuery {
             Users.update({ Users.username eq user.username }) {
                 it[password] = BCrypt.withDefaults().hashToString(12, newPasswordPlain.toCharArray())
-                it[updatedAt] = now()
+                it[updatedAt] = LocalDateTime.now()
             }
         }
         return true
@@ -58,7 +59,7 @@ class UserService(database: Database, private val adminUsername: String) {
 
     suspend fun findAll(): List<ExposedUser> {
         return dbQuery {
-            Users.selectAll().map { ExposedUser(it[Users.username], it[Users.name], it[Users.username] == adminUsername, it[Users.createdAt].toDatetimeString(), it[Users.updatedAt]?.toDatetimeString()) }
+            Users.selectAll().map { ExposedUser(it[Users.username], it[Users.name], it[Users.username] == adminUsername, it[Users.createdAt], it[Users.updatedAt]) }
         }
     }
 
@@ -66,7 +67,7 @@ class UserService(database: Database, private val adminUsername: String) {
         return dbQuery {
             Users.selectAll()
                 .where { Users.username eq username }
-                .map { ExposedUser(it[Users.username], it[Users.name], it[Users.username] == adminUsername, it[Users.createdAt].toDatetimeString(), it[Users.updatedAt]?.toDatetimeString()) }
+                .map { ExposedUser(it[Users.username], it[Users.name], it[Users.username] == adminUsername, it[Users.createdAt], it[Users.updatedAt]) }
                 .singleOrNull()
         }
     }
@@ -83,7 +84,7 @@ class UserService(database: Database, private val adminUsername: String) {
         dbQuery {
             Users.update({ Users.username eq user.username }) {
                 it[name] = user.name
-                it[updatedAt] = now()
+                it[updatedAt] = LocalDateTime.now()
             }
         }
     }

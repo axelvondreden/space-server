@@ -1,6 +1,7 @@
 package de.axl
 
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import de.axl.db.DocumentService
 import de.axl.db.ImportService
 import de.axl.db.UserService
@@ -31,6 +32,7 @@ fun Application.module() {
     install(ContentNegotiation) {
         jackson {
             enable(SerializationFeature.INDENT_OUTPUT)
+            registerModule(JavaTimeModule())
         }
     }
     install(CallLogging) {
