@@ -27,6 +27,7 @@ dependencies {
     implementation(libs.ktor.server.thymeleaf)
     implementation(libs.ktor.server.call.logging)
     implementation(libs.ktor.server.swagger)
+    implementation(libs.ktor.server.statuspages)
     implementation(libs.ktor.serialization.jackson)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.jackson.time)

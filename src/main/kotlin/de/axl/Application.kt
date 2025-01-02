@@ -9,10 +9,13 @@ import de.axl.files.FileManager
 import de.axl.startup.configureStartup
 import de.axl.web.configureRouting
 import de.axl.web.configureSecurity
+import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.thymeleaf.*
 import org.jetbrains.exposed.sql.Database
@@ -29,6 +32,11 @@ fun main(args: Array<String>) {
 
 fun Application.module() {
     install(IgnoreTrailingSlash)
+    install(StatusPages) {
+        status(HttpStatusCode.NotFound) { call, status ->
+            call.respondText(text = "404: Page Not Found", status = status)
+        }
+    }
     install(ContentNegotiation) {
         jackson {
             enable(SerializationFeature.INDENT_OUTPUT)
