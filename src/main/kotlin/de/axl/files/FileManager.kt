@@ -4,6 +4,7 @@ import de.axl.db.ExposedImport
 import de.axl.db.ImportService
 import de.axl.db.ImportType
 import de.axl.db.OCRLanguage
+import kotlinx.coroutines.flow.MutableSharedFlow
 import net.coobird.thumbnailator.Thumbnails
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.rendering.ImageType
@@ -20,8 +21,11 @@ import java.util.concurrent.TimeUnit
 import kotlin.io.path.Path
 import kotlin.io.path.exists
 import kotlin.io.path.pathString
+import kotlin.math.roundToInt
 
 class FileManager(val dataPath: String, private val importService: ImportService) {
+
+    private var importing = false
 
     fun createFolder(base: String, vararg path: String) {
         val p = Path(base, *path)
@@ -31,41 +35,56 @@ class FileManager(val dataPath: String, private val importService: ImportService
         }
     }
 
-    suspend fun handleUpload(filename: String) {
-        logger.info("Handling uploaded file $filename")
-        val file = File("$dataPath/upload", filename)
-        if (file.exists()) {
-            val guid = UUID.randomUUID().toString()
-            when (file.extension) {
-                "pdf" -> handlePdfUpload(file, guid)
-                "png", "jpg", "jpeg" -> handleImgUpload(file, guid)
-                else -> logger.error("File $filename has unsupported filetype ${file.extension}")
+    suspend fun handleUploads(importFlow: MutableSharedFlow<String>) {
+        if (importing) return
+        importing = true
+        val files = File("$dataPath/upload").listFiles()
+        logger.info("Found ${files?.size ?: 0} new files")
+        files.forEachIndexed { index, file ->
+            if (file.exists()) {
+                val percent = (index.toFloat() / files.size.toFloat() * 100).roundToInt()
+                importFlow.emit("$percent % Importing ${file.name}")
+                val guid = UUID.randomUUID().toString()
+                when (file.extension) {
+                    "pdf" -> handlePdfUpload(file, guid, importFlow, percent)
+                    "png", "jpg", "jpeg" -> handleImgUpload(file, guid)
+                    else -> logger.error("File ${file.name} has unsupported filetype ${file.extension}")
+                }
+            } else {
+                logger.error("File ${file.name} does not exist")
             }
-        } else {
-            logger.error("File $filename does not exist")
         }
+        importFlow.emit("100 % Importing complete")
+        importing = false
     }
 
-    private suspend fun handlePdfUpload(file: File, guid: String) {
+    private suspend fun handlePdfUpload(file: File, guid: String, importFlow: MutableSharedFlow<String>, percent: Int) {
         logger.info("Detected PDF")
         val originalFilename = "$guid-original.${file.extension}"
         logger.info("Moving file to $originalFilename")
+        importFlow.emit("$percent % Moving file to $originalFilename")
         val newPath = Files.move(file.toPath(), Path("$dataPath/docs/pdf", originalFilename))
 
+        importFlow.emit("$percent % Running OCR on PDF")
         val ocrPdf = createSearchablePdf(newPath.toFile(), guid)
 
+        importFlow.emit("$percent % Extracting text from PDF")
         val text = extractTextFromPdf(ocrPdf)
 
+        importFlow.emit("$percent % Searching for dates in PDF")
         val date = findDateFromText(text)
 
+        importFlow.emit("$percent % Creating images from PDF")
         createImagesFromPdf(ocrPdf)
 
+        importFlow.emit("$percent % Creating thumbnails")
         val page1Img = getImage(guid, 1)
         createThumbnails(page1Img)
 
         logger.info("Creating import for $guid")
         importService.create(ExposedImport(guid, originalFilename, ImportType.PDF, ocrPdf.name, ocrLanguage = OCRLanguage.DEU, text = text, date = date))
         logger.info("PDF import created")
+        importFlow.emit("$percent % PDF import created")
     }
 
     private suspend fun handleImgUpload(file: File, guid: String) {

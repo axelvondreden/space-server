@@ -11,11 +11,19 @@ import io.ktor.server.routing.*
 import io.ktor.server.sse.*
 import io.ktor.sse.*
 import io.ktor.utils.io.*
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.launch
 import kotlinx.io.readByteArray
 import java.io.File
+import java.util.concurrent.atomic.AtomicReference
 
-fun Route.importsRoute(importService: ImportService, fileManager: FileManager, importFlow: Flow<String>) {
+fun Route.importsRoute(importService: ImportService, fileManager: FileManager, importFlow: MutableSharedFlow<String>) {
+
+    val handleUploadsJob = AtomicReference<Job?>(null)
+
     post("/upload") {
         var fileName = ""
         val multipartData = call.receiveMultipart(formFieldLimit = 200 * 1024 * 1024)
@@ -32,7 +40,16 @@ fun Route.importsRoute(importService: ImportService, fileManager: FileManager, i
 
         if (fileName.isNotBlank()) {
             call.respondText("File $fileName was uploaded!")
-            //fileManager.handleUpload(fileName)
+            // Cancel if a scheduled job exists and schedule a new one
+            handleUploadsJob.getAndSet(
+                GlobalScope.launch {
+                    (10 downTo 1).forEach {
+                        importFlow.emit("Starting import in $it second(s)")
+                        delay(1_000)
+                    }
+                    fileManager.handleUploads(importFlow)
+                }
+            )?.cancel() // Cancel previous unfinished job
         } else {
             call.respond(HttpStatusCode.BadRequest, "No file found in request")
         }
