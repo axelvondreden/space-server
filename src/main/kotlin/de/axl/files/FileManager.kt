@@ -3,6 +3,7 @@ package de.axl.files
 import de.axl.db.ExposedImport
 import de.axl.db.ImportService
 import de.axl.db.ImportType
+import de.axl.db.OCRLanguage
 import net.coobird.thumbnailator.Thumbnails
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.rendering.ImageType
@@ -63,7 +64,7 @@ class FileManager(val dataPath: String, private val importService: ImportService
         createThumbnails(page1Img)
 
         logger.info("Creating import for $guid")
-        importService.create(ExposedImport(guid, originalFilename, ImportType.PDF, ocrPdf.name, text = text, date = date))
+        importService.create(ExposedImport(guid, originalFilename, ImportType.PDF, ocrPdf.name, ocrLanguage = OCRLanguage.DEU, text = text, date = date))
         logger.info("PDF import created")
     }
 

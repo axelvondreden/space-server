@@ -18,6 +18,7 @@ data class ExposedImport(
     val originalFile: String,
     val type: ImportType,
     val pdfFileOptimized: String,
+    val ocrLanguage: OCRLanguage = OCRLanguage.DEU,
     val text: String? = null,
     @Contextual val date: LocalDate? = null,
     @Contextual val createdAt: LocalDateTime = LocalDateTime.now(),
@@ -29,6 +30,11 @@ enum class ImportType(val type: String) {
     IMG("img")
 }
 
+enum class OCRLanguage(val lang: String) {
+    DEU("deu"),
+    ENG("eng")
+}
+
 class ImportService(database: Database) {
     object Imports : Table() {
         val id = integer("id").autoIncrement()
@@ -36,6 +42,7 @@ class ImportService(database: Database) {
         val originalFile = varchar("originalFile", length = 200)
         val type = enumerationByName("type", 10, ImportType::class)
         val pdfFileOptimized = varchar("pdfFileOptimized", length = 200)
+        val ocrLanguage = enumerationByName("ocrLanguage", 10, OCRLanguage::class).default(OCRLanguage.DEU)
         val text = text("text").nullable()
         val date = date("date").nullable()
         val createdAt = datetime("createdAt")
@@ -56,6 +63,7 @@ class ImportService(database: Database) {
             it[originalFile] = import.originalFile
             it[type] = import.type
             it[pdfFileOptimized] = import.pdfFileOptimized
+            it[ocrLanguage] = import.ocrLanguage
             it[text] = import.text
             it[date] = import.date
             it[createdAt] = LocalDateTime.now()
@@ -70,6 +78,7 @@ class ImportService(database: Database) {
                     it[Imports.originalFile],
                     it[Imports.type],
                     it[Imports.pdfFileOptimized],
+                    it[Imports.ocrLanguage],
                     it[Imports.text],
                     it[Imports.date],
                     it[Imports.createdAt],
@@ -89,6 +98,7 @@ class ImportService(database: Database) {
                         it[Imports.originalFile],
                         it[Imports.type],
                         it[Imports.pdfFileOptimized],
+                        it[Imports.ocrLanguage],
                         it[Imports.text],
                         it[Imports.date],
                         it[Imports.createdAt],
