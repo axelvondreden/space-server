@@ -45,7 +45,7 @@ fun Route.importsRoute(importService: ImportService, fileManager: FileManager, i
             // Cancel if a scheduled job exists and schedule a new one
             handleUploadsJob.getAndSet(
                 GlobalScope.launch {
-                    (10 downTo 1).forEach {
+                    (5 downTo 1).forEach {
                         importFlow.emit(ImportStateEvent(importing = false, message = "Starting import in $it second(s)"))
                         delay(1_000)
                     }
