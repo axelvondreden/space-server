@@ -39,10 +39,13 @@
     </div>
 </main>
 <footer class="footer mt-auto py-2 bg-body-tertiary">
-    <div class="container-fluid" style="font-size: 1.2rem;">
-        <i class="bi bi-pause-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Not Importing"></i>
-        <i class="bi bi-play-circle d-none" data-bs-toggle="tooltip" data-bs-placement="top" title="Importing"></i>
+    <div class="container-fluid" style="font-size: 1.1rem;">
+        <i id="statusIconPause" class="bi bi-pause-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Paused"></i>
+        <i id="statusIconPlay" class="bi bi-play-circle d-none" data-bs-toggle="tooltip" data-bs-placement="top" title="Importing"></i>
         <span class="text-body-secondary">|</span>
+        <i id="statusIconFile" class="bi bi-file-earmark-text d-none" data-bs-toggle="tooltip" data-bs-placement="top" title="Files"></i>
+        <span id="statusFilecount" class="text-body-secondary"></span>
+        <span id="statusFilecountSpacer" class="text-body-secondary d-none">|</span>
         <span id="statusProgress" class="text-body-secondary"></span>
         <span id="statusProgressSpacer" class="text-body-secondary d-none">|</span>
         <span id="statusGuid" class="text-body-secondary"></span>
@@ -59,11 +62,19 @@
     const modalDiv = document.getElementById("uploadModal");
     const fileList = document.getElementById("fileList");
     const modal = new bootstrap.Modal("#uploadModal");
+
+    const statusFilecount = document.getElementById("statusFilecount");
     const statusProgress = document.getElementById("statusProgress");
     const statusGuid = document.getElementById("statusGuid");
     const statusMessage = document.getElementById("statusMessage");
-    const statusGuidSpacer = document.getElementById("statusGuidSpacer");
+
+    const statusFilecountSpacer = document.getElementById("statusFilecountSpacer");
     const statusProgressSpacer = document.getElementById("statusProgressSpacer");
+    const statusGuidSpacer = document.getElementById("statusGuidSpacer");
+
+    const statusIconPause = document.getElementById("statusIconPause");
+    const statusIconPlay = document.getElementById("statusIconPlay");
+    const statusIconFile = document.getElementById("statusIconFile");
 
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
     const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
@@ -74,18 +85,22 @@
     ws.onmessage = (event) => {
         const state = JSON.parse(event.data);
         if (state.importing) {
-            document.querySelector(".bi-pause-circle").classList.add("d-none");
-            document.querySelector(".bi-play-circle").classList.remove("d-none");
+            statusIconPause.classList.add("d-none");
+            statusIconPlay.classList.remove("d-none");
         } else {
-            document.querySelector(".bi-pause-circle").classList.remove("d-none");
-            document.querySelector(".bi-play-circle").classList.add("d-none");
+            statusIconPause.classList.remove("d-none");
+            statusIconPlay.classList.add("d-none");
         }
-        if (state.message) {
-            statusMessage.innerHTML = state.message;
+        if (state.currentFile != null && state.fileCount != null) {
+            statusIconFile.classList.remove("d-none");
+            statusFilecount.innerHTML = state.currentFile + " / " + state.fileCount;
+            statusFilecountSpacer.classList.remove("d-none");
         } else {
-            statusMessage.innerHTML = "";
+            statusIconFile.classList.add("d-none");
+            statusFilecount.innerHTML = "";
+            statusFilecountSpacer.classList.add("d-none");
         }
-        if (state.progress) {
+        if (state.progress != null) {
             statusProgress.innerHTML = state.progress + "%";
             statusProgressSpacer.classList.remove("d-none");
         } else {
@@ -98,6 +113,11 @@
         } else {
             statusGuid.innerHTML = "";
             statusGuidSpacer.classList.add("d-none");
+        }
+        if (state.message) {
+            statusMessage.innerHTML = state.message;
+        } else {
+            statusMessage.innerHTML = "";
         }
     };
 

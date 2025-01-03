@@ -44,7 +44,14 @@ class FileManager(val dataPath: String, private val importService: ImportService
             if (file.exists()) {
                 val guid = UUID.randomUUID().toString()
                 val percent = index.toDouble() / files.size.toDouble()
-                val state = ImportStateEvent(importing = true, guid = guid, progress = percent, message = "Importing ${file.name}")
+                val state = ImportStateEvent(
+                    importing = true,
+                    currentFile = index + 1,
+                    fileCount = files.size,
+                    guid = guid,
+                    progress = percent,
+                    message = "Importing ${file.name}"
+                )
                 importFlow.emit(state)
                 when (file.extension) {
                     "pdf" -> handlePdfUpload(file, guid, importFlow, state, 1.0 / files.size)
