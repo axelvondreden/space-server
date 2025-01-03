@@ -8,11 +8,14 @@ import io.ktor.http.content.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.sse.*
+import io.ktor.sse.*
 import io.ktor.utils.io.*
+import kotlinx.coroutines.flow.Flow
 import kotlinx.io.readByteArray
 import java.io.File
 
-fun Route.importsRoute(importService: ImportService, fileManager: FileManager) {
+fun Route.importsRoute(importService: ImportService, fileManager: FileManager, importFlow: Flow<String>) {
     post("/upload") {
         var fileName = ""
         val multipartData = call.receiveMultipart()
@@ -77,6 +80,13 @@ fun Route.importsRoute(importService: ImportService, fileManager: FileManager) {
             } else {
                 importService.delete(guid)
                 call.respond(HttpStatusCode.OK)
+            }
+        }
+
+        sse("/events") {
+            call.response.cacheControl(CacheControl.NoCache(null))
+            importFlow.collect { event ->
+                send(ServerSentEvent(event))
             }
         }
     }
