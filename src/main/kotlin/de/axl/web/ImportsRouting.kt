@@ -18,7 +18,7 @@ import java.io.File
 fun Route.importsRoute(importService: ImportService, fileManager: FileManager, importFlow: Flow<String>) {
     post("/upload") {
         var fileName = ""
-        val multipartData = call.receiveMultipart()
+        val multipartData = call.receiveMultipart(formFieldLimit = 200 * 1024 * 1024)
         var part = multipartData.readPart()
         while (part != null) {
             if (part is PartData.FileItem) {
@@ -32,7 +32,7 @@ fun Route.importsRoute(importService: ImportService, fileManager: FileManager, i
 
         if (fileName.isNotBlank()) {
             call.respondText("File $fileName was uploaded!")
-            fileManager.handleUpload(fileName)
+            //fileManager.handleUpload(fileName)
         } else {
             call.respond(HttpStatusCode.BadRequest, "No file found in request")
         }

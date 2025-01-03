@@ -17,7 +17,7 @@
     </div>
     <!-- Upload Modal -->
     <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h1 class="modal-title fs-5" id="uploadModalLabel">Upload Files</h1>
@@ -28,6 +28,7 @@
                         <label for="formFileMultiple" class="form-label">Select files to upload</label>
                         <input class="form-control form-control-lg" type="file" id="formFileMultiple" multiple accept="image/png, image/jpeg, application/pdf"/>
                     </form>
+                    <ul class="list-group list-group-flush" id="fileList"></ul>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -47,6 +48,7 @@
     const inputFile = document.getElementById("formFileMultiple");
     const uploadButton = document.getElementById("uploadButton");
     const modalDiv = document.getElementById("uploadModal");
+    const fileList = document.getElementById("fileList");
     const modal = new bootstrap.Modal("#uploadModal");
     const importStatus = document.getElementById("importStatus");
 
@@ -60,14 +62,30 @@
         inputFile.value = "";
     });
 
-    uploadButton.addEventListener("click", () => {
+    inputFile.addEventListener("change", () => {
+        fileList.innerHTML = "";
+        for (const file of inputFile.files) {
+            const li = document.createElement("li");
+            li.innerHTML = file.name;
+            li.id = file.name;
+            li.classList.add("list-group-item");
+            fileList.appendChild(li);
+        }
+    });
+
+    uploadButton.addEventListener("click", async () => {
         for (const file of inputFile.files) {
             const formData = new FormData();
             formData.append("file", file);
-            fetch("/api/v1/upload", {
+            await fetch("/api/v1/upload", {
                 method: "post",
                 body: formData,
-            }).catch((error) => alert("Something went wrong. " + error));
+            }).then(result => {
+                if (result.ok) {
+                    const li = document.getElementById(file.name);
+                    li.classList.add("list-group-item-success");
+                }
+            }).catch((error) => console.log("Something went wrong. " + error));
         }
         modal.hide();
     });
