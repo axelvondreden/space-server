@@ -107,7 +107,8 @@
             statusProgressSpacer.classList.add("d-none");
         }
         if (state.guid) {
-            statusGuid.innerHTML = state.guid.substring(0, 4) + "..." + state.guid.substring(state.guid.length - 4);
+            const hashIcon = "<i class='bi bi-hash'></i>";
+            statusGuid.innerHTML = hashIcon + state.guid.substring(0, 4) + "..." + state.guid.substring(state.guid.length - 4);
             statusGuid.setAttribute("data-bs-original-title", state.guid);
             statusGuidSpacer.classList.remove("d-none");
         } else {
