@@ -80,14 +80,14 @@ class FileManager(val dataPath: String, private val importService: ImportService
     }
 
     private fun createImagesFromPdf(file: File) {
-        val document = Loader.loadPDF(file);
-        val pdfRenderer = PDFRenderer(document);
+        val document = Loader.loadPDF(file)
+        val pdfRenderer = PDFRenderer(document)
         for (i in 0 until document.numberOfPages) {
             logger.info("Creating image from PDF page ${i + 1}")
-            var img = pdfRenderer.renderImageWithDPI(i, 300F, ImageType.RGB);
-            ImageIOUtil.writeImage(img, "${dataPath}/docs/img/${file.nameWithoutExtension}-${(i + 1).toString().padStart(4, '0')}.png", 300);
+            var img = pdfRenderer.renderImageWithDPI(i, 300F, ImageType.RGB)
+            ImageIOUtil.writeImage(img, "${dataPath}/docs/img/${file.nameWithoutExtension}-${(i + 1).toString().padStart(4, '0')}.png", 300)
         }
-        document.close();
+        document.close()
     }
 
     private fun createThumbnails(file: File) {
@@ -101,7 +101,7 @@ class FileManager(val dataPath: String, private val importService: ImportService
 
     private fun extractTextFromPdf(file: File): String {
         logger.info("Extracting text from PDF")
-        val document = Loader.loadPDF(file);
+        val document = Loader.loadPDF(file)
         val text = PDFTextStripper().getText(document)
         return text.lines().filter { it.isNotBlank() }.joinToString("\n")
     }
