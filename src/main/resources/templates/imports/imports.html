@@ -39,8 +39,8 @@
     </div>
 </main>
 <footer class="footer mt-auto py-3 bg-body-tertiary">
-    <div class="container-fluid">
-        <span class="text-body-secondary">Import-Status:</span>
+    <div class="container-fluid" style="font-size: 1.3rem;">
+        <i class="bi bi-pause-circle"></i>
         <span id="importStatus" class="text-body-secondary"></span>
     </div>
 </footer>
@@ -59,7 +59,8 @@
     const ws = new WebSocket("ws://" + host + "/api/v1/imports/events");
 
     ws.onmessage = (event) => {
-        importStatus.innerHTML = event.data;
+        const state = JSON.parse(event.data);
+        importStatus.innerHTML = state.message;
     };
 
     modalDiv.addEventListener("shown.bs.modal", () => {

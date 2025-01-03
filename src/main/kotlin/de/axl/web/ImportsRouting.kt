@@ -1,8 +1,10 @@
 package de.axl.web
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import de.axl.db.ExposedImport
 import de.axl.db.ImportService
 import de.axl.files.FileManager
+import de.axl.web.events.ImportStateEvent
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.request.*
@@ -20,7 +22,7 @@ import kotlinx.io.readByteArray
 import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 
-fun Route.importsRoute(importService: ImportService, fileManager: FileManager, importFlow: MutableSharedFlow<String>) {
+fun Route.importsRoute(importService: ImportService, fileManager: FileManager, importFlow: MutableSharedFlow<ImportStateEvent>) {
 
     val handleUploadsJob = AtomicReference<Job?>(null)
 
@@ -44,7 +46,7 @@ fun Route.importsRoute(importService: ImportService, fileManager: FileManager, i
             handleUploadsJob.getAndSet(
                 GlobalScope.launch {
                     (10 downTo 1).forEach {
-                        importFlow.emit("Starting import in $it second(s)")
+                        importFlow.emit(ImportStateEvent(importing = false, message = "Starting import in $it second(s)"))
                         delay(1_000)
                     }
                     fileManager.handleUploads(importFlow)
@@ -101,9 +103,8 @@ fun Route.importsRoute(importService: ImportService, fileManager: FileManager, i
         }
 
         webSocket("/events") {
-            send("Connected to server")
             importFlow.collect { event ->
-                this@webSocket.send(event)
+                send(jacksonObjectMapper().writeValueAsString(event))
             }
         }
     }

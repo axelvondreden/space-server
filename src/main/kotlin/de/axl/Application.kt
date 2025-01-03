@@ -54,7 +54,9 @@ fun Application.module() {
             characterEncoding = "utf-8"
         })
     }
-    install(WebSockets)
+    install(WebSockets) {
+        contentConverter = JacksonWebsocketContentConverter()
+    }
 
     val properties = Properties()
     javaClass.getResourceAsStream("/de/axl/version.properties").use { stream ->

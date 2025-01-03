@@ -4,6 +4,7 @@ import de.axl.db.ExposedImport
 import de.axl.db.ImportService
 import de.axl.db.ImportType
 import de.axl.db.OCRLanguage
+import de.axl.web.events.ImportStateEvent
 import kotlinx.coroutines.flow.MutableSharedFlow
 import net.coobird.thumbnailator.Thumbnails
 import org.apache.pdfbox.Loader
@@ -21,7 +22,6 @@ import java.util.concurrent.TimeUnit
 import kotlin.io.path.Path
 import kotlin.io.path.exists
 import kotlin.io.path.pathString
-import kotlin.math.roundToInt
 
 class FileManager(val dataPath: String, private val importService: ImportService) {
 
@@ -35,18 +35,19 @@ class FileManager(val dataPath: String, private val importService: ImportService
         }
     }
 
-    suspend fun handleUploads(importFlow: MutableSharedFlow<String>) {
+    suspend fun handleUploads(importFlow: MutableSharedFlow<ImportStateEvent>) {
         if (importing) return
         importing = true
         val files = File("$dataPath/upload").listFiles()
         logger.info("Found ${files?.size ?: 0} new files")
         files.forEachIndexed { index, file ->
             if (file.exists()) {
-                val percent = (index.toFloat() / files.size.toFloat() * 100).roundToInt()
-                importFlow.emit("$percent % Importing ${file.name}")
                 val guid = UUID.randomUUID().toString()
+                val percent = index.toDouble() / files.size.toDouble()
+                val state = ImportStateEvent(importing = true, guid = guid, progress = percent, message = "Importing ${file.name}")
+                importFlow.emit(state)
                 when (file.extension) {
-                    "pdf" -> handlePdfUpload(file, guid, importFlow, percent)
+                    "pdf" -> handlePdfUpload(file, guid, importFlow, state, 1.0 / files.size)
                     "png", "jpg", "jpeg" -> handleImgUpload(file, guid)
                     else -> logger.error("File ${file.name} has unsupported filetype ${file.extension}")
                 }
@@ -54,37 +55,37 @@ class FileManager(val dataPath: String, private val importService: ImportService
                 logger.error("File ${file.name} does not exist")
             }
         }
-        importFlow.emit("100 % Importing complete")
+        importFlow.emit(ImportStateEvent(importing = false, message = "Finished importing files"))
         importing = false
     }
 
-    private suspend fun handlePdfUpload(file: File, guid: String, importFlow: MutableSharedFlow<String>, percent: Int) {
+    private suspend fun handlePdfUpload(file: File, guid: String, importFlow: MutableSharedFlow<ImportStateEvent>, state: ImportStateEvent, fullStep: Double) {
         logger.info("Detected PDF")
         val originalFilename = "$guid-original.${file.extension}"
         logger.info("Moving file to $originalFilename")
-        importFlow.emit("$percent % Moving file to $originalFilename")
+        importFlow.emit(state.copy(message = "Moving file to $originalFilename"))
         val newPath = Files.move(file.toPath(), Path("$dataPath/docs/pdf", originalFilename))
 
-        importFlow.emit("$percent % Running OCR on PDF")
+        importFlow.emit(state.copy(message = "Running OCR on PDF"))
         val ocrPdf = createSearchablePdf(newPath.toFile(), guid)
 
-        importFlow.emit("$percent % Extracting text from PDF")
+        importFlow.emit(state.copy(message = "Extracting text from PDF"))
         val text = extractTextFromPdf(ocrPdf)
 
-        importFlow.emit("$percent % Searching for dates in PDF")
+        importFlow.emit(state.copy(message = "Searching for dates in PDF"))
         val date = findDateFromText(text)
 
-        importFlow.emit("$percent % Creating images from PDF")
+        importFlow.emit(state.copy(message = "Creating images from PDF"))
         createImagesFromPdf(ocrPdf)
 
-        importFlow.emit("$percent % Creating thumbnails")
+        importFlow.emit(state.copy(message = "Creating thumbnails"))
         val page1Img = getImage(guid, 1)
         createThumbnails(page1Img)
 
         logger.info("Creating import for $guid")
+        importFlow.emit(state.copy(message = "Creating import in database for $guid"))
         importService.create(ExposedImport(guid, originalFilename, ImportType.PDF, ocrPdf.name, ocrLanguage = OCRLanguage.DEU, text = text, date = date))
         logger.info("PDF import created")
-        importFlow.emit("$percent % PDF import created")
     }
 
     private suspend fun handleImgUpload(file: File, guid: String) {
