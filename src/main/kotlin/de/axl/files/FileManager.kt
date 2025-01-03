@@ -83,8 +83,8 @@ class FileManager(val dataPath: String, private val importService: ImportService
         importFlow.emit(state.copy(progress = state.progress?.plus((step * 4)), message = "Searching for dates in PDF"))
         val date = findDateFromText(text)
 
-        importFlow.emit(state.copy(progress = state.progress?.plus((step * 5)), message = "Creating images from PDF"))
-        createImagesFromPdf(ocrPdf)
+        val imgState = state.copy(progress = state.progress?.plus((step * 5)))
+        createImagesFromPdf(ocrPdf, importFlow, imgState)
 
         importFlow.emit(state.copy(progress = state.progress?.plus((step * 6)), message = "Creating thumbnails"))
         val page1Img = getImage(guid, 1)
@@ -108,10 +108,11 @@ class FileManager(val dataPath: String, private val importService: ImportService
         return File(dir, "$guid.pdf")
     }
 
-    private fun createImagesFromPdf(file: File) {
+    private suspend fun createImagesFromPdf(file: File, importFlow: MutableSharedFlow<ImportStateEvent>, imgState: ImportStateEvent) {
         val document = Loader.loadPDF(file)
         val pdfRenderer = PDFRenderer(document)
         for (i in 0 until document.numberOfPages) {
+            importFlow.emit(imgState.copy(message = "Creating image from PDF page ${i + 1}"))
             logger.info("Creating image from PDF page ${i + 1}")
             var img = pdfRenderer.renderImageWithDPI(i, 300F, ImageType.RGB)
             ImageIOUtil.writeImage(img, "${dataPath}/docs/img/${file.nameWithoutExtension}-${(i + 1).toString().padStart(4, '0')}.png", 300)
