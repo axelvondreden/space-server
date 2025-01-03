@@ -8,9 +8,9 @@ import io.ktor.http.content.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.server.sse.*
-import io.ktor.sse.*
+import io.ktor.server.websocket.*
 import io.ktor.utils.io.*
+import io.ktor.websocket.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -100,10 +100,10 @@ fun Route.importsRoute(importService: ImportService, fileManager: FileManager, i
             }
         }
 
-        sse("/events") {
-            call.response.cacheControl(CacheControl.NoCache(null))
+        webSocket("/events") {
+            send("Connected to server")
             importFlow.collect { event ->
-                send(ServerSentEvent(event))
+                this@webSocket.send(event)
             }
         }
     }

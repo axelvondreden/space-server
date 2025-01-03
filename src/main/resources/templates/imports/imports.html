@@ -55,9 +55,10 @@
     const modal = new bootstrap.Modal("#uploadModal");
     const importStatus = document.getElementById("importStatus");
 
-    const evtSource = new EventSource("/api/v1/imports/events");
+    const host = window.location.host;
+    const ws = new WebSocket("ws://" + host + "/api/v1/imports/events");
 
-    evtSource.onmessage = (event) => {
+    ws.onmessage = (event) => {
         importStatus.innerHTML = event.data;
     };
 

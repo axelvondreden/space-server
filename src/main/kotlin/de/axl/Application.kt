@@ -17,8 +17,8 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.server.sse.*
 import io.ktor.server.thymeleaf.*
+import io.ktor.server.websocket.*
 import org.jetbrains.exposed.sql.Database
 import org.slf4j.event.Level
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver
@@ -54,7 +54,7 @@ fun Application.module() {
             characterEncoding = "utf-8"
         })
     }
-    install(SSE)
+    install(WebSockets)
 
     val properties = Properties()
     javaClass.getResourceAsStream("/de/axl/version.properties").use { stream ->
