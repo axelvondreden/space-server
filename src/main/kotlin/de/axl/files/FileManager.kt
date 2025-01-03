@@ -14,7 +14,6 @@ import org.apache.pdfbox.text.PDFTextStripper
 import org.apache.pdfbox.tools.imageio.ImageIOUtil
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.lang.ProcessBuilder.Redirect
 import java.nio.file.Files
 import java.time.LocalDate
 import java.util.*
@@ -67,30 +66,32 @@ class FileManager(val dataPath: String, private val importService: ImportService
     }
 
     private suspend fun handlePdfUpload(file: File, guid: String, importFlow: MutableSharedFlow<ImportStateEvent>, state: ImportStateEvent, fullStep: Double) {
+        val step = fullStep / 7.0
         logger.info("Detected PDF")
         val originalFilename = "$guid-original.${file.extension}"
         logger.info("Moving file to $originalFilename")
-        importFlow.emit(state.copy(message = "Moving file to $originalFilename"))
+        importFlow.emit(state.copy(progress = state.progress?.plus((step * 1)), message = "Moving file to $originalFilename"))
         val newPath = Files.move(file.toPath(), Path("$dataPath/docs/pdf", originalFilename))
 
-        importFlow.emit(state.copy(message = "Running OCR on PDF"))
-        val ocrPdf = createSearchablePdf(newPath.toFile(), guid)
+        val ocrState = state.copy(progress = state.progress?.plus((step * 2)), message = "Running OCR")
+        importFlow.emit(ocrState)
+        val ocrPdf = createSearchablePdf(newPath.toFile(), guid, importFlow, ocrState)
 
-        importFlow.emit(state.copy(message = "Extracting text from PDF"))
+        importFlow.emit(state.copy(progress = state.progress?.plus((step * 3)), message = "Extracting text from PDF"))
         val text = extractTextFromPdf(ocrPdf)
 
-        importFlow.emit(state.copy(message = "Searching for dates in PDF"))
+        importFlow.emit(state.copy(progress = state.progress?.plus((step * 4)), message = "Searching for dates in PDF"))
         val date = findDateFromText(text)
 
-        importFlow.emit(state.copy(message = "Creating images from PDF"))
+        importFlow.emit(state.copy(progress = state.progress?.plus((step * 5)), message = "Creating images from PDF"))
         createImagesFromPdf(ocrPdf)
 
-        importFlow.emit(state.copy(message = "Creating thumbnails"))
+        importFlow.emit(state.copy(progress = state.progress?.plus((step * 6)), message = "Creating thumbnails"))
         val page1Img = getImage(guid, 1)
         createThumbnails(page1Img)
 
         logger.info("Creating import for $guid")
-        importFlow.emit(state.copy(message = "Creating import in database for $guid"))
+        importFlow.emit(state.copy(progress = state.progress?.plus((step * 7)), message = "Creating import in database for $guid"))
         importService.create(ExposedImport(guid, originalFilename, ImportType.PDF, ocrPdf.name, ocrLanguage = OCRLanguage.DEU, text = text, date = date))
         logger.info("PDF import created")
     }
@@ -99,11 +100,11 @@ class FileManager(val dataPath: String, private val importService: ImportService
         logger.info("Detected Image (${file.extension})")
     }
 
-    private fun createSearchablePdf(file: File, guid: String): File {
+    private suspend fun createSearchablePdf(file: File, guid: String, importFlow: MutableSharedFlow<ImportStateEvent>? = null, state: ImportStateEvent? = null): File {
         logger.info("Creating searchable PDF")
         val dir = file.parentFile
         val name = file.name
-        runCommand(dir, "ocrmypdf --rotate-pages --deskew --clean --skip-text --language deu $name $guid.pdf")
+        runCommand(dir, "ocrmypdf --rotate-pages --deskew --clean --skip-text --language deu $name $guid.pdf", importFlow, state)
         return File(dir, "$guid.pdf")
     }
 
@@ -158,13 +159,27 @@ class FileManager(val dataPath: String, private val importService: ImportService
         return File("$dataPath/docs/img/${guid}-${page.toString().padStart(4, '0')}.png")
     }
 
-    private fun runCommand(workingDir: File, command: String) {
-        ProcessBuilder(*command.split(" ").toTypedArray())
+    private suspend fun runCommand(workingDir: File, command: String, importFlow: MutableSharedFlow<ImportStateEvent>? = null, state: ImportStateEvent? = null) {
+        val process = ProcessBuilder(*command.split(" ").toTypedArray())
             .directory(workingDir)
-            .redirectOutput(Redirect.INHERIT)
-            .redirectError(Redirect.INHERIT)
+            .redirectErrorStream(true)
             .start()
-            .waitFor(10, TimeUnit.MINUTES)
+    
+        process.inputStream.bufferedReader().useLines { lines ->
+            lines.forEach { line ->
+                if (line.isNotBlank()) {
+                    logger.info("OCR: ${line.trim()}")
+                    if (importFlow != null && state != null) {
+                        importFlow.emit(state.copy(message = "Running OCR - ${line.trim()}"))
+                    }
+                }
+            }
+        }
+    
+        if (!process.waitFor(10, TimeUnit.MINUTES)) {
+            logger.error("Command timed out: $command")
+            process.destroy()
+        }
     }
 
     companion object {
