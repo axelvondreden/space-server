@@ -16,6 +16,7 @@ data class ExposedImport(
     val guid: String,
     val type: ImportType,
     val ocrLanguage: OCRLanguage = OCRLanguage.DEU,
+    val pages: Int = 1,
     val text: String? = null,
     @Contextual val date: LocalDate? = null,
     @Contextual val createdAt: LocalDateTime = LocalDateTime.now(),
@@ -38,6 +39,7 @@ class ImportService(database: Database) {
         val guid = varchar("guid", length = 36).uniqueIndex()
         val type = enumerationByName("type", 10, ImportType::class)
         val ocrLanguage = enumerationByName("ocrLanguage", 10, OCRLanguage::class).default(OCRLanguage.DEU)
+        val pages = integer("pages")
         val text = text("text").nullable()
         val date = date("date").nullable()
         val createdAt = datetime("createdAt")
@@ -57,6 +59,7 @@ class ImportService(database: Database) {
             it[guid] = import.guid
             it[type] = import.type
             it[ocrLanguage] = import.ocrLanguage
+            it[pages] = import.pages
             it[text] = import.text
             it[date] = import.date
             it[createdAt] = LocalDateTime.now()
@@ -70,6 +73,7 @@ class ImportService(database: Database) {
                     it[Imports.guid],
                     it[Imports.type],
                     it[Imports.ocrLanguage],
+                    it[Imports.pages],
                     it[Imports.text],
                     it[Imports.date],
                     it[Imports.createdAt],
@@ -88,6 +92,7 @@ class ImportService(database: Database) {
                         it[Imports.guid],
                         it[Imports.type],
                         it[Imports.ocrLanguage],
+                        it[Imports.pages],
                         it[Imports.text],
                         it[Imports.date],
                         it[Imports.createdAt],

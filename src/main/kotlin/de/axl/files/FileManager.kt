@@ -84,7 +84,7 @@ class FileManager(val dataPath: String, private val importService: ImportService
         val date = findDateFromText(text)
 
         val imgState = state.copy(progress = state.progress?.plus((step * 5)))
-        createImagesFromPdf(ocrPdf, importFlow, imgState)
+        val pages = createImagesFromPdf(ocrPdf, importFlow, imgState)
 
         importFlow.emit(state.copy(progress = state.progress?.plus((step * 6)), message = "Creating thumbnails"))
         val page1Img = getImage(guid, 1)
@@ -92,7 +92,7 @@ class FileManager(val dataPath: String, private val importService: ImportService
 
         logger.info("Creating import for $guid")
         importFlow.emit(state.copy(progress = state.progress?.plus((step * 7)), message = "Creating import in database for $guid"))
-        importService.create(ExposedImport(guid, ImportType.PDF, ocrLanguage = OCRLanguage.DEU, text = text, date = date))
+        importService.create(ExposedImport(guid, ImportType.PDF, ocrLanguage = OCRLanguage.DEU, pages = pages, text = text, date = date))
         logger.info("PDF import created")
     }
 
@@ -108,16 +108,18 @@ class FileManager(val dataPath: String, private val importService: ImportService
         return File(dir, "$guid.pdf")
     }
 
-    private suspend fun createImagesFromPdf(file: File, importFlow: MutableSharedFlow<ImportStateEvent>, imgState: ImportStateEvent) {
+    private suspend fun createImagesFromPdf(file: File, importFlow: MutableSharedFlow<ImportStateEvent>, imgState: ImportStateEvent): Int {
         val document = Loader.loadPDF(file)
+        val pages = document.numberOfPages
         val pdfRenderer = PDFRenderer(document)
-        for (i in 0 until document.numberOfPages) {
+        for (i in 0 until pages) {
             importFlow.emit(imgState.copy(message = "Creating image from PDF page ${i + 1}"))
             logger.info("Creating image from PDF page ${i + 1}")
             var img = pdfRenderer.renderImageWithDPI(i, 300F, ImageType.RGB)
             ImageIOUtil.writeImage(img, "${dataPath}/docs/img/${file.nameWithoutExtension}-${(i + 1).toString().padStart(4, '0')}.png", 300)
         }
         document.close()
+        return pages
     }
 
     private fun createThumbnails(file: File) {

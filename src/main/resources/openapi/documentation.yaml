@@ -410,6 +410,8 @@ components:
           type: string
         ocrLanguage:
           type: string
+        pages:
+          type: integer
         text:
           type: string
         date:
@@ -422,6 +424,7 @@ components:
         - id
         - guid
         - type
+        - pages
         - createdAt
 
     LocalDateTime:
