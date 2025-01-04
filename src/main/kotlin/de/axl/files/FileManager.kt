@@ -92,7 +92,7 @@ class FileManager(val dataPath: String, private val importService: ImportService
 
         logger.info("Creating import for $guid")
         importFlow.emit(state.copy(progress = state.progress?.plus((step * 7)), message = "Creating import in database for $guid"))
-        importService.create(ExposedImport(guid, originalFilename, ImportType.PDF, ocrPdf.name, ocrLanguage = OCRLanguage.DEU, text = text, date = date))
+        importService.create(ExposedImport(guid, ImportType.PDF, ocrLanguage = OCRLanguage.DEU, text = text, date = date))
         logger.info("PDF import created")
     }
 
@@ -156,8 +156,16 @@ class FileManager(val dataPath: String, private val importService: ImportService
         return date
     }
 
-    private fun getImage(guid: String, page: Int): File {
+    fun getImage(guid: String, page: Int): File {
         return File("$dataPath/docs/img/${guid}-${page.toString().padStart(4, '0')}.png")
+    }
+
+    fun getPdf(guid: String): File {
+        return File("$dataPath/docs/pdf/${guid}.pdf")
+    }
+
+    fun getThumb(guid: String, page: Int, size: Int): File {
+        return File("$dataPath/docs/thumb/${guid}-${page.toString().padStart(4, '0')}-$size.png")
     }
 
     private suspend fun runCommand(workingDir: File, command: String, importFlow: MutableSharedFlow<ImportStateEvent>? = null, state: ImportStateEvent? = null) {

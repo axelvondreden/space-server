@@ -10,14 +10,11 @@ import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.*
 
 @Serializable
 data class ExposedImport(
     val guid: String,
-    val originalFile: String,
     val type: ImportType,
-    val pdfFileOptimized: String,
     val ocrLanguage: OCRLanguage = OCRLanguage.DEU,
     val text: String? = null,
     @Contextual val date: LocalDate? = null,
@@ -39,9 +36,7 @@ class ImportService(database: Database) {
     object Imports : Table() {
         val id = integer("id").autoIncrement()
         val guid = varchar("guid", length = 36).uniqueIndex()
-        val originalFile = varchar("originalFile", length = 200)
         val type = enumerationByName("type", 10, ImportType::class)
-        val pdfFileOptimized = varchar("pdfFileOptimized", length = 200)
         val ocrLanguage = enumerationByName("ocrLanguage", 10, OCRLanguage::class).default(OCRLanguage.DEU)
         val text = text("text").nullable()
         val date = date("date").nullable()
@@ -59,10 +54,8 @@ class ImportService(database: Database) {
 
     suspend fun create(import: ExposedImport): String = dbQuery {
         Imports.insert {
-            it[guid] = UUID.randomUUID().toString()
-            it[originalFile] = import.originalFile
+            it[guid] = import.guid
             it[type] = import.type
-            it[pdfFileOptimized] = import.pdfFileOptimized
             it[ocrLanguage] = import.ocrLanguage
             it[text] = import.text
             it[date] = import.date
@@ -75,9 +68,7 @@ class ImportService(database: Database) {
             Imports.selectAll().map {
                 ExposedImport(
                     it[Imports.guid],
-                    it[Imports.originalFile],
                     it[Imports.type],
-                    it[Imports.pdfFileOptimized],
                     it[Imports.ocrLanguage],
                     it[Imports.text],
                     it[Imports.date],
@@ -95,9 +86,7 @@ class ImportService(database: Database) {
                 .map {
                     ExposedImport(
                         it[Imports.guid],
-                        it[Imports.originalFile],
                         it[Imports.type],
-                        it[Imports.pdfFileOptimized],
                         it[Imports.ocrLanguage],
                         it[Imports.text],
                         it[Imports.date],
