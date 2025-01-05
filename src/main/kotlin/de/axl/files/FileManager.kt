@@ -18,6 +18,7 @@ import java.nio.file.Files
 import java.time.LocalDate
 import java.util.*
 import java.util.concurrent.TimeUnit
+import javax.imageio.ImageIO
 import kotlin.io.path.Path
 import kotlin.io.path.exists
 import kotlin.io.path.pathString
@@ -123,12 +124,30 @@ class FileManager(val dataPath: String, private val importService: ImportService
     }
 
     private fun createThumbnails(file: File) {
-        logger.info("Creating Thumbnail 128x128")
+        logger.info("Creating Thumbnail 128")
         Thumbnails.of(file).size(128, 128).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-128.png"))
-        logger.info("Creating Thumbnail 256x256")
+        logger.info("Creating Thumbnail 256")
         Thumbnails.of(file).size(256, 256).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-256.png"))
-        logger.info("Creating Thumbnail 512x512")
+        logger.info("Creating Thumbnail 512")
         Thumbnails.of(file).size(512, 512).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-512.png"))
+
+        val img = ImageIO.read(file)
+        val square = if (img.width > img.height) {
+            logger.info("Page is landscape, creating square thumbnails")
+            img.getSubimage(0, 0, img.height, img.height)
+        } else {
+            logger.info("Page is portrait, creating square thumbnails")
+            img.getSubimage(0, 0, img.width, img.width)
+        }
+        img.flush()
+
+        logger.info("Creating Thumbnail Square 128")
+        Thumbnails.of(square).size(128, 128).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-128x128.png"))
+        logger.info("Creating Thumbnail Square 256")
+        Thumbnails.of(square).size(256, 256).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-256x256.png"))
+        logger.info("Creating Thumbnail Square 512")
+        Thumbnails.of(square).size(512, 512).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-512x512.png"))
+        square.flush()
     }
 
     private fun extractTextFromPdf(file: File): String {
