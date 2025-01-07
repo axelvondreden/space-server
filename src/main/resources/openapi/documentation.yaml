@@ -127,66 +127,6 @@ paths:
           description: Import not found
         "401":
           $ref: "#/components/responses/Unauthorized"
-  /imports/{guid}/pdf:
-    parameters:
-      - in: path
-        name: guid
-        required: true
-        schema:
-          type: string
-        description: GUID of import
-    get:
-      summary: Get the PDF of the document
-      tags:
-        - Imports
-      responses:
-        "200":
-          description: Returns the PDF
-          content:
-            application/pdf:
-              schema:
-                type: string
-                format: binary
-        "404":
-          description: Import not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-  /imports/{guid}/thumb/{page}/{size}:
-    parameters:
-      - in: path
-        name: guid
-        required: true
-        schema:
-          type: string
-        description: GUID of import
-      - in: path
-        name: page
-        required: true
-        schema:
-          type: integer
-        description: the page number
-      - in: path
-        name: size
-        required: true
-        schema:
-          type: integer
-        description: the size of the thumbnail (128, 256, 512)
-    get:
-      summary: Get the thumbnail for the specified page
-      tags:
-        - Imports
-      responses:
-        "200":
-          description: Returns the Thumbnail
-          content:
-            image/png:
-              schema:
-                type: string
-                format: binary
-        "404":
-          description: Import not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
 
   /documents:
     get:
@@ -252,6 +192,96 @@ paths:
       responses:
         "200":
           description: Document deleted successfully
+        "404":
+          description: Document not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /documents/{guid}/pdf:
+    parameters:
+      - in: path
+        name: guid
+        required: true
+        schema:
+          type: string
+        description: GUID of the document
+    get:
+      summary: Get the PDF of the document
+      tags:
+        - Documents
+      responses:
+        "200":
+          description: Returns the PDF
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Document not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /documents/{guid}/img/{page}:
+    parameters:
+      - in: path
+        name: guid
+        required: true
+        schema:
+          type: string
+        description: GUID of the document
+      - in: path
+        name: page
+        required: true
+        schema:
+          type: integer
+        description: the page number
+    get:
+      summary: Get the Image for the specified page
+      tags:
+        - Documents
+      responses:
+        "200":
+          description: Returns the Image
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Document not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /documents/{guid}/thumb/{page}/{size}:
+    parameters:
+      - in: path
+        name: guid
+        required: true
+        schema:
+          type: string
+        description: GUID of the document
+      - in: path
+        name: page
+        required: true
+        schema:
+          type: integer
+        description: the page number
+      - in: path
+        name: size
+        required: true
+        schema:
+          type: integer
+        description: the size of the thumbnail (128, 256, 512)
+    get:
+      summary: Get the thumbnail for the specified page
+      tags:
+        - Documents
+      responses:
+        "200":
+          description: Returns the Thumbnail
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
         "404":
           description: Document not found
         "401":

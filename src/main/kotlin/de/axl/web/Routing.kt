@@ -26,7 +26,7 @@ fun Application.configureRouting(userService: UserService, documentService: Docu
         authenticate("auth-session") {
             apiRoute {
                 usersRoute(userService)
-                documentsRoute(documentService)
+                documentsRoute(documentService, fileManager)
                 importsRoute(importService, fileManager, importFlow)
             }
 
