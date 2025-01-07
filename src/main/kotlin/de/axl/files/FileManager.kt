@@ -13,6 +13,7 @@ import org.apache.pdfbox.rendering.PDFRenderer
 import org.apache.pdfbox.text.PDFTextStripper
 import org.apache.pdfbox.tools.imageio.ImageIOUtil
 import org.slf4j.LoggerFactory
+import java.awt.image.BufferedImage
 import java.io.File
 import java.nio.file.Files
 import java.time.LocalDate
@@ -124,30 +125,39 @@ class FileManager(val dataPath: String, private val importService: ImportService
     }
 
     private fun createThumbnails(file: File) {
-        logger.info("Creating Thumbnail 128")
-        Thumbnails.of(file).size(128, 128).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-128.png"))
-        logger.info("Creating Thumbnail 256")
-        Thumbnails.of(file).size(256, 256).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-256.png"))
-        logger.info("Creating Thumbnail 512")
-        Thumbnails.of(file).size(512, 512).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-512.png"))
-
         val img = ImageIO.read(file)
-        val square = if (img.width > img.height) {
-            logger.info("Page is landscape, creating square thumbnails")
-            img.getSubimage(0, 0, img.height, img.height)
+        if (img.width > img.height) {
+            createThumbnailLandscape(file, 128)
+            createThumbnailLandscape(file, 256)
+            createThumbnailLandscape(file, 512)
         } else {
-            logger.info("Page is portrait, creating square thumbnails")
-            img.getSubimage(0, 0, img.width, img.width)
+            createThumbnailPortrait(file, 128)
+            createThumbnailPortrait(file, 256)
+            createThumbnailPortrait(file, 512)
         }
+
+        val square = if (img.width > img.height) img.getSubimage(0, 0, img.height, img.height) else img.getSubimage(0, 0, img.width, img.width)
         img.flush()
 
-        logger.info("Creating Thumbnail Square 128")
-        Thumbnails.of(square).size(128, 128).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-128x128.png"))
-        logger.info("Creating Thumbnail Square 256")
-        Thumbnails.of(square).size(256, 256).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-256x256.png"))
-        logger.info("Creating Thumbnail Square 512")
-        Thumbnails.of(square).size(512, 512).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-512x512.png"))
+        createThumbnailSquare(square, file.nameWithoutExtension, 128)
+        createThumbnailSquare(square, file.nameWithoutExtension, 256)
+        createThumbnailSquare(square, file.nameWithoutExtension, 512)
         square.flush()
+    }
+
+    private fun createThumbnailLandscape(file: File, height: Int) {
+        logger.info("Creating Landscape-Thumbnail $height")
+        Thumbnails.of(file).height(height).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-$height.png"))
+    }
+
+    private fun createThumbnailPortrait(file: File, width: Int) {
+        logger.info("Creating Portrait-Thumbnail $width")
+        Thumbnails.of(file).width(width).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-$width.png"))
+    }
+
+    private fun createThumbnailSquare(img: BufferedImage, name: String, size: Int) {
+        logger.info("Creating Thumbnail Square $size")
+        Thumbnails.of(img).size(size, size).outputFormat("png").toFile(File("${dataPath}/docs/thumb/$name-${size}x$size.png"))
     }
 
     private fun extractTextFromPdf(file: File): String {
