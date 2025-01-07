@@ -96,6 +96,7 @@ class FileManager(val dataPath: String, private val importService: ImportService
         importFlow.emit(state.copy(progress = state.progress?.plus((step * 7)), message = "Creating import in database for $guid"))
         importService.create(ExposedImport(guid, ImportType.PDF, ocrLanguage = OCRLanguage.DEU, pages = pages, text = text, date = date))
         logger.info("PDF import created")
+        importFlow.emit(state.copy(progress = state.progress?.plus((step * 7)), message = "Import complete", completedFile = true))
     }
 
     private suspend fun handleImgUpload(file: File, guid: String) {

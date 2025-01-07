@@ -87,7 +87,7 @@
         statusMessage.innerHTML = "WebSocket disconnected";
     };
 
-    ws.onmessage = (event) => {
+    ws.onmessage = async (event) => {
         const state = JSON.parse(event.data);
         if (state.importing) {
             statusIconPause.classList.add("d-none");
@@ -130,6 +130,14 @@
             statusMessage.innerHTML = state.message;
         } else {
             statusMessage.innerHTML = "";
+        }
+        if (state.completedFile) {
+            await fetch("/api/v1/imports/" + state.guid).then(async result => {
+                if (result.ok) {
+                    const imp = await result.json();
+                    addImportToSidebar(imp);
+                }
+            }).catch((error) => console.log("Something went wrong. " + error));
         }
     };
 
