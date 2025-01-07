@@ -79,6 +79,14 @@
     const host = window.location.host;
     const ws = new WebSocket("ws://" + host + "/api/v1/imports/events");
 
+    ws.onopen = () => {
+        statusMessage.innerHTML = "WebSocket connected";
+    };
+
+    ws.onclose = () => {
+        statusMessage.innerHTML = "WebSocket disconnected";
+    };
+
     ws.onmessage = (event) => {
         const state = JSON.parse(event.data);
         if (state.importing) {
