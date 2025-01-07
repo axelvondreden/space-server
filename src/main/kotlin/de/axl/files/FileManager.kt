@@ -195,7 +195,7 @@ class FileManager(val dataPath: String, private val importService: ImportService
         return File("$dataPath/docs/pdf/${guid}.pdf")
     }
 
-    fun getThumb(guid: String, page: Int, size: Int): File {
+    fun getThumb(guid: String, page: Int, size: String): File {
         return File("$dataPath/docs/thumb/${guid}-${page.toString().padStart(4, '0')}-$size.png")
     }
 

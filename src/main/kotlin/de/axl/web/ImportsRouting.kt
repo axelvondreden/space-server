@@ -84,7 +84,7 @@ fun Route.importsRoute(importService: ImportService, fileManager: FileManager, i
         get("/{guid}/thumb/{page}/{size}") {
             val guid = call.parameters["guid"]!!
             val page = call.parameters["page"]?.toIntOrNull() ?: 1
-            val size = call.parameters["size"]?.toIntOrNull() ?: 128
+            val size = call.parameters["size"]!!
             call.respondFile(fileManager.getThumb(guid, page, size))
         }
 
