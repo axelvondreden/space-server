@@ -9,3 +9,10 @@ body {
     margin: 0;
     transform: translate(-120px, 34px);
 }
+
+.split, .gutter.gutter-horizontal {
+    float: left;
+}
+.gutter.gutter-horizontal {
+    cursor: ew-resize;
+}
