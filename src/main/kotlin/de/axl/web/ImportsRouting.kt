@@ -76,6 +76,24 @@ fun Route.importsRoute(importService: ImportService, fileManager: FileManager, i
             }
         }
 
+        get("/{guid}/pdf") {
+            val guid = call.parameters["guid"]!!
+            call.respondFile(fileManager.getImportPdf(guid))
+        }
+
+        get("/{guid}/img/{page}") {
+            val guid = call.parameters["guid"]!!
+            val page = call.parameters["page"]?.toIntOrNull() ?: 1
+            call.respondFile(fileManager.getImportImage(guid, page))
+        }
+
+        get("/{guid}/thumb/{page}/{size}") {
+            val guid = call.parameters["guid"]!!
+            val page = call.parameters["page"]?.toIntOrNull() ?: 1
+            val size = call.parameters["size"]!!
+            call.respondFile(fileManager.getImportThumb(guid, page, size))
+        }
+
         put("/{guid}") {
             val guid = call.parameters["guid"]
             if (guid.isNullOrBlank()) {

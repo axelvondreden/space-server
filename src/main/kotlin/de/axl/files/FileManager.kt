@@ -71,7 +71,7 @@ class FileManager(val dataPath: String, private val importService: ImportService
         val originalFilename = "$guid-original.${file.extension}"
         logger.info("Moving file to $originalFilename")
         importFlow.emit(state.copy(progress = state.progress?.plus((step * 1)), message = "Moving file to $originalFilename"))
-        val newPath = Files.move(file.toPath(), Path("$dataPath/docs/pdf", originalFilename))
+        val newPath = Files.move(file.toPath(), Path("$dataPath/import", originalFilename))
 
         val ocrState = state.copy(progress = state.progress?.plus((step * 2)), message = "Running OCR")
         importFlow.emit(ocrState)
@@ -87,7 +87,7 @@ class FileManager(val dataPath: String, private val importService: ImportService
         val pages = createImagesFromPdf(ocrPdf, importFlow, imgState)
 
         importFlow.emit(state.copy(progress = state.progress?.plus((step * 6)), message = "Creating thumbnails"))
-        val page1Img = getImage(guid, 1)
+        val page1Img = getImportImage(guid, 1)
         createThumbnails(page1Img)
 
         logger.info("Creating import for $guid")
@@ -113,7 +113,7 @@ class FileManager(val dataPath: String, private val importService: ImportService
             importFlow.emit(imgState.copy(message = "Creating image from PDF page ${i + 1}"))
             logger.info("Creating image from PDF page ${i + 1}")
             var img = pdfRenderer.renderImageWithDPI(i, 300F, ImageType.RGB)
-            ImageIOUtil.writeImage(img, "${dataPath}/docs/img/${file.nameWithoutExtension}-${(i + 1).toString().padStart(4, '0')}.png", 300)
+            ImageIOUtil.writeImage(img, "${dataPath}/import/${file.nameWithoutExtension}-${(i + 1).toString().padStart(4, '0')}.png", 300)
         }
         document.close()
         return pages
@@ -142,17 +142,17 @@ class FileManager(val dataPath: String, private val importService: ImportService
 
     private fun createThumbnailLandscape(file: File, height: Int) {
         logger.info("Creating Landscape-Thumbnail $height")
-        Thumbnails.of(file).height(height).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-$height.png"))
+        Thumbnails.of(file).height(height).outputFormat("png").toFile(File("${dataPath}/import/${file.nameWithoutExtension}-$height.png"))
     }
 
     private fun createThumbnailPortrait(file: File, width: Int) {
         logger.info("Creating Portrait-Thumbnail $width")
-        Thumbnails.of(file).width(width).outputFormat("png").toFile(File("${dataPath}/docs/thumb/${file.nameWithoutExtension}-$width.png"))
+        Thumbnails.of(file).width(width).outputFormat("png").toFile(File("${dataPath}/import/${file.nameWithoutExtension}-$width.png"))
     }
 
     private fun createThumbnailSquare(img: BufferedImage, name: String, size: Int) {
         logger.info("Creating Thumbnail Square $size")
-        Thumbnails.of(img).size(size, size).outputFormat("png").toFile(File("${dataPath}/docs/thumb/$name-${size}x$size.png"))
+        Thumbnails.of(img).size(size, size).outputFormat("png").toFile(File("${dataPath}/import/$name-${size}x$size.png"))
     }
 
     private fun extractTextFromPdf(file: File): String {
@@ -186,12 +186,24 @@ class FileManager(val dataPath: String, private val importService: ImportService
         return File("$dataPath/docs/img/${guid}-${page.toString().padStart(4, '0')}.png")
     }
 
+    fun getImportImage(guid: String, page: Int): File {
+        return File("$dataPath/import/${guid}-${page.toString().padStart(4, '0')}.png")
+    }
+
     fun getPdf(guid: String): File {
         return File("$dataPath/docs/pdf/${guid}.pdf")
     }
 
+    fun getImportPdf(guid: String): File {
+        return File("$dataPath/import/${guid}-original.pdf")
+    }
+
     fun getThumb(guid: String, page: Int, size: String): File {
         return File("$dataPath/docs/thumb/${guid}-${page.toString().padStart(4, '0')}-$size.png")
+    }
+
+    fun getImportThumb(guid: String, page: Int, size: String): File {
+        return File("$dataPath/import/${guid}-${page.toString().padStart(4, '0')}-$size.png")
     }
 
     private suspend fun runCommand(workingDir: File, command: String, importFlow: MutableSharedFlow<ImportStateEvent>? = null, state: ImportStateEvent? = null) {

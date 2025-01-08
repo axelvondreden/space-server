@@ -21,6 +21,7 @@ fun Application.configureStartup(userService: UserService, fileManager: FileMana
     fileManager.apply {
         createFolder(dataPath)
         createFolder(dataPath, "upload")
+        createFolder(dataPath, "import")
         createFolder(dataPath, "docs")
         createFolder(dataPath, "docs", "pdf")
         createFolder(dataPath, "docs", "img")
