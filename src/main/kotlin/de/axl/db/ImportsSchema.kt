@@ -14,7 +14,6 @@ import java.time.LocalDateTime
 @Serializable
 data class ExposedImport(
     val guid: String,
-    val type: ImportType,
     val ocrLanguage: OCRLanguage = OCRLanguage.DEU,
     val pages: Int = 1,
     val text: String? = null,
@@ -22,11 +21,6 @@ data class ExposedImport(
     @Contextual val createdAt: LocalDateTime = LocalDateTime.now(),
     @Contextual val updatedAt: LocalDateTime? = null
 )
-
-enum class ImportType(val type: String) {
-    PDF("pdf"),
-    IMG("img")
-}
 
 enum class OCRLanguage(val lang: String) {
     DEU("deu"),
@@ -37,7 +31,6 @@ class ImportService(database: Database) {
     object Imports : Table() {
         val id = integer("id").autoIncrement()
         val guid = varchar("guid", length = 36).uniqueIndex()
-        val type = enumerationByName("type", 10, ImportType::class)
         val ocrLanguage = enumerationByName("ocrLanguage", 10, OCRLanguage::class).default(OCRLanguage.DEU)
         val pages = integer("pages")
         val text = text("text").nullable()
@@ -57,7 +50,6 @@ class ImportService(database: Database) {
     suspend fun create(import: ExposedImport): String = dbQuery {
         Imports.insert {
             it[guid] = import.guid
-            it[type] = import.type
             it[ocrLanguage] = import.ocrLanguage
             it[pages] = import.pages
             it[text] = import.text
@@ -71,7 +63,6 @@ class ImportService(database: Database) {
             Imports.selectAll().map {
                 ExposedImport(
                     it[Imports.guid],
-                    it[Imports.type],
                     it[Imports.ocrLanguage],
                     it[Imports.pages],
                     it[Imports.text],
@@ -90,7 +81,6 @@ class ImportService(database: Database) {
                 .map {
                     ExposedImport(
                         it[Imports.guid],
-                        it[Imports.type],
                         it[Imports.ocrLanguage],
                         it[Imports.pages],
                         it[Imports.text],

@@ -2,7 +2,6 @@ package de.axl.files
 
 import de.axl.db.ExposedImport
 import de.axl.db.ImportService
-import de.axl.db.ImportType
 import de.axl.db.OCRLanguage
 import de.axl.web.events.ImportStateEvent
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -56,7 +55,6 @@ class FileManager(val dataPath: String, private val importService: ImportService
                 importFlow.emit(state)
                 when (file.extension) {
                     "pdf" -> handlePdfUpload(file, guid, importFlow, state, 1.0 / files.size)
-                    "png", "jpg", "jpeg" -> handleImgUpload(file, guid)
                     else -> logger.error("File ${file.name} has unsupported filetype ${file.extension}")
                 }
             } else {
@@ -94,13 +92,9 @@ class FileManager(val dataPath: String, private val importService: ImportService
 
         logger.info("Creating import for $guid")
         importFlow.emit(state.copy(progress = state.progress?.plus((step * 7)), message = "Creating import in database for $guid"))
-        importService.create(ExposedImport(guid, ImportType.PDF, ocrLanguage = OCRLanguage.DEU, pages = pages, text = text, date = date))
+        importService.create(ExposedImport(guid, ocrLanguage = OCRLanguage.DEU, pages = pages, text = text, date = date))
         logger.info("PDF import created")
         importFlow.emit(state.copy(progress = state.progress?.plus((step * 7)), message = "Import complete", completedFile = true))
-    }
-
-    private suspend fun handleImgUpload(file: File, guid: String) {
-        logger.info("Detected Image (${file.extension})")
     }
 
     private suspend fun createSearchablePdf(file: File, guid: String, importFlow: MutableSharedFlow<ImportStateEvent>? = null, state: ImportStateEvent? = null): File {
