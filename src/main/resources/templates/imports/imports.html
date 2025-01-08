@@ -22,10 +22,10 @@
         <div id="sidebar" class="list-group list-group-flush border-bottom scrollarea" style="overflow-y: auto"></div>
     </div>
     <div id="importDocArea" class="container-fluid d-flex p-0 d-none">
-        <div id="importDocImageArea" class="split" style="overflow-y: scroll">
+        <div id="importDocImageArea" class="split overflow-y-scroll">
             <img id="pageImage" src="" class="img-fluid" alt="page image">
         </div>
-        <div id="importDocDataArea" class="split d-flex flex-md-column px-3">
+        <div id="importDocDataArea" class="split d-flex flex-md-column px-3 overflow-y-scroll">
             <h4 class="my-3" id="importGuid">GUID</h4>
             <div class="mb-3">
                 <label for="importDate" class="form-label">Document Date</label>
@@ -37,6 +37,10 @@
                     <option value="DEU">German</option>
                     <option value="ENG">English</option>
                 </select>
+            </div>
+            <div class="mb-3">
+                <label for="importText" class="form-label">Text</label>
+                <textarea class="form-control" id="importText" rows="20"></textarea>
             </div>
             <button type="button" class="btn btn-primary w-100 mt-auto mb-2"><i class="bi bi-save"></i>&nbsp;Import</button>
             <button type="button" class="btn btn-danger w-100 mb-2"><i class="bi bi-trash"></i>&nbsp;Delete</button>
@@ -256,6 +260,7 @@
     const pageImage = document.getElementById("pageImage");
     const importGuid = document.getElementById("importGuid");
     const languageSelect = document.getElementById("languageSelect");
+    const importText = document.getElementById("importText");
 
     function docSelected(imp) {
         importNoDocSelected.classList.add("d-none");
@@ -269,6 +274,8 @@
         dateElem.datepicker("update", new Date(imp.date[0], imp.date[1] - 1, imp.date[2]));
 
         languageSelect.value = imp.ocrLanguage;
+
+        importText.value = imp.text;
     }
 
 </script>
