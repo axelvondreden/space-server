@@ -281,9 +281,13 @@
     const importText = document.getElementById("importText");
 
     const deskewButton = document.getElementById("deskewButton");
+
     const sliderDeskew = document.getElementById("sliderDeskew");
+    const sliderDeskewValue = document.getElementById("sliderDeskewValue");
     const sliderColorFuzz = document.getElementById("sliderColorFuzz");
+    const sliderColorFuzzValue = document.getElementById("sliderColorFuzzValue");
     const sliderCropFuzz = document.getElementById("sliderCropFuzz");
+    const sliderCropFuzzValue = document.getElementById("sliderCropFuzzValue");
 
     function docSelected(imp) {
         importNoDocSelected.classList.add("d-none");
@@ -303,8 +307,11 @@
         importText.value = imp.text;
 
         sliderDeskew.value = imp.deskew;
+        sliderDeskewValue.innerText = imp.deskew;
         sliderColorFuzz.value = imp.colorFuzz;
+        sliderColorFuzzValue.innerText = imp.colorFuzz;
         sliderCropFuzz.value = imp.cropFuzz;
+        sliderCropFuzzValue.innerText = imp.cropFuzz;
     }
 
     deskewButton.addEventListener("click", async () => {
