@@ -19,7 +19,7 @@ data class ExposedDocument(
     @Contextual val updatedAt: LocalDateTime?
 )
 
-class DocumentService(database: Database) {
+class DocumentDbService(database: Database) {
     object Documents : Table() {
         val id = integer("id").autoIncrement()
         val guid = varchar("guid", length = 36).uniqueIndex()

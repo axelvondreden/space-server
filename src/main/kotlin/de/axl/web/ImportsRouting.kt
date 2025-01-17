@@ -2,9 +2,9 @@ package de.axl.web
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import de.axl.db.ExposedImport
-import de.axl.db.ImportService
-import de.axl.files.FileManager
-import de.axl.web.events.ImportStateEvent
+import de.axl.files.FileManagerImport
+import de.axl.importing.ImportService
+import de.axl.importing.events.ImportStateEvent
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.request.*
@@ -22,7 +22,7 @@ import kotlinx.io.readByteArray
 import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 
-fun Route.importsRoute(importService: ImportService, fileManager: FileManager, importFlow: MutableSharedFlow<ImportStateEvent>) {
+fun Route.importsRoute(importService: ImportService, fileManager: FileManagerImport, importFlow: MutableSharedFlow<ImportStateEvent>) {
 
     val handleUploadsJob = AtomicReference<Job?>(null)
 
@@ -49,7 +49,7 @@ fun Route.importsRoute(importService: ImportService, fileManager: FileManager, i
                         importFlow.emit(ImportStateEvent(importing = false, message = "Starting import in $it second(s)"))
                         delay(1_000)
                     }
-                    fileManager.handleUploads(importFlow)
+                    importService.handleUploads(importFlow)
                 }
             )?.cancel() // Cancel previous unfinished job
         } else {
@@ -78,20 +78,20 @@ fun Route.importsRoute(importService: ImportService, fileManager: FileManager, i
 
         get("/{guid}/pdf") {
             val guid = call.parameters["guid"]!!
-            call.respondFile(fileManager.getImportPdf(guid))
+            call.respondFile(fileManager.getPdfOriginal(guid))
         }
 
         get("/{guid}/img/{page}") {
             val guid = call.parameters["guid"]!!
             val page = call.parameters["page"]?.toIntOrNull() ?: 1
-            call.respondFile(fileManager.getImportImage(guid, page))
+            call.respondFile(fileManager.getImage(guid, page))
         }
 
         get("/{guid}/thumb/{page}/{size}") {
             val guid = call.parameters["guid"]!!
             val page = call.parameters["page"]?.toIntOrNull() ?: 1
             val size = call.parameters["size"]!!
-            call.respondFile(fileManager.getImportThumb(guid, page, size))
+            call.respondFile(fileManager.getThumbnail(guid, page, size))
         }
 
         put("/{guid}") {

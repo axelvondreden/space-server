@@ -1,4 +1,4 @@
-package de.axl.web.events
+package de.axl.importing.events
 
 import kotlinx.serialization.Serializable
 

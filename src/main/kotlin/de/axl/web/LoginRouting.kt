@@ -1,7 +1,7 @@
 package de.axl.web
 
 import de.axl.apiRoute
-import de.axl.db.UserService
+import de.axl.db.UserDbService
 import io.ktor.http.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
@@ -11,14 +11,14 @@ import io.ktor.server.sessions.*
 import io.ktor.server.thymeleaf.*
 import org.slf4j.Logger
 
-fun Route.loginRoute(userService: UserService, logger: Logger) {
+fun Route.loginRoute(userDbService: UserDbService, logger: Logger) {
     apiRoute {
         post("/login") {
-            handleLogin(userService, logger)
+            handleLogin(userDbService, logger)
         }
     }
     post("/login") {
-        handleLogin(userService, logger)
+        handleLogin(userDbService, logger)
     }
 
     get("/login") {
@@ -34,7 +34,7 @@ fun Route.loginRoute(userService: UserService, logger: Logger) {
     }
 }
 
-private suspend fun RoutingContext.handleLogin(userService: UserService, logger: Logger) {
+private suspend fun RoutingContext.handleLogin(userDbService: UserDbService, logger: Logger) {
     val params = call.receiveParameters()
     val username = params["username"]
     val password = params["password"]
@@ -48,9 +48,9 @@ private suspend fun RoutingContext.handleLogin(userService: UserService, logger:
         }
         return
     }
-    val dbUser = userService.findByUsername(username)
+    val dbUser = userDbService.findByUsername(username)
 
-    if (dbUser == null || !userService.testPassword(dbUser, password)) {
+    if (dbUser == null || !userDbService.testPassword(dbUser, password)) {
         logger.warn("Wrong credentials used! username: $username | password: $password")
         if (fromUI) {
             call.respondRedirect("/login?error=Wrong credentials")

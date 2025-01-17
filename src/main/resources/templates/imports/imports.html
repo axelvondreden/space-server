@@ -236,16 +236,17 @@
     }
 
     function addImportToSidebar(imp) {
+        const date = (!imp.date) ? "" : imp.date[2] + "." + imp.date[1] + "." + imp.date[0];
         const a = document.createElement("a");
         a.href = "#";
         a.className = "list-group-item list-group-item-action py-3 lh-sm";
         a.innerHTML = `
             <div class="d-flex w-100 align-items-center justify-content-between">
-                <strong class="mb-1">${imp.date[2]}.${imp.date[1]}.${imp.date[0]}</strong>
+                <strong class="mb-1">${date}</strong>
                 <span class="text-body-secondary"><i class="bi bi-file-earmark-text"></i> ${imp.pages}</span>
             </div>
             <div class="d-flex w-100">
-                <img src="/api/v1/documents/${imp.guid}/thumb/1/512x512" class="img-fluid" alt="Thumbnail">
+                <img src="/api/v1/imports/${imp.guid}/thumb/1/512x512" class="img-fluid" alt="Thumbnail">
             </div>
         `;
         a.addEventListener("click", () => {
@@ -265,13 +266,15 @@
     function docSelected(imp) {
         importNoDocSelected.classList.add("d-none");
         importDocArea.classList.remove("d-none");
-        pageImage.src = "/api/v1/documents/" + imp.guid + "/img/1";
+        pageImage.src = "/api/v1/imports/" + imp.guid + "/img/1";
         importGuid.innerHTML = imp.guid;
         let dateElem = $("#importDate");
         dateElem.datepicker({
             format: "dd.mm.yyyy",
         });
-        dateElem.datepicker("update", new Date(imp.date[0], imp.date[1] - 1, imp.date[2]));
+        if (imp.date) {
+            dateElem.datepicker("update", new Date(imp.date[0], imp.date[1] - 1, imp.date[2]));
+        }
 
         languageSelect.value = imp.ocrLanguage;
 

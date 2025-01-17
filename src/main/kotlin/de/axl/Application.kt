@@ -2,10 +2,11 @@ package de.axl
 
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import de.axl.db.DocumentService
-import de.axl.db.ImportService
-import de.axl.db.UserService
-import de.axl.files.FileManager
+import de.axl.db.DocumentDbService
+import de.axl.db.ImportDbService
+import de.axl.db.UserDbService
+import de.axl.files.FileManagerImport
+import de.axl.importing.ImportService
 import de.axl.startup.configureStartup
 import de.axl.web.configureRouting
 import de.axl.web.configureSecurity
@@ -82,11 +83,12 @@ ${"┗" + "━".repeat(if (missing % 2 == 0) missing / 2 else (missing / 2) + 1)
         driver = "org.h2.Driver",
         password = "",
     )
-    val userService = UserService(database, property("space.admin.user.username"))
-    val documentService = DocumentService(database)
-    val importService = ImportService(database)
-    val fileManager = FileManager(dataPath, importService)
+    val userDbService = UserDbService(database, property("space.admin.user.username"))
+    val documentDbService = DocumentDbService(database)
+    val importDbService = ImportDbService(database)
+    val fileManagerImport = FileManagerImport(dataPath)
+    val importService = ImportService(fileManagerImport, importDbService)
 
-    configureRouting(userService, documentService, importService, fileManager)
-    configureStartup(userService, fileManager)
+    configureRouting(userDbService, documentDbService, importService, fileManagerImport)
+    configureStartup(userDbService, fileManagerImport)
 }

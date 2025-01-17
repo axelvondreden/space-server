@@ -1,16 +1,18 @@
 package de.axl
 
 import de.axl.db.ExposedUser
-import de.axl.db.UserService
+import de.axl.db.UserDbService
 import de.axl.web.UserSession
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import java.time.format.DateTimeFormatter
-
-private val datetimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")
+import java.io.File
+import java.nio.file.Files
+import java.util.concurrent.TimeUnit
+import kotlin.io.path.Path
+import kotlin.io.path.exists
 
 fun Application.property(path: String) = environment.config.property(path).getString()
 
@@ -20,6 +22,25 @@ suspend fun <T> dbQuery(block: suspend () -> T): T = newSuspendedTransaction(Dis
 
 fun Route.apiRoute(build: Route.() -> Unit) = route("/api/v1") { build() }
 
-suspend fun RoutingContext.getSessionUser(userService: UserService): ExposedUser? {
-    return call.sessions.get<UserSession>()?.username?.let { userService.findByUsername(it) }
+suspend fun RoutingContext.getSessionUser(userDbService: UserDbService): ExposedUser? {
+    return call.sessions.get<UserSession>()?.username?.let { userDbService.findByUsername(it) }
+}
+
+fun createFolder(base: String, vararg path: String) {
+    val p = Path(base, *path)
+    if (!p.exists()) {
+        Files.createDirectory(p)
+    }
+}
+
+fun runCommand(workingDir: File, command: String) {
+    val process = ProcessBuilder(*command.split(" ").toTypedArray())
+        .directory(workingDir)
+        .redirectErrorStream(true)
+        .start()
+
+    if (!process.waitFor(10, TimeUnit.MINUTES)) {
+        System.err.println("Command timed out: $command")
+        process.destroy()
+    }
 }

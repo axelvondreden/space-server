@@ -1,17 +1,17 @@
 package de.axl.web
 
 import de.axl.db.ExposedUser
-import de.axl.db.UserService
+import de.axl.db.UserDbService
 import de.axl.getSessionUser
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun Route.usersRoute(userService: UserService) {
+fun Route.usersRoute(userDbService: UserDbService) {
     route("/users") {
         get {
-            call.respond(HttpStatusCode.OK, userService.findAll())
+            call.respond(HttpStatusCode.OK, userDbService.findAll())
         }
 
         get("/{username}") {
@@ -19,7 +19,7 @@ fun Route.usersRoute(userService: UserService) {
             if (username.isNullOrBlank()) {
                 call.respond(HttpStatusCode.NotFound)
             } else {
-                val user = userService.findByUsername(username)
+                val user = userDbService.findByUsername(username)
                 if (user != null) {
                     call.respond(HttpStatusCode.OK, user)
                 } else {
@@ -30,8 +30,8 @@ fun Route.usersRoute(userService: UserService) {
 
         put {
             val updatedUser = call.receive<ExposedUser>()
-            val dbUser = userService.findByUsername(updatedUser.username)
-            val sessionUser = getSessionUser(userService)
+            val dbUser = userDbService.findByUsername(updatedUser.username)
+            val sessionUser = getSessionUser(userDbService)
             if (sessionUser == null) {
                 call.respond(HttpStatusCode.Unauthorized, "User not authenticated")
             } else if (dbUser == null) {
@@ -41,7 +41,7 @@ fun Route.usersRoute(userService: UserService) {
             } else if (updatedUser.name.isNullOrBlank()) {
                 call.respond(HttpStatusCode.BadRequest, "Name must not be empty or blank")
             } else {
-                userService.update(dbUser.copy(name = updatedUser.name))
+                userDbService.update(dbUser.copy(name = updatedUser.name))
                 call.respond(HttpStatusCode.OK)
             }
         }
@@ -51,11 +51,11 @@ fun Route.usersRoute(userService: UserService) {
             if (changeRequest.old.isBlank() || changeRequest.new.isBlank()) {
                 call.respond(HttpStatusCode.BadRequest, "Empty password")
             } else {
-                val user = getSessionUser(userService)
+                val user = getSessionUser(userDbService)
                 if (user == null) {
                     call.respond(HttpStatusCode.Unauthorized, "User not found")
                 } else {
-                    if (userService.changePassword(user, changeRequest.old, changeRequest.new)) {
+                    if (userDbService.changePassword(user, changeRequest.old, changeRequest.new)) {
                         call.respond(HttpStatusCode.OK)
                     } else {
                         call.respond(HttpStatusCode.BadRequest, "Wrong password")
@@ -70,7 +70,7 @@ fun Route.usersRoute(userService: UserService) {
             if (username.isNullOrBlank()) {
                 call.respond(HttpStatusCode.NotFound)
             } else {
-                userService.delete(username)
+                userDbService.delete(username)
                 call.respond(HttpStatusCode.OK)
             }
         }

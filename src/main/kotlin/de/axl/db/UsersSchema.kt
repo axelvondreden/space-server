@@ -19,7 +19,7 @@ data class ExposedUser(
     @Contextual val updatedAt: LocalDateTime? = null
 )
 
-class UserService(database: Database, private val adminUsername: String) {
+class UserDbService(database: Database, private val adminUsername: String) {
     object Users : Table() {
         val id = integer("id").autoIncrement()
         val username = varchar("username", length = 50).uniqueIndex()

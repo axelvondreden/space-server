@@ -27,7 +27,7 @@ enum class OCRLanguage(val lang: String) {
     ENG("eng")
 }
 
-class ImportService(database: Database) {
+class ImportDbService(database: Database) {
     object Imports : Table() {
         val id = integer("id").autoIncrement()
         val guid = varchar("guid", length = 36).uniqueIndex()
