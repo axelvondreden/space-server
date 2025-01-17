@@ -42,7 +42,24 @@
                 <label for="importText" class="form-label">Text</label>
                 <textarea class="form-control" id="importText" rows="20"></textarea>
             </div>
-            <button type="button" class="btn btn-primary w-100 mt-auto mb-2"><i class="bi bi-save"></i>&nbsp;Import</button>
+
+            <div class="mt-auto d-flex">
+                <label for="sliderDeskew" class="form-label me-2" style="min-width: 100px; text-align-last: justify">Deskew: <span id="sliderDeskewValue">40</span></label>
+                <input type="range" class="form-range" id="sliderDeskew" min="0" max="100" step="1" value="40"
+                       oninput="document.getElementById('sliderDeskewValue').innerText = this.value">
+            </div>
+            <div class="d-flex">
+                <label for="sliderColorFuzz" class="form-label me-2" style="min-width: 100px; text-align-last: justify">Color: <span id="sliderColorFuzzValue">5</span></label>
+                <input type="range" class="form-range" id="sliderColorFuzz" min="0" max="100" step="1" value="5"
+                       oninput="document.getElementById('sliderColorFuzzValue').innerText = this.value">
+            </div>
+            <div class="d-flex">
+                <label for="sliderCropFuzz" class="form-label me-2" style="min-width: 100px; text-align-last: justify">Crop: <span id="sliderCropFuzzValue">20</span></label>
+                <input type="range" class="form-range" id="sliderCropFuzz" min="0" max="100" step="1" value="20"
+                       oninput="document.getElementById('sliderCropFuzzValue').innerText = this.value">
+            </div>
+            <button id="deskewButton" type="button" class="btn btn-secondary w-100 mb-2"><i class="bi bi-arrow-repeat"></i>&nbsp;Deskew</button>
+            <button type="button" class="btn btn-primary w-100 mb-2"><i class="bi bi-save"></i>&nbsp;Import</button>
             <button type="button" class="btn btn-danger w-100 mb-2"><i class="bi bi-trash"></i>&nbsp;Delete</button>
         </div>
     </div>
@@ -263,6 +280,11 @@
     const languageSelect = document.getElementById("languageSelect");
     const importText = document.getElementById("importText");
 
+    const deskewButton = document.getElementById("deskewButton");
+    const sliderDeskew = document.getElementById("sliderDeskew");
+    const sliderColorFuzz = document.getElementById("sliderColorFuzz");
+    const sliderCropFuzz = document.getElementById("sliderCropFuzz");
+
     function docSelected(imp) {
         importNoDocSelected.classList.add("d-none");
         importDocArea.classList.remove("d-none");
@@ -279,6 +301,38 @@
         languageSelect.value = imp.ocrLanguage;
 
         importText.value = imp.text;
+
+        sliderDeskew.value = 40;
+        sliderColorFuzz.value = 5;
+        sliderCropFuzz.value = 20;
+    }
+
+    deskewButton.addEventListener("click", async () => {
+        const guid = importGuid.innerHTML;
+        if (guid) {
+            deskewButton.disabled = true;
+            const query = "?deskew=" + sliderDeskew.value + "&colorFuzz=" + sliderColorFuzz.value + "&cropFuzz=" + sliderCropFuzz.value;
+            await fetch("/api/v1/imports/" + guid + "/deskew" + query, { method: "post" }).then(async result => {
+                if (result.ok) {
+                    await reloadImagesForGuid(guid);
+                    deskewButton.disabled = false;
+                }
+            });
+        }
+    });
+
+    async function reloadImagesForGuid(guid) {
+        await reloadImg("/api/v1/imports/" + guid + "/img/1");
+        await reloadImg("/api/v1/imports/" + guid + "/thumb/1/512x512");
+    }
+
+    async function reloadImg(url) {
+        await fetch(url, { cache: 'no-store', mode: 'no-cors' })
+        document.body.querySelectorAll(`img[src='${url}']`)
+            .forEach(img => {
+                console.log(img.src);
+                return img.src = url;
+            })
     }
 
 </script>

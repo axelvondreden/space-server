@@ -27,19 +27,26 @@ class FileManagerImport(val dataPath: String) {
         document.close()
     }
 
-    fun createDeskewedImage(guid: String, page: Int, deskew: Int = 40, fill: Int = 5) {
+    fun createDeskewedImage(guid: String, page: Int, deskew: Int = 40) {
         val img = getImageOriginal(guid, page)
         logger.info("Creating deskewed image for ${img.name}")
         runCommand(
             img.parentFile,
-            "magick ${img.name} -deskew $deskew% -fuzz $fill% -fill white -opaque \"#B6BBBF\" -trim +repage ${guid}-deskewed-${
-                page.toString().padStart(4, '0')
-            }.png"
+            "magick ${img.name} -deskew $deskew% -trim +repage ${guid}-deskewed-${page.toString().padStart(4, '0')}.png"
+        )
+    }
+
+    fun createColorAdjustedImage(guid: String, page: Int, fuzz: Int = 5) {
+        val img = getImageDeskewed(guid, page)
+        logger.info("Creating color-adjusted image for ${img.name}")
+        runCommand(
+            img.parentFile,
+            "magick ${img.name} -fuzz $fuzz% -fill white -opaque \"#B6BBBF\" -trim +repage ${guid}-coloradjusted-${page.toString().padStart(4, '0')}.png"
         )
     }
 
     fun createCroppedImage(guid: String, page: Int, fuzz: Int = 20) {
-        val img = getImageDeskewed(guid, page)
+        val img = getImageColorAdjusted(guid, page)
         logger.info("Creating cropped image for ${img.name}")
         runCommand(img.parentFile, "magick ${img.name} -fuzz $fuzz% -trim +repage ${guid}-${page.toString().padStart(4, '0')}.png")
     }
@@ -91,6 +98,8 @@ class FileManagerImport(val dataPath: String) {
     fun getImageOriginal(guid: String, page: Int) = File("$dataPath/import/${guid}-original-${page.toString().padStart(4, '0')}.png")
 
     fun getImageDeskewed(guid: String, page: Int) = File("$dataPath/import/${guid}-deskewed-${page.toString().padStart(4, '0')}.png")
+
+    fun getImageColorAdjusted(guid: String, page: Int) = File("$dataPath/import/${guid}-coloradjusted-${page.toString().padStart(4, '0')}.png")
 
     fun getImage(guid: String, page: Int) = File("$dataPath/import/${guid}-${page.toString().padStart(4, '0')}.png")
 

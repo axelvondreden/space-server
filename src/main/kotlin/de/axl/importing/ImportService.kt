@@ -62,10 +62,7 @@ class ImportService(private val fileManager: FileManagerImport, private val dbSe
         val pageImages = fileManager.getImagesOriginal(guid)
         val pageCount = pageImages.size
 
-        for (page in 1..pageCount) {
-            fileManager.createDeskewedImage(guid, page)
-            fileManager.createCroppedImage(guid, page)
-        }
+        deskewAndCreateThumbnails(guid)
 
         val ocrState = state.copy(progress = state.progress?.plus((step * 2)), message = "Running OCR")
         importFlow.emit(ocrState)
@@ -77,16 +74,22 @@ class ImportService(private val fileManager: FileManagerImport, private val dbSe
         importFlow.emit(state.copy(progress = state.progress?.plus((step * 4)), message = "Searching for dates in PDF"))
         //val date = findDateFromText(text)
 
-        importFlow.emit(state.copy(progress = state.progress?.plus((step * 6)), message = "Creating thumbnails"))
-        for (page in 1..pageCount) {
-            fileManager.createThumbnails(guid, page)
-        }
-
         logger.info("Creating import for $guid")
         importFlow.emit(state.copy(progress = state.progress?.plus((step * 7)), message = "Creating import in database for $guid"))
         dbService.create(ExposedImport(guid, ocrLanguage = OCRLanguage.DEU, pages = pageCount, text = null, date = null))
         logger.info("PDF import created")
         importFlow.emit(state.copy(progress = state.progress?.plus((step * 7)), message = "Import complete", completedFile = true))
+    }
+
+    fun deskewAndCreateThumbnails(guid: String, deskew: Int = 40, colorFuzz: Int = 5, cropFuzz: Int = 20) {
+        logger.info("Running deskew on $guid: deskew: $deskew% colorFuzz: $colorFuzz% cropFuzz: $cropFuzz%")
+        val pageCount = fileManager.getImagesOriginal(guid).size
+        for (page in 1..pageCount) {
+            fileManager.createDeskewedImage(guid, page, deskew)
+            fileManager.createColorAdjustedImage(guid, page, colorFuzz)
+            fileManager.createCroppedImage(guid, page, cropFuzz)
+            fileManager.createThumbnails(guid, page)
+        }
     }
 
     private fun extractTextFromPdf(file: File): String {
