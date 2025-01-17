@@ -123,7 +123,7 @@ fun Route.importsRoute(importService: ImportService, fileManager: FileManagerImp
         post("/{guid}/deskew") {
             val guid = call.parameters["guid"]
             val deskew = call.request.queryParameters["deskew"]?.toIntOrNull() ?: 40
-            val colorFuzz = call.request.queryParameters["colorFuzz"]?.toIntOrNull() ?: 5
+            val colorFuzz = call.request.queryParameters["colorFuzz"]?.toIntOrNull() ?: 10
             val cropFuzz = call.request.queryParameters["cropFuzz"]?.toIntOrNull() ?: 20
             if (guid.isNullOrBlank()) {
                 call.respond(HttpStatusCode.NotFound)

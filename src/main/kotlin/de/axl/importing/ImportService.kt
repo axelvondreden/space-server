@@ -5,6 +5,7 @@ import de.axl.db.ImportDbService
 import de.axl.db.OCRLanguage
 import de.axl.files.FileManagerImport
 import de.axl.importing.events.ImportStateEvent
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.text.PDFTextStripper
@@ -81,13 +82,16 @@ class ImportService(private val fileManager: FileManagerImport, private val dbSe
         importFlow.emit(state.copy(progress = state.progress?.plus((step * 7)), message = "Import complete", completedFile = true))
     }
 
-    fun deskewAndCreateThumbnails(guid: String, deskew: Int = 40, colorFuzz: Int = 5, cropFuzz: Int = 20) {
+    suspend fun deskewAndCreateThumbnails(guid: String, deskew: Int = 40, colorFuzz: Int = 10, cropFuzz: Int = 20) {
         logger.info("Running deskew on $guid: deskew: $deskew% colorFuzz: $colorFuzz% cropFuzz: $cropFuzz%")
         val pageCount = fileManager.getImagesOriginal(guid).size
         for (page in 1..pageCount) {
             fileManager.createDeskewedImage(guid, page, deskew)
+            delay(100)
             fileManager.createColorAdjustedImage(guid, page, colorFuzz)
+            delay(100)
             fileManager.createCroppedImage(guid, page, cropFuzz)
+            delay(100)
             fileManager.createThumbnails(guid, page)
         }
     }

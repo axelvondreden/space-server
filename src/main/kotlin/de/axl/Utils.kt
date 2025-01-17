@@ -8,6 +8,7 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.slf4j.Logger
 import java.io.File
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
@@ -33,11 +34,14 @@ fun createFolder(base: String, vararg path: String) {
     }
 }
 
-fun runCommand(workingDir: File, command: String) {
-    val process = ProcessBuilder(*command.split(" ").toTypedArray())
+fun runCommand(workingDir: File, command: String, logger: Logger? = null) {
+    logger?.info("Running command: $command")
+    val process = ProcessBuilder(command.split(" "))
         .directory(workingDir)
         .redirectErrorStream(true)
         .start()
+
+    process.inputStream.bufferedReader().lines().forEach { logger?.info(it) }
 
     if (!process.waitFor(10, TimeUnit.MINUTES)) {
         System.err.println("Command timed out: $command")

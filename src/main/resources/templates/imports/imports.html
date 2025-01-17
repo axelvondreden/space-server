@@ -49,8 +49,8 @@
                        oninput="document.getElementById('sliderDeskewValue').innerText = this.value">
             </div>
             <div class="d-flex">
-                <label for="sliderColorFuzz" class="form-label me-2" style="min-width: 100px; text-align-last: justify">Color: <span id="sliderColorFuzzValue">5</span></label>
-                <input type="range" class="form-range" id="sliderColorFuzz" min="0" max="100" step="1" value="5"
+                <label for="sliderColorFuzz" class="form-label me-2" style="min-width: 100px; text-align-last: justify">Color: <span id="sliderColorFuzzValue">10</span></label>
+                <input type="range" class="form-range" id="sliderColorFuzz" min="0" max="100" step="1" value="10"
                        oninput="document.getElementById('sliderColorFuzzValue').innerText = this.value">
             </div>
             <div class="d-flex">
@@ -303,7 +303,7 @@
         importText.value = imp.text;
 
         sliderDeskew.value = 40;
-        sliderColorFuzz.value = 5;
+        sliderColorFuzz.value = 10;
         sliderCropFuzz.value = 20;
     }
 

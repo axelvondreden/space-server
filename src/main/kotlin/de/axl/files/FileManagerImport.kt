@@ -30,25 +30,23 @@ class FileManagerImport(val dataPath: String) {
     fun createDeskewedImage(guid: String, page: Int, deskew: Int = 40) {
         val img = getImageOriginal(guid, page)
         logger.info("Creating deskewed image for ${img.name}")
-        runCommand(
-            img.parentFile,
-            "magick ${img.name} -deskew $deskew% -trim +repage ${guid}-deskewed-${page.toString().padStart(4, '0')}.png"
-        )
+        runCommand(img.parentFile, "magick ${img.name} -deskew $deskew% -trim +repage ${guid}-deskewed-${page.toString().padStart(4, '0')}.png", logger)
     }
 
-    fun createColorAdjustedImage(guid: String, page: Int, fuzz: Int = 5) {
+    fun createColorAdjustedImage(guid: String, page: Int, fuzz: Int = 10) {
         val img = getImageDeskewed(guid, page)
         logger.info("Creating color-adjusted image for ${img.name}")
         runCommand(
             img.parentFile,
-            "magick ${img.name} -fuzz $fuzz% -fill white -opaque \"#B6BBBF\" -trim +repage ${guid}-coloradjusted-${page.toString().padStart(4, '0')}.png"
+            "magick ${img.name} -fuzz $fuzz% -fill white -opaque #B6BBBF -trim +repage ${guid}-coloradjusted-${page.toString().padStart(4, '0')}.png",
+            logger
         )
     }
 
     fun createCroppedImage(guid: String, page: Int, fuzz: Int = 20) {
         val img = getImageColorAdjusted(guid, page)
         logger.info("Creating cropped image for ${img.name}")
-        runCommand(img.parentFile, "magick ${img.name} -fuzz $fuzz% -trim +repage ${guid}-${page.toString().padStart(4, '0')}.png")
+        runCommand(img.parentFile, "magick ${img.name} -fuzz $fuzz% -trim +repage ${guid}-${page.toString().padStart(4, '0')}.png", logger)
     }
 
     fun createThumbnails(guid: String, page: Int) {
