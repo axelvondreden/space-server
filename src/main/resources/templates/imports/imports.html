@@ -302,9 +302,9 @@
 
         importText.value = imp.text;
 
-        sliderDeskew.value = 40;
-        sliderColorFuzz.value = 10;
-        sliderCropFuzz.value = 20;
+        sliderDeskew.value = imp.deskew;
+        sliderColorFuzz.value = imp.colorFuzz;
+        sliderCropFuzz.value = imp.cropFuzz;
     }
 
     deskewButton.addEventListener("click", async () => {

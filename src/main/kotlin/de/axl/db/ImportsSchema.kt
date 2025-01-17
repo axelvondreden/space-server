@@ -17,6 +17,9 @@ data class ExposedImport(
     val ocrLanguage: OCRLanguage = OCRLanguage.DEU,
     val pages: Int = 1,
     val text: String? = null,
+    val deskew: Int = 40,
+    val colorFuzz: Int = 10,
+    val cropFuzz: Int = 20,
     @Contextual val date: LocalDate? = null,
     @Contextual val createdAt: LocalDateTime = LocalDateTime.now(),
     @Contextual val updatedAt: LocalDateTime? = null
@@ -34,6 +37,9 @@ class ImportDbService(database: Database) {
         val ocrLanguage = enumerationByName("ocrLanguage", 10, OCRLanguage::class).default(OCRLanguage.DEU)
         val pages = integer("pages")
         val text = text("text").nullable()
+        val deskew = integer("deskew").default(40)
+        val colorFuzz = integer("colorFuzz").default(10)
+        val cropFuzz = integer("cropFuzz").default(20)
         val date = date("date").nullable()
         val createdAt = datetime("createdAt")
         val updatedAt = datetime("updatedAt").nullable()
@@ -66,6 +72,9 @@ class ImportDbService(database: Database) {
                     it[Imports.ocrLanguage],
                     it[Imports.pages],
                     it[Imports.text],
+                    it[Imports.deskew],
+                    it[Imports.colorFuzz],
+                    it[Imports.cropFuzz],
                     it[Imports.date],
                     it[Imports.createdAt],
                     it[Imports.updatedAt]
@@ -84,6 +93,9 @@ class ImportDbService(database: Database) {
                         it[Imports.ocrLanguage],
                         it[Imports.pages],
                         it[Imports.text],
+                        it[Imports.deskew],
+                        it[Imports.colorFuzz],
+                        it[Imports.cropFuzz],
                         it[Imports.date],
                         it[Imports.createdAt],
                         it[Imports.updatedAt]
@@ -96,6 +108,11 @@ class ImportDbService(database: Database) {
     suspend fun update(import: ExposedImport) {
         dbQuery {
             Imports.update({ Imports.guid eq import.guid }) {
+                it[ocrLanguage] = import.ocrLanguage
+                it[text] = import.text
+                it[deskew] = import.deskew
+                it[colorFuzz] = import.colorFuzz
+                it[cropFuzz] = import.cropFuzz
                 it[date] = import.date
                 it[updatedAt] = LocalDateTime.now()
             }

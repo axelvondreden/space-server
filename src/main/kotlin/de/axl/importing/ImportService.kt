@@ -85,6 +85,10 @@ class ImportService(private val fileManager: FileManagerImport, private val dbSe
     suspend fun deskewAndCreateThumbnails(guid: String, deskew: Int = 40, colorFuzz: Int = 10, cropFuzz: Int = 20) {
         logger.info("Running deskew on $guid: deskew: $deskew% colorFuzz: $colorFuzz% cropFuzz: $cropFuzz%")
         val pageCount = fileManager.getImagesOriginal(guid).size
+        val dbImport = dbService.findByGuid(guid)
+        if (dbImport != null) {
+            dbService.update(dbImport.copy(deskew = deskew, colorFuzz = colorFuzz, cropFuzz = cropFuzz))
+        }
         for (page in 1..pageCount) {
             fileManager.createDeskewedImage(guid, page, deskew)
             delay(100)
