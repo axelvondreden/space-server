@@ -87,6 +87,24 @@ fun Route.importsRoute(importService: ImportService, fileManager: FileManagerImp
             call.respondFile(fileManager.getImage(guid, page))
         }
 
+        get("/{guid}/img/{page}/deskewed") {
+            val guid = call.parameters["guid"]!!
+            val page = call.parameters["page"]?.toIntOrNull() ?: 1
+            call.respondFile(fileManager.getImageDeskewed(guid, page))
+        }
+
+        get("/{guid}/img/{page}/color") {
+            val guid = call.parameters["guid"]!!
+            val page = call.parameters["page"]?.toIntOrNull() ?: 1
+            call.respondFile(fileManager.getImageColorAdjusted(guid, page))
+        }
+
+        get("/{guid}/img/{page}/original") {
+            val guid = call.parameters["guid"]!!
+            val page = call.parameters["page"]?.toIntOrNull() ?: 1
+            call.respondFile(fileManager.getImageOriginal(guid, page))
+        }
+
         get("/{guid}/thumb/{page}/{size}") {
             val guid = call.parameters["guid"]!!
             val page = call.parameters["page"]?.toIntOrNull() ?: 1

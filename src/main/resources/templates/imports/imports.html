@@ -7,7 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src= "https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/js/bootstrap-datepicker.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/js/bootstrap-datepicker.js"></script>
     <script src="https://unpkg.com/split.js/dist/split.min.js"></script>
     <script src="/scripts/theme.js"></script>
 </head>
@@ -43,22 +43,9 @@
                 <textarea class="form-control" id="importText" rows="20"></textarea>
             </div>
 
-            <div class="mt-auto d-flex">
-                <label for="sliderDeskew" class="form-label me-2" style="min-width: 100px; text-align-last: justify">Deskew: <span id="sliderDeskewValue">40</span></label>
-                <input type="range" class="form-range" id="sliderDeskew" min="0" max="100" step="1" value="40"
-                       oninput="document.getElementById('sliderDeskewValue').innerText = this.value">
-            </div>
-            <div class="d-flex">
-                <label for="sliderColorFuzz" class="form-label me-2" style="min-width: 100px; text-align-last: justify">Color: <span id="sliderColorFuzzValue">10</span></label>
-                <input type="range" class="form-range" id="sliderColorFuzz" min="0" max="100" step="1" value="10"
-                       oninput="document.getElementById('sliderColorFuzzValue').innerText = this.value">
-            </div>
-            <div class="d-flex">
-                <label for="sliderCropFuzz" class="form-label me-2" style="min-width: 100px; text-align-last: justify">Crop: <span id="sliderCropFuzzValue">20</span></label>
-                <input type="range" class="form-range" id="sliderCropFuzz" min="0" max="100" step="1" value="20"
-                       oninput="document.getElementById('sliderCropFuzzValue').innerText = this.value">
-            </div>
-            <button id="deskewButton" type="button" class="btn btn-secondary w-100 mb-2"><i class="bi bi-arrow-repeat"></i>&nbsp;Deskew</button>
+            <button type="button" class="btn btn-secondary mb-2 mt-auto" data-bs-toggle="modal" data-bs-target="#imageModal"><i class="bi bi-image"></i>
+                &nbsp;Image Editor
+            </button>
             <button type="button" class="btn btn-primary w-100 mb-2"><i class="bi bi-save"></i>&nbsp;Import</button>
             <button type="button" class="btn btn-danger w-100 mb-2"><i class="bi bi-trash"></i>&nbsp;Delete</button>
         </div>
@@ -84,6 +71,7 @@
         <span id="statusMessage" class="text-body-secondary"></span>
     </div>
 </footer>
+
 <!-- Upload Modal -->
 <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable">
@@ -106,6 +94,59 @@
         </div>
     </div>
 </div>
+
+<!-- Image Edit Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="imageModalLabel">Image Editor</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid d-flex">
+                    <div class="row w-100">
+                        <div class="col">
+                            <div style="height: 100px">
+                                <span class="form-label">Original:</span>
+                            </div>
+                            <img id="editImageOriginal" src="" class="img-fluid" alt="original">
+                        </div>
+                        <div class="col">
+                            <div style="height: 100px">
+                                <label for="sliderDeskew" class="form-label">Deskew: <span id="sliderDeskewValue">40</span></label>
+                                <input type="range" class="form-range" id="sliderDeskew" min="0" max="100" step="1" value="40"
+                                       oninput="document.getElementById('sliderDeskewValue').innerText = this.value">
+                            </div>
+                            <img id="editImageDeskewed" src="" class="img-fluid" alt="deskewed">
+                        </div>
+                        <div class="col">
+                            <div style="height: 100px">
+                                <label for="sliderColorFuzz" class="form-label">Color: <span id="sliderColorFuzzValue">10</span></label>
+                                <input type="range" class="form-range" id="sliderColorFuzz" min="0" max="100" step="1" value="10"
+                                       oninput="document.getElementById('sliderColorFuzzValue').innerText = this.value">
+                            </div>
+                            <img id="editImageColorAdjusted" src="" class="img-fluid" alt="color adjusted">
+                        </div>
+                        <div class="col">
+                            <div style="height: 100px">
+                                <label for="sliderCropFuzz" class="form-label">Crop: <span id="sliderCropFuzzValue">20</span></label>
+                                <input type="range" class="form-range" id="sliderCropFuzz" min="0" max="100" step="1" value="20"
+                                       oninput="document.getElementById('sliderCropFuzzValue').innerText = this.value">
+                            </div>
+                            <img id="editImageCropped" src="" class="img-fluid" alt="cropped">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button id="imageConfirmButton" type="button" class="btn btn-primary">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script th:inline="javascript">
 
@@ -212,7 +253,7 @@
 
 
     const uploadButton = document.getElementById("uploadButton");
-    const modal = new bootstrap.Modal("#uploadModal");
+    const uploadModal = new bootstrap.Modal("#uploadModal");
 
     uploadButton.addEventListener("click", async () => {
         for (const file of inputFile.files) {
@@ -228,14 +269,12 @@
                 }
             }).catch((error) => console.log("Something went wrong. " + error));
         }
-        modal.hide();
+        uploadModal.hide();
     });
 
 
     window.addEventListener("load", () => {
-        Split(['#importDocImageArea', '#importDocDataArea'], {
-
-        });
+        Split(['#importDocImageArea', '#importDocDataArea'], {});
         fillSidebar();
     });
 
@@ -280,7 +319,8 @@
     const languageSelect = document.getElementById("languageSelect");
     const importText = document.getElementById("importText");
 
-    const deskewButton = document.getElementById("deskewButton");
+    const imageConfirmButton = document.getElementById("imageConfirmButton");
+    const imageModal = new bootstrap.Modal("#imageModal");
 
     const sliderDeskew = document.getElementById("sliderDeskew");
     const sliderDeskewValue = document.getElementById("sliderDeskewValue");
@@ -288,6 +328,11 @@
     const sliderColorFuzzValue = document.getElementById("sliderColorFuzzValue");
     const sliderCropFuzz = document.getElementById("sliderCropFuzz");
     const sliderCropFuzzValue = document.getElementById("sliderCropFuzzValue");
+
+    const editImageOriginal = document.getElementById("editImageOriginal");
+    const editImageDeskewed = document.getElementById("editImageDeskewed");
+    const editImageColorAdjusted = document.getElementById("editImageColorAdjusted");
+    const editImageCropped = document.getElementById("editImageCropped");
 
     function docSelected(imp) {
         importNoDocSelected.classList.add("d-none");
@@ -312,17 +357,23 @@
         sliderColorFuzzValue.innerText = imp.colorFuzz;
         sliderCropFuzz.value = imp.cropFuzz;
         sliderCropFuzzValue.innerText = imp.cropFuzz;
+
+        editImageOriginal.src = "/api/v1/imports/" + imp.guid + "/img/1/original";
+        editImageDeskewed.src = "/api/v1/imports/" + imp.guid + "/img/1/deskewed";
+        editImageColorAdjusted.src = "/api/v1/imports/" + imp.guid + "/img/1/color";
+        editImageCropped.src = "/api/v1/imports/" + imp.guid + "/img/1";
     }
 
-    deskewButton.addEventListener("click", async () => {
+    imageConfirmButton.addEventListener("click", async () => {
         const guid = importGuid.innerHTML;
         if (guid) {
-            deskewButton.disabled = true;
+            imageConfirmButton.disabled = true;
             const query = "?deskew=" + sliderDeskew.value + "&colorFuzz=" + sliderColorFuzz.value + "&cropFuzz=" + sliderCropFuzz.value;
-            await fetch("/api/v1/imports/" + guid + "/deskew" + query, { method: "post" }).then(async result => {
+            await fetch("/api/v1/imports/" + guid + "/deskew" + query, {method: "post"}).then(async result => {
                 if (result.ok) {
                     await reloadImagesForGuid(guid);
-                    deskewButton.disabled = false;
+                    imageConfirmButton.disabled = false;
+                    imageModal.hide();
                 }
             });
         }
@@ -334,7 +385,7 @@
     }
 
     async function reloadImg(url) {
-        await fetch(url, { cache: 'no-store', mode: 'no-cors' })
+        await fetch(url, {cache: 'no-store', mode: 'no-cors'})
         document.body.querySelectorAll(`img[src='${url}']`)
             .forEach(img => {
                 console.log(img.src);
