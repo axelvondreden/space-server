@@ -127,7 +127,82 @@ paths:
           description: Import not found
         "401":
           $ref: "#/components/responses/Unauthorized"
-  /imports/{guid}/deskew:
+  /imports/{guid}/edit/deskew:
+    parameters:
+      - in: path
+        name: guid
+        required: true
+        schema:
+          type: string
+        description: GUID of the Import
+      - in: query
+        name: deskew
+        required: false
+        schema:
+          type: integer
+        description: deskew value
+    post:
+      summary: Run deskew on images
+      tags:
+        - Imports
+      responses:
+        "200":
+          description: Operation successfull
+        "404":
+          description: Import not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /imports/{guid}/edit/color:
+    parameters:
+      - in: path
+        name: guid
+        required: true
+        schema:
+          type: string
+        description: GUID of the Import
+      - in: query
+        name: fuzz
+        required: false
+        schema:
+          type: integer
+        description: fuzz value for removing background color
+    post:
+      summary: Run color adjustments on images
+      tags:
+        - Imports
+      responses:
+        "200":
+          description: Operation successfull
+        "404":
+          description: Import not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /imports/{guid}/edit/crop:
+    parameters:
+      - in: path
+        name: guid
+        required: true
+        schema:
+          type: string
+        description: GUID of the Import
+      - in: query
+        name: fuzz
+        required: false
+        schema:
+          type: integer
+        description: fuzz value for cropping background
+    post:
+      summary: Run background removal on images
+      tags:
+        - Imports
+      responses:
+        "200":
+          description: Operation successfull
+        "404":
+          description: Import not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /imports/{guid}/edit/complete:
     parameters:
       - in: path
         name: guid
@@ -154,7 +229,7 @@ paths:
           type: integer
         description: fuzz value for cropping background
     post:
-      summary: Run image deskew and create new thumbnails
+      summary: Run image editing and create new thumbnails
       tags:
         - Imports
       responses:

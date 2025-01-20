@@ -369,7 +369,7 @@
         if (guid) {
             imageConfirmButton.disabled = true;
             const query = "?deskew=" + sliderDeskew.value + "&colorFuzz=" + sliderColorFuzz.value + "&cropFuzz=" + sliderCropFuzz.value;
-            await fetch("/api/v1/imports/" + guid + "/deskew" + query, {method: "post"}).then(async result => {
+            await fetch("/api/v1/imports/" + guid + "/edit/complete" + query, {method: "post"}).then(async result => {
                 if (result.ok) {
                     await reloadImagesForGuid(guid);
                     imageConfirmButton.disabled = false;

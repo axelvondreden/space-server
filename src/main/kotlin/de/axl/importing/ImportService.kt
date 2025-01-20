@@ -63,7 +63,7 @@ class ImportService(private val fileManager: FileManagerImport, private val dbSe
         val pageImages = fileManager.getImagesOriginal(guid)
         val pageCount = pageImages.size
 
-        deskewAndCreateThumbnails(guid)
+        editImageComplete(guid)
 
         val ocrState = state.copy(progress = state.progress?.plus((step * 2)), message = "Running OCR")
         importFlow.emit(ocrState)
@@ -82,7 +82,7 @@ class ImportService(private val fileManager: FileManagerImport, private val dbSe
         importFlow.emit(state.copy(progress = state.progress?.plus((step * 7)), message = "Import complete", completedFile = true))
     }
 
-    suspend fun deskewAndCreateThumbnails(guid: String, deskew: Int = 40, colorFuzz: Int = 10, cropFuzz: Int = 20) {
+    suspend fun editImageComplete(guid: String, deskew: Int = 40, colorFuzz: Int = 10, cropFuzz: Int = 20) {
         logger.info("Running deskew on $guid: deskew: $deskew% colorFuzz: $colorFuzz% cropFuzz: $cropFuzz%")
         val pageCount = fileManager.getImagesOriginal(guid).size
         val dbImport = dbService.findByGuid(guid)

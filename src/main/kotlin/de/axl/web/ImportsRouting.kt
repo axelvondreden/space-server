@@ -138,7 +138,40 @@ fun Route.importsRoute(importService: ImportService, fileManager: FileManagerImp
             }
         }
 
-        post("/{guid}/deskew") {
+        post("/{guid}/edit/deskew") {
+            val guid = call.parameters["guid"]
+            val deskew = call.request.queryParameters["deskew"]?.toIntOrNull() ?: 40
+            if (guid.isNullOrBlank()) {
+                call.respond(HttpStatusCode.NotFound)
+            } else {
+                fileManager.createDeskewedImage(guid, deskew)
+                call.respond(HttpStatusCode.OK)
+            }
+        }
+
+        post("/{guid}/edit/color") {
+            val guid = call.parameters["guid"]
+            val fuzz = call.request.queryParameters["fuzz"]?.toIntOrNull() ?: 10
+            if (guid.isNullOrBlank()) {
+                call.respond(HttpStatusCode.NotFound)
+            } else {
+                fileManager.createColorAdjustedImage(guid, fuzz)
+                call.respond(HttpStatusCode.OK)
+            }
+        }
+
+        post("/{guid}/edit/crop") {
+            val guid = call.parameters["guid"]
+            val fuzz = call.request.queryParameters["fuzz"]?.toIntOrNull() ?: 10
+            if (guid.isNullOrBlank()) {
+                call.respond(HttpStatusCode.NotFound)
+            } else {
+                fileManager.createCroppedImage(guid, fuzz)
+                call.respond(HttpStatusCode.OK)
+            }
+        }
+
+        post("/{guid}/edit/complete") {
             val guid = call.parameters["guid"]
             val deskew = call.request.queryParameters["deskew"]?.toIntOrNull() ?: 40
             val colorFuzz = call.request.queryParameters["colorFuzz"]?.toIntOrNull() ?: 10
@@ -146,7 +179,7 @@ fun Route.importsRoute(importService: ImportService, fileManager: FileManagerImp
             if (guid.isNullOrBlank()) {
                 call.respond(HttpStatusCode.NotFound)
             } else {
-                importService.deskewAndCreateThumbnails(guid, deskew, colorFuzz, cropFuzz)
+                importService.editImageComplete(guid, deskew, colorFuzz, cropFuzz)
                 call.respond(HttpStatusCode.OK)
             }
         }
