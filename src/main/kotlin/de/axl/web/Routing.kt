@@ -25,7 +25,7 @@ fun Application.configureRouting(userDbService: UserDbService, importService: Im
         authenticate("auth-session") {
             apiRoute {
                 usersRoute(userDbService)
-                importsRoute(importService, fileManagerImport, importFlow)
+                importDocumentRoute(importService, fileManagerImport, importFlow)
             }
 
             webappRoute(userDbService)

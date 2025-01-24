@@ -1,7 +1,7 @@
 package de.axl.importing
 
-import de.axl.db.ExposedImport
-import de.axl.db.ImportDbService
+import de.axl.db.ExposedImportDocument
+import de.axl.db.ImportDocumentDbService
 import de.axl.db.OCRLanguage
 import de.axl.files.FileManagerImport
 import de.axl.importing.events.ImportStateEvent
@@ -14,7 +14,7 @@ import java.io.File
 import java.time.LocalDate
 import java.util.*
 
-class ImportService(private val fileManager: FileManagerImport, private val dbService: ImportDbService) {
+class ImportService(private val fileManager: FileManagerImport, private val dbService: ImportDocumentDbService) {
 
     private var importing = false
 
@@ -45,11 +45,11 @@ class ImportService(private val fileManager: FileManagerImport, private val dbSe
         importing = false
     }
 
-    suspend fun findAll(): List<ExposedImport> = dbService.findAll()
+    suspend fun findAll(): List<ExposedImportDocument> = dbService.findAll()
 
-    suspend fun findByGuid(guid: String): ExposedImport? = dbService.findByGuid(guid)
+    suspend fun findByGuid(guid: String): ExposedImportDocument? = dbService.findByGuid(guid)
 
-    suspend fun update(import: ExposedImport) = dbService.update(import)
+    suspend fun update(import: ExposedImportDocument) = dbService.update(import)
 
     suspend fun delete(guid: String) = dbService.delete(guid)
 
@@ -73,7 +73,7 @@ class ImportService(private val fileManager: FileManagerImport, private val dbSe
 
         logger.info("Creating import for $guid")
         importFlow.emit(state.copy(progress = state.progress?.plus((step * 7)), message = "Creating import in database for $guid"))
-        dbService.create(ExposedImport(guid, ocrLanguage = OCRLanguage.DEU, pages = pageCount, text = null, date = null))
+        dbService.create(ExposedImportDocument(guid, ocrLanguage = OCRLanguage.DEU, pages = pageCount, text = null, date = null))
         logger.info("PDF import created")
         importFlow.emit(state.copy(progress = state.progress?.plus((step * 7)), message = "Import complete", completedFile = true))
     }

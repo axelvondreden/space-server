@@ -12,7 +12,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Serializable
-data class ExposedImport(
+data class ExposedImportDocument(
     val guid: String,
     val ocrLanguage: OCRLanguage = OCRLanguage.DEU,
     val pages: Int = 1,
@@ -30,7 +30,7 @@ enum class OCRLanguage(val lang: String) {
     ENG("eng")
 }
 
-class ImportDbService(database: Database) {
+class ImportDocumentDbService(database: Database) {
     object Imports : Table() {
         val id = integer("id").autoIncrement()
         val guid = varchar("guid", length = 36).uniqueIndex()
@@ -53,7 +53,7 @@ class ImportDbService(database: Database) {
         }
     }
 
-    suspend fun create(import: ExposedImport): String = dbQuery {
+    suspend fun create(import: ExposedImportDocument): String = dbQuery {
         Imports.insert {
             it[guid] = import.guid
             it[ocrLanguage] = import.ocrLanguage
@@ -64,10 +64,10 @@ class ImportDbService(database: Database) {
         }[Imports.guid]
     }
 
-    suspend fun findAll(): List<ExposedImport> {
+    suspend fun findAll(): List<ExposedImportDocument> {
         return dbQuery {
             Imports.selectAll().map {
-                ExposedImport(
+                ExposedImportDocument(
                     it[Imports.guid],
                     it[Imports.ocrLanguage],
                     it[Imports.pages],
@@ -83,12 +83,12 @@ class ImportDbService(database: Database) {
         }
     }
 
-    suspend fun findByGuid(guid: String): ExposedImport? {
+    suspend fun findByGuid(guid: String): ExposedImportDocument? {
         return dbQuery {
             Imports.selectAll()
                 .where { Imports.guid eq guid }
                 .map {
-                    ExposedImport(
+                    ExposedImportDocument(
                         it[Imports.guid],
                         it[Imports.ocrLanguage],
                         it[Imports.pages],
@@ -105,7 +105,7 @@ class ImportDbService(database: Database) {
         }
     }
 
-    suspend fun update(import: ExposedImport) {
+    suspend fun update(import: ExposedImportDocument) {
         dbQuery {
             Imports.update({ Imports.guid eq import.guid }) {
                 it[ocrLanguage] = import.ocrLanguage

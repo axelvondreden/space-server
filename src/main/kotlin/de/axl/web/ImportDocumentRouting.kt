@@ -1,7 +1,7 @@
 package de.axl.web
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import de.axl.db.ExposedImport
+import de.axl.db.ExposedImportDocument
 import de.axl.files.FileManagerImport
 import de.axl.importing.ImportService
 import de.axl.importing.events.ImportStateEvent
@@ -22,7 +22,7 @@ import kotlinx.io.readByteArray
 import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 
-fun Route.importsRoute(importService: ImportService, fileManager: FileManagerImport, importFlow: MutableSharedFlow<ImportStateEvent>) {
+fun Route.importDocumentRoute(importService: ImportService, fileManager: FileManagerImport, importFlow: MutableSharedFlow<ImportStateEvent>) {
 
     val handleUploadsJob = AtomicReference<Job?>(null)
 
@@ -109,7 +109,7 @@ fun Route.importsRoute(importService: ImportService, fileManager: FileManagerImp
                 if (dbImport == null) {
                     call.respond(HttpStatusCode.NotFound)
                 } else {
-                    val import = call.receive<ExposedImport>()
+                    val import = call.receive<ExposedImportDocument>()
                     importService.update(import)
                     call.respond(HttpStatusCode.OK)
                 }
