@@ -96,12 +96,11 @@
 </div>
 
 <!-- Image Edit Modal -->
-<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+<div class="modal fade" id="imageModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="imageModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable modal-xl">
         <div class="modal-content">
             <div class="modal-header">
                 <h1 class="modal-title fs-5" id="imageModalLabel">Image Editor</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="container-fluid d-flex">
@@ -115,33 +114,39 @@
                         <div class="col">
                             <div style="height: 100px">
                                 <label for="sliderDeskew" class="form-label">Deskew: <span id="sliderDeskewValue">40</span></label>
-                                <input type="range" class="form-range" id="sliderDeskew" min="0" max="100" step="1" value="40"
-                                       oninput="document.getElementById('sliderDeskewValue').innerText = this.value">
+                                <input type="range" class="form-range" id="sliderDeskew" min="0" max="100" step="1" value="40">
                             </div>
                             <img id="editImageDeskewed" src="" class="img-fluid" alt="deskewed">
+                            <div id="deskewImageSpinner" class="d-flex justify-content-center d-none">
+                                <div class="spinner-border" role="status"></div>
+                            </div>
                         </div>
                         <div class="col">
                             <div style="height: 100px">
                                 <label for="sliderColorFuzz" class="form-label">Color: <span id="sliderColorFuzzValue">10</span></label>
-                                <input type="range" class="form-range" id="sliderColorFuzz" min="0" max="100" step="1" value="10"
-                                       oninput="document.getElementById('sliderColorFuzzValue').innerText = this.value">
+                                <input type="range" class="form-range" id="sliderColorFuzz" min="0" max="100" step="1" value="10">
                             </div>
                             <img id="editImageColorAdjusted" src="" class="img-fluid" alt="color adjusted">
+                            <div id="colorImageSpinner" class="d-flex justify-content-center d-none">
+                                <div class="spinner-border" role="status"></div>
+                            </div>
                         </div>
                         <div class="col">
                             <div style="height: 100px">
                                 <label for="sliderCropFuzz" class="form-label">Crop: <span id="sliderCropFuzzValue">20</span></label>
-                                <input type="range" class="form-range" id="sliderCropFuzz" min="0" max="100" step="1" value="20"
-                                       oninput="document.getElementById('sliderCropFuzzValue').innerText = this.value">
+                                <input type="range" class="form-range" id="sliderCropFuzz" min="0" max="100" step="1" value="20">
                             </div>
                             <img id="editImageCropped" src="" class="img-fluid" alt="cropped">
+                            <div id="cropImageSpinner" class="d-flex justify-content-center d-none">
+                                <div class="spinner-border" role="status"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button id="imageConfirmButton" type="button" class="btn btn-primary">Confirm</button>
+                <button id="imageEditCloseButton" type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                <button id="imageEditConfirmButton" type="button" class="btn btn-primary d-none">Create Thumbnails and Close</button>
             </div>
         </div>
     </div>
@@ -302,7 +307,7 @@
                 <span class="text-body-secondary"><i class="bi bi-file-earmark-text"></i> ${imp.pages}</span>
             </div>
             <div class="d-flex w-100">
-                <img src="/api/v1/imports/${imp.guid}/thumb/1/512x512" class="img-fluid" alt="Thumbnail">
+                <img id="${imp.guid}-thumb" src="/api/v1/imports/${imp.guid}/thumb/1/512x512" class="img-fluid" alt="Thumbnail">
             </div>
         `;
         a.addEventListener("click", () => {
@@ -319,20 +324,27 @@
     const languageSelect = document.getElementById("languageSelect");
     const importText = document.getElementById("importText");
 
-    const imageConfirmButton = document.getElementById("imageConfirmButton");
-    const imageModal = new bootstrap.Modal("#imageModal");
-
     const sliderDeskew = document.getElementById("sliderDeskew");
     const sliderDeskewValue = document.getElementById("sliderDeskewValue");
+    const deskewImageSpinner = document.getElementById("deskewImageSpinner");
+
     const sliderColorFuzz = document.getElementById("sliderColorFuzz");
     const sliderColorFuzzValue = document.getElementById("sliderColorFuzzValue");
+    const colorImageSpinner = document.getElementById("colorImageSpinner");
+
     const sliderCropFuzz = document.getElementById("sliderCropFuzz");
     const sliderCropFuzzValue = document.getElementById("sliderCropFuzzValue");
+    const cropImageSpinner = document.getElementById("cropImageSpinner");
 
     const editImageOriginal = document.getElementById("editImageOriginal");
     const editImageDeskewed = document.getElementById("editImageDeskewed");
     const editImageColorAdjusted = document.getElementById("editImageColorAdjusted");
     const editImageCropped = document.getElementById("editImageCropped");
+
+    const imageEditorConfirmButton = document.getElementById("imageEditConfirmButton");
+    const imageEditorCloseButton = document.getElementById("imageEditCloseButton");
+
+    const imageModal = new bootstrap.Modal("#imageModal");
 
     function docSelected(imp) {
         importNoDocSelected.classList.add("d-none");
@@ -362,37 +374,96 @@
         editImageDeskewed.src = "/api/v1/imports/" + imp.guid + "/img/1/deskewed";
         editImageColorAdjusted.src = "/api/v1/imports/" + imp.guid + "/img/1/color";
         editImageCropped.src = "/api/v1/imports/" + imp.guid + "/img/1";
+
+        imageEditorChanged(false);
     }
 
-    imageConfirmButton.addEventListener("click", async () => {
+    sliderDeskew.addEventListener("input", async () => sliderDeskewValue.innerText = sliderDeskew.value);
+    sliderColorFuzz.addEventListener("input", async () => sliderColorFuzzValue.innerText = sliderColorFuzz.value);
+    sliderCropFuzz.addEventListener("input", async () => sliderCropFuzzValue.innerText = sliderCropFuzz.value);
+
+    sliderDeskew.addEventListener("change", async () => {
         const guid = importGuid.innerHTML;
         if (guid) {
-            imageConfirmButton.disabled = true;
-            const query = "?deskew=" + sliderDeskew.value + "&colorFuzz=" + sliderColorFuzz.value + "&cropFuzz=" + sliderCropFuzz.value;
-            await fetch("/api/v1/imports/" + guid + "/edit/complete" + query, {method: "post"}).then(async result => {
+            imageEditorChanged(true);
+            await deskewImg(guid, sliderDeskew.value, sliderColorFuzz.value, sliderCropFuzz.value);
+        }
+    });
+
+    sliderColorFuzz.addEventListener("change", async () => {
+        const guid = importGuid.innerHTML;
+        if (guid) {
+            imageEditorChanged(true);
+            await colorImg(guid, sliderColorFuzz.value, sliderCropFuzz.value);
+        }
+    });
+
+    sliderCropFuzz.addEventListener("change", async () => {
+        const guid = importGuid.innerHTML;
+        if (guid) {
+            imageEditorChanged(true);
+            await cropImg(guid, sliderCropFuzz.value);
+        }
+    });
+
+    imageEditorConfirmButton.addEventListener("click", async () => {
+        const guid = importGuid.innerHTML;
+        if (guid) {
+            await fetch("/api/v1/imports/" + guid + "/edit/1/thumbs", {method: "post"}).then(async result => {
                 if (result.ok) {
-                    await reloadImagesForGuid(guid);
-                    imageConfirmButton.disabled = false;
+                    const img = document.getElementById(guid + "-thumb");
+                    img.src = "/api/v1/imports/" + guid + "/thumb/1/512x512?" + new Date().getTime();
                     imageModal.hide();
                 }
             });
         }
     });
 
-    async function reloadImagesForGuid(guid) {
-        await reloadImg("/api/v1/imports/" + guid + "/img/1");
-        await reloadImg("/api/v1/imports/" + guid + "/thumb/1/512x512");
+    function imageEditorChanged(changed) {
+        if (changed) {
+            imageEditorConfirmButton.classList.remove("d-none");
+            imageEditorCloseButton.classList.add("d-none");
+        } else {
+            imageEditorConfirmButton.classList.add("d-none");
+            imageEditorCloseButton.classList.remove("d-none");
+        }
     }
 
-    async function reloadImg(url) {
-        await fetch(url, {cache: 'no-store', mode: 'no-cors'})
-        document.body.querySelectorAll(`img[src='${url}']`)
-            .forEach(img => {
-                console.log(img.src);
-                return img.src = url;
-            })
+    async function deskewImg(guid, deskew, color, crop) {
+        editImageDeskewed.src = "";
+        deskewImageSpinner.classList.remove("d-none");
+        await fetch("/api/v1/imports/" + guid + "/edit/1/deskew?deskew=" + deskew, {method: "post"}).then(async result => {
+            if (result.ok) {
+                deskewImageSpinner.classList.add("d-none");
+                editImageDeskewed.src = "/api/v1/imports/" + guid + "/img/1/deskewed?" + new Date().getTime();
+                await colorImg(guid, color, crop);
+            }
+        });
     }
 
+    async function colorImg(guid, color, crop) {
+        editImageColorAdjusted.src = "";
+        colorImageSpinner.classList.remove("d-none");
+        await fetch("/api/v1/imports/" + guid + "/edit/1/color?fuzz=" + color, {method: "post"}).then(async result => {
+            if (result.ok) {
+                colorImageSpinner.classList.add("d-none");
+                editImageColorAdjusted.src = "/api/v1/imports/" + guid + "/img/1/color?" + new Date().getTime();
+                await cropImg(guid, crop);
+            }
+        });
+    }
+
+    async function cropImg(guid, crop) {
+        editImageCropped.src = "";
+        cropImageSpinner.classList.remove("d-none");
+        await fetch("/api/v1/imports/" + guid + "/edit/1/crop?fuzz=" + crop, {method: "post"}).then(async result => {
+            if (result.ok) {
+                cropImageSpinner.classList.add("d-none");
+                editImageCropped.src = "/api/v1/imports/" + guid + "/img/1?" + new Date().getTime();
+                pageImage.src = "/api/v1/imports/" + guid + "/img/1?" + new Date().getTime();
+            }
+        });
+    }
 </script>
 </body>
 </html>

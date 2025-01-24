@@ -138,35 +138,52 @@ fun Route.importsRoute(importService: ImportService, fileManager: FileManagerImp
             }
         }
 
-        post("/{guid}/edit/deskew") {
+        post("/{guid}/edit/{page}/deskew") {
             val guid = call.parameters["guid"]
+            val page = call.parameters["page"]?.toIntOrNull() ?: 1
             val deskew = call.request.queryParameters["deskew"]?.toIntOrNull() ?: 40
             if (guid.isNullOrBlank()) {
                 call.respond(HttpStatusCode.NotFound)
             } else {
-                fileManager.createDeskewedImage(guid, deskew)
+                importService.update(importService.findByGuid(guid)!!.copy(deskew = deskew))
+                fileManager.createDeskewedImage(guid, page, deskew)
                 call.respond(HttpStatusCode.OK)
             }
         }
 
-        post("/{guid}/edit/color") {
+        post("/{guid}/edit/{page}/color") {
             val guid = call.parameters["guid"]
+            val page = call.parameters["page"]?.toIntOrNull() ?: 1
             val fuzz = call.request.queryParameters["fuzz"]?.toIntOrNull() ?: 10
             if (guid.isNullOrBlank()) {
                 call.respond(HttpStatusCode.NotFound)
             } else {
-                fileManager.createColorAdjustedImage(guid, fuzz)
+                importService.update(importService.findByGuid(guid)!!.copy(colorFuzz = fuzz))
+                fileManager.createColorAdjustedImage(guid, page, fuzz)
                 call.respond(HttpStatusCode.OK)
             }
         }
 
-        post("/{guid}/edit/crop") {
+        post("/{guid}/edit/{page}/crop") {
             val guid = call.parameters["guid"]
+            val page = call.parameters["page"]?.toIntOrNull() ?: 1
             val fuzz = call.request.queryParameters["fuzz"]?.toIntOrNull() ?: 10
             if (guid.isNullOrBlank()) {
                 call.respond(HttpStatusCode.NotFound)
             } else {
-                fileManager.createCroppedImage(guid, fuzz)
+                importService.update(importService.findByGuid(guid)!!.copy(cropFuzz = fuzz))
+                fileManager.createCroppedImage(guid, page, fuzz)
+                call.respond(HttpStatusCode.OK)
+            }
+        }
+
+        post("/{guid}/edit/{page}/thumbs") {
+            val guid = call.parameters["guid"]
+            val page = call.parameters["page"]?.toIntOrNull() ?: 1
+            if (guid.isNullOrBlank()) {
+                call.respond(HttpStatusCode.NotFound)
+            } else {
+                fileManager.createThumbnails(guid, page)
                 call.respond(HttpStatusCode.OK)
             }
         }
