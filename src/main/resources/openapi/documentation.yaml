@@ -151,7 +151,7 @@ paths:
           description: Import not found
         "401":
           $ref: "#/components/responses/Unauthorized"
-  /imports/{guid}/img/{page}:
+  /imports/{guid}/img:
     parameters:
       - in: path
         name: guid
@@ -159,104 +159,20 @@ paths:
         schema:
           type: string
         description: GUID of the Import
-      - in: path
+      - in: query
         name: page
-        required: true
+        required: false
         schema:
           type: integer
         description: the page number
-    get:
-      summary: Get the Image for the specified page
-      tags:
-        - Imports
-      responses:
-        "200":
-          description: Returns the Image
-          content:
-            image/png:
-              schema:
-                type: string
-                format: binary
-        "404":
-          description: Import not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-  /imports/{guid}/img/{page}/deskewed:
-    parameters:
-      - in: path
-        name: guid
-        required: true
+      - in: query
+        name: type
+        required: false
         schema:
           type: string
-        description: GUID of the Import
-      - in: path
-        name: page
-        required: true
-        schema:
-          type: integer
-        description: the page number
+        description: "the image type: original, deskewed, color, final"
     get:
-      summary: Get the deskewed Image for the specified page
-      tags:
-        - Imports
-      responses:
-        "200":
-          description: Returns the Image
-          content:
-            image/png:
-              schema:
-                type: string
-                format: binary
-        "404":
-          description: Import not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-  /imports/{guid}/img/{page}/color:
-    parameters:
-      - in: path
-        name: guid
-        required: true
-        schema:
-          type: string
-        description: GUID of the Import
-      - in: path
-        name: page
-        required: true
-        schema:
-          type: integer
-        description: the page number
-    get:
-      summary: Get the color adjusted Image for the specified page
-      tags:
-        - Imports
-      responses:
-        "200":
-          description: Returns the Image
-          content:
-            image/png:
-              schema:
-                type: string
-                format: binary
-        "404":
-          description: Import not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-  /imports/{guid}/img/{page}/original:
-    parameters:
-      - in: path
-        name: guid
-        required: true
-        schema:
-          type: string
-        description: GUID of the Import
-      - in: path
-        name: page
-        required: true
-        schema:
-          type: integer
-        description: the page number
-    get:
-      summary: Get the original Image for the specified page
+      summary: Get the Image for the specified type and page and
       tags:
         - Imports
       responses:
@@ -369,7 +285,7 @@ paths:
           description: Import not found
         "401":
           $ref: "#/components/responses/Unauthorized"
-  /imports/{guid}/edit/crop:
+  /imports/{guid}/edit/{page}/crop:
     parameters:
       - in: path
         name: guid

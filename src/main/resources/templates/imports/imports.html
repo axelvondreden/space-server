@@ -349,7 +349,7 @@
     function docSelected(imp) {
         importNoDocSelected.classList.add("d-none");
         importDocArea.classList.remove("d-none");
-        pageImage.src = "/api/v1/imports/" + imp.guid + "/img/1";
+        pageImage.src = "/api/v1/imports/" + imp.guid + "/img";
         importGuid.innerHTML = imp.guid;
         let dateElem = $("#importDate");
         dateElem.datepicker({
@@ -370,10 +370,10 @@
         sliderCropFuzz.value = imp.cropFuzz;
         sliderCropFuzzValue.innerText = imp.cropFuzz;
 
-        editImageOriginal.src = "/api/v1/imports/" + imp.guid + "/img/1/original";
-        editImageDeskewed.src = "/api/v1/imports/" + imp.guid + "/img/1/deskewed";
-        editImageColorAdjusted.src = "/api/v1/imports/" + imp.guid + "/img/1/color";
-        editImageCropped.src = "/api/v1/imports/" + imp.guid + "/img/1";
+        editImageOriginal.src = "/api/v1/imports/" + imp.guid + "/img?type=original";
+        editImageDeskewed.src = "/api/v1/imports/" + imp.guid + "/img?type=deskewed";
+        editImageColorAdjusted.src = "/api/v1/imports/" + imp.guid + "/img?type=color";
+        editImageCropped.src = "/api/v1/imports/" + imp.guid + "/img";
 
         imageEditorChanged(false);
     }
@@ -435,7 +435,7 @@
         await fetch("/api/v1/imports/" + guid + "/edit/1/deskew?deskew=" + deskew, {method: "post"}).then(async result => {
             if (result.ok) {
                 deskewImageSpinner.classList.add("d-none");
-                editImageDeskewed.src = "/api/v1/imports/" + guid + "/img/1/deskewed?" + new Date().getTime();
+                editImageDeskewed.src = "/api/v1/imports/" + guid + "/img?type=deskewed&" + new Date().getTime();
                 await colorImg(guid, color, crop);
             }
         });
@@ -447,7 +447,7 @@
         await fetch("/api/v1/imports/" + guid + "/edit/1/color?fuzz=" + color, {method: "post"}).then(async result => {
             if (result.ok) {
                 colorImageSpinner.classList.add("d-none");
-                editImageColorAdjusted.src = "/api/v1/imports/" + guid + "/img/1/color?" + new Date().getTime();
+                editImageColorAdjusted.src = "/api/v1/imports/" + guid + "/img?type=color&" + new Date().getTime();
                 await cropImg(guid, crop);
             }
         });
@@ -459,8 +459,8 @@
         await fetch("/api/v1/imports/" + guid + "/edit/1/crop?fuzz=" + crop, {method: "post"}).then(async result => {
             if (result.ok) {
                 cropImageSpinner.classList.add("d-none");
-                editImageCropped.src = "/api/v1/imports/" + guid + "/img/1?" + new Date().getTime();
-                pageImage.src = "/api/v1/imports/" + guid + "/img/1?" + new Date().getTime();
+                editImageCropped.src = "/api/v1/imports/" + guid + "/img?" + new Date().getTime();
+                pageImage.src = "/api/v1/imports/" + guid + "/img?" + new Date().getTime();
             }
         });
     }
