@@ -127,118 +127,6 @@ paths:
           description: Import not found
         "401":
           $ref: "#/components/responses/Unauthorized"
-  /imports/{guid}/edit/deskew:
-    parameters:
-      - in: path
-        name: guid
-        required: true
-        schema:
-          type: string
-        description: GUID of the Import
-      - in: query
-        name: deskew
-        required: false
-        schema:
-          type: integer
-        description: deskew value
-    post:
-      summary: Run deskew on images
-      tags:
-        - Imports
-      responses:
-        "200":
-          description: Operation successfull
-        "404":
-          description: Import not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-  /imports/{guid}/edit/color:
-    parameters:
-      - in: path
-        name: guid
-        required: true
-        schema:
-          type: string
-        description: GUID of the Import
-      - in: query
-        name: fuzz
-        required: false
-        schema:
-          type: integer
-        description: fuzz value for removing background color
-    post:
-      summary: Run color adjustments on images
-      tags:
-        - Imports
-      responses:
-        "200":
-          description: Operation successfull
-        "404":
-          description: Import not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-  /imports/{guid}/edit/crop:
-    parameters:
-      - in: path
-        name: guid
-        required: true
-        schema:
-          type: string
-        description: GUID of the Import
-      - in: query
-        name: fuzz
-        required: false
-        schema:
-          type: integer
-        description: fuzz value for cropping background
-    post:
-      summary: Run background removal on images
-      tags:
-        - Imports
-      responses:
-        "200":
-          description: Operation successfull
-        "404":
-          description: Import not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-  /imports/{guid}/edit/complete:
-    parameters:
-      - in: path
-        name: guid
-        required: true
-        schema:
-          type: string
-        description: GUID of the Import
-      - in: query
-        name: deskew
-        required: false
-        schema:
-          type: integer
-        description: deskew value
-      - in: query
-        name: colorFuzz
-        required: false
-        schema:
-          type: integer
-        description: fuzz value for removing background color
-      - in: query
-        name: cropFuzz
-        required: false
-        schema:
-          type: integer
-        description: fuzz value for cropping background
-    post:
-      summary: Run image editing and create new thumbnails
-      tags:
-        - Imports
-      responses:
-        "200":
-          description: Operation successfull
-        "404":
-          description: Import not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
   /imports/{guid}/pdf:
     parameters:
       - in: path
@@ -248,7 +136,7 @@ paths:
           type: string
         description: GUID of the Import
     get:
-      summary: Get the PDF of the Import
+      summary: Get the original PDF of the Import
       tags:
         - Imports
       responses:
@@ -419,73 +307,134 @@ paths:
           description: Import not found
         "401":
           $ref: "#/components/responses/Unauthorized"
-
-  /documents:
-    get:
-      summary: Get all documents
-      tags:
-        - Documents
-      responses:
-        "200":
-          description: Returns a list of all documents
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Document"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
-  /documents/{guid}:
+  /imports/{guid}/edit/{page}/deskew:
     parameters:
       - in: path
         name: guid
         required: true
         schema:
           type: string
-        description: GUID of document
-    get:
-      summary: Get a specific document
-      tags:
-        - Documents
-      responses:
-        "200":
-          description: Returns the specified document
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Document"
-        "404":
-          description: Document not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-    put:
-      summary: Update a specific document
-      tags:
-        - Documents
-      requestBody:
+        description: GUID of the Import
+      - in: path
+        name: page
         required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Document"
+        schema:
+          type: integer
+        description: page number
+      - in: query
+        name: deskew
+        required: false
+        schema:
+          type: integer
+        description: deskew value
+    post:
+      summary: Run deskew on original image
+      tags:
+        - Imports
       responses:
         "200":
-          description: Document updated successfully
+          description: Operation successfull
         "404":
-          description: Document not found
+          description: Import not found
         "401":
           $ref: "#/components/responses/Unauthorized"
-    delete:
-      summary: Delete a specific document
+  /imports/{guid}/edit/{page}/color:
+    parameters:
+      - in: path
+        name: guid
+        required: true
+        schema:
+          type: string
+        description: GUID of the Import
+      - in: path
+        name: page
+        required: true
+        schema:
+          type: integer
+        description: page number
+      - in: query
+        name: fuzz
+        required: false
+        schema:
+          type: integer
+        description: fuzz value for removing background color
+    post:
+      summary: Run color adjustments on deskewed image
       tags:
-        - Documents
+        - Imports
       responses:
         "200":
-          description: Document deleted successfully
+          description: Operation successfull
         "404":
-          description: Document not found
+          description: Import not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /imports/{guid}/edit/crop:
+    parameters:
+      - in: path
+        name: guid
+        required: true
+        schema:
+          type: string
+        description: GUID of the Import
+      - in: path
+        name: page
+        required: true
+        schema:
+          type: integer
+        description: page number
+      - in: query
+        name: fuzz
+        required: false
+        schema:
+          type: integer
+        description: fuzz value for cropping background
+    post:
+      summary: Run background removal on color adjusted image
+      tags:
+        - Imports
+      responses:
+        "200":
+          description: Operation successfull
+        "404":
+          description: Import not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /imports/{guid}/edit/complete:
+    parameters:
+      - in: path
+        name: guid
+        required: true
+        schema:
+          type: string
+        description: GUID of the Import
+      - in: query
+        name: deskew
+        required: false
+        schema:
+          type: integer
+        description: deskew value
+      - in: query
+        name: colorFuzz
+        required: false
+        schema:
+          type: integer
+        description: fuzz value for removing background color
+      - in: query
+        name: cropFuzz
+        required: false
+        schema:
+          type: integer
+        description: fuzz value for cropping background
+    post:
+      summary: Run image editing on all pages and create new thumbnails
+      tags:
+        - Imports
+      responses:
+        "200":
+          description: Operation successfull
+        "404":
+          description: Import not found
         "401":
           $ref: "#/components/responses/Unauthorized"
 
@@ -613,22 +562,6 @@ components:
           $ref: "#/components/schemas/LocalDateTime"
       required:
         - username
-        - createdAt
-
-    Document:
-      type: object
-      properties:
-        id:
-          type: integer
-        guid:
-          type: string
-        createdAt:
-          $ref: "#/components/schemas/LocalDateTime"
-        updatedAt:
-          $ref: "#/components/schemas/LocalDateTime"
-      required:
-        - id
-        - guid
         - createdAt
 
     Import:

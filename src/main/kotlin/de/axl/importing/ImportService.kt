@@ -65,10 +65,6 @@ class ImportService(private val fileManager: FileManagerImport, private val dbSe
 
         editImageComplete(guid)
 
-        val ocrState = state.copy(progress = state.progress?.plus((step * 2)), message = "Running OCR")
-        importFlow.emit(ocrState)
-        //val ocrPdf = createSearchablePdf(newPath.toFile(), guid, importFlow, ocrState)
-
         importFlow.emit(state.copy(progress = state.progress?.plus((step * 3)), message = "Extracting text from PDF"))
         //val text = extractTextFromPdf(ocrPdf)
 

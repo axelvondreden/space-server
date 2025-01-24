@@ -2,7 +2,6 @@ package de.axl
 
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import de.axl.db.DocumentDbService
 import de.axl.db.ImportDbService
 import de.axl.db.UserDbService
 import de.axl.files.FileManagerImport
@@ -84,11 +83,10 @@ ${"┗" + "━".repeat(if (missing % 2 == 0) missing / 2 else (missing / 2) + 1)
         password = "",
     )
     val userDbService = UserDbService(database, property("space.admin.user.username"))
-    val documentDbService = DocumentDbService(database)
     val importDbService = ImportDbService(database)
     val fileManagerImport = FileManagerImport(dataPath)
     val importService = ImportService(fileManagerImport, importDbService)
 
-    configureRouting(userDbService, documentDbService, importService, fileManagerImport)
+    configureRouting(userDbService, importService, fileManagerImport)
     configureStartup(userDbService, fileManagerImport)
 }

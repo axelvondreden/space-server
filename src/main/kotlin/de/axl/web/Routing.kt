@@ -1,7 +1,6 @@
 package de.axl.web
 
 import de.axl.apiRoute
-import de.axl.db.DocumentDbService
 import de.axl.db.UserDbService
 import de.axl.files.FileManagerImport
 import de.axl.importing.ImportService
@@ -13,7 +12,7 @@ import io.ktor.server.plugins.swagger.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 
-fun Application.configureRouting(userDbService: UserDbService, documentDbService: DocumentDbService, importService: ImportService, fileManagerImport: FileManagerImport) {
+fun Application.configureRouting(userDbService: UserDbService, importService: ImportService, fileManagerImport: FileManagerImport) {
     val swaggerEnabled = property("space.swagger.enabled").toBoolean()
 
     val importFlow = MutableSharedFlow<ImportStateEvent>()
@@ -26,7 +25,6 @@ fun Application.configureRouting(userDbService: UserDbService, documentDbService
         authenticate("auth-session") {
             apiRoute {
                 usersRoute(userDbService)
-                documentsRoute(documentDbService)
                 importsRoute(importService, fileManagerImport, importFlow)
             }
 
