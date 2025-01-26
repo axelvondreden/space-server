@@ -43,7 +43,7 @@ paths:
     post:
       summary: Upload a file to be imported
       tags:
-        - Imports
+        - Upload
       requestBody:
         content:
           multipart/form-data:
@@ -59,86 +59,85 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
-  /imports:
+  /import/doc:
     get:
-      summary: Get all imports
+      summary: Get all import documents
       tags:
-        - Imports
+        - Import Document
       responses:
         "200":
-          description: Returns a list of all imports
+          description: Returns a list of all import documents
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Import"
+                  $ref: "#/components/schemas/ImportDocument"
         "401":
           $ref: "#/components/responses/Unauthorized"
-
-  /imports/{guid}:
+  /import/doc/{guid}:
     parameters:
       - in: path
         name: guid
         required: true
         schema:
           type: string
-        description: GUID of import
+        description: GUID of import document
     get:
-      summary: Get a specific import
+      summary: Get a specific import document
       tags:
-        - Imports
+        - Import Document
       responses:
         "200":
-          description: Returns the specified import
+          description: Returns the specified import document
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Import"
+                $ref: "#/components/schemas/ImportDocument"
         "404":
-          description: Import not found
+          description: Import document not found
         "401":
           $ref: "#/components/responses/Unauthorized"
     put:
-      summary: Update a specific import
+      summary: Update a specific import document
       tags:
-        - Imports
+        - Import Document
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Import"
+              $ref: "#/components/schemas/ImportDocument"
       responses:
         "200":
-          description: Import updated successfully
+          description: Import document updated successfully
         "404":
-          description: Import not found
+          description: Import document not found
         "401":
           $ref: "#/components/responses/Unauthorized"
     delete:
-      summary: Delete a specific import
+      summary: Delete a specific import document
       tags:
-        - Imports
+        - Import Document
       responses:
         "200":
-          description: Import deleted successfully
+          description: Import document deleted successfully
         "404":
-          description: Import not found
+          description: Import document not found
         "401":
           $ref: "#/components/responses/Unauthorized"
-  /imports/{guid}/pdf:
+  /import/doc/{guid}/pdf:
     parameters:
       - in: path
         name: guid
         required: true
         schema:
           type: string
-        description: GUID of the Import
+        description: GUID of the Import document
     get:
-      summary: Get the original PDF of the Import
+      summary: Get the original PDF of the Import document
       tags:
-        - Imports
+        - Import Document
       responses:
         "200":
           description: Returns the original PDF
@@ -148,10 +147,10 @@ paths:
                 type: string
                 format: binary
         "404":
-          description: Import not found
+          description: Import document not found
         "401":
           $ref: "#/components/responses/Unauthorized"
-  /imports/{guid}/img:
+  /import/doc/{guid}/edit/complete:
     parameters:
       - in: path
         name: guid
@@ -160,21 +159,119 @@ paths:
           type: string
         description: GUID of the Import
       - in: query
-        name: page
+        name: deskew
         required: false
         schema:
           type: integer
-        description: the page number
+          minimum: 0
+          maximum: 100
+          default: 40
+        description: deskew value
+      - in: query
+        name: colorFuzz
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 100
+          default: 10
+        description: fuzz value for removing background color
+      - in: query
+        name: cropFuzz
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 100
+          default: 20
+        description: fuzz value for cropping background
+    post:
+      summary: Run image editing on all pages and create new thumbnails
+      tags:
+        - Import Document
+      responses:
+        "200":
+          description: Operation successfull
+        "404":
+          description: Import not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /import/page/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID of import page
+    get:
+      summary: Get a specific import page
+      tags:
+        - Import Page
+      responses:
+        "200":
+          description: Returns the specified import page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportPage"
+        "404":
+          description: Import page not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    put:
+      summary: Update a specific import page
+      tags:
+        - Import Page
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportPage"
+      responses:
+        "200":
+          description: Import page updated successfully
+        "404":
+          description: Import page not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      summary: Delete a specific import page
+      tags:
+        - Import Page
+      responses:
+        "200":
+          description: Import page deleted successfully
+        "404":
+          description: Import page not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /import/page/{id}/img:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID of the Import page
       - in: query
         name: type
         required: false
         schema:
           type: string
-        description: "the image type: original, deskewed, color, final"
+          enum:
+            - original
+            - deskewed
+            - color
+            - final
+          default: final
+        description: "the image type"
     get:
-      summary: Get the Image for the specified type and page and
+      summary: Get the Image for the specified type
       tags:
-        - Imports
+        - Import Page
       responses:
         "200":
           description: Returns the Image
@@ -184,33 +281,32 @@ paths:
                 type: string
                 format: binary
         "404":
-          description: Import not found
+          description: Import page not found
         "401":
           $ref: "#/components/responses/Unauthorized"
-  /imports/{guid}/thumb/{page}/{size}:
+  /import/page/{id}/thumb:
     parameters:
       - in: path
-        name: guid
-        required: true
-        schema:
-          type: string
-        description: GUID of the Import
-      - in: path
-        name: page
+        name: id
         required: true
         schema:
           type: integer
-        description: the page number
-      - in: path
+        description: ID of the Import page
+      - in: query
         name: size
-        required: true
+        required: false
         schema:
           type: integer
-        description: the size of the thumbnail (128, 256, 512)
+          enum:
+            - 128
+            - 256
+            - 512
+          default: 512
+        description: the size of the thumbnail
     get:
-      summary: Get the thumbnail for the specified page
+      summary: Get the thumbnail for the specified size
       tags:
-        - Imports
+        - Import Page
       responses:
         "200":
           description: Returns the Thumbnail
@@ -220,137 +316,266 @@ paths:
                 type: string
                 format: binary
         "404":
-          description: Import not found
+          description: Import page not found
         "401":
           $ref: "#/components/responses/Unauthorized"
-  /imports/{guid}/edit/{page}/deskew:
+  /import/page/{id}/edit/deskew:
     parameters:
       - in: path
-        name: guid
-        required: true
-        schema:
-          type: string
-        description: GUID of the Import
-      - in: path
-        name: page
+        name: id
         required: true
         schema:
           type: integer
-        description: page number
+        description: ID of the import page
       - in: query
         name: deskew
         required: false
         schema:
           type: integer
+          minimum: 0
+          maximum: 100
+          default: 40
         description: deskew value
     post:
-      summary: Run deskew on original image
+      summary: Run deskew on original image of page
       tags:
-        - Imports
+        - Import Page
       responses:
         "200":
           description: Operation successfull
         "404":
-          description: Import not found
+          description: Import page not found
         "401":
           $ref: "#/components/responses/Unauthorized"
-  /imports/{guid}/edit/{page}/color:
+  /import/page/{id}/edit/color:
     parameters:
       - in: path
-        name: guid
-        required: true
-        schema:
-          type: string
-        description: GUID of the Import
-      - in: path
-        name: page
+        name: id
         required: true
         schema:
           type: integer
-        description: page number
+        description: ID of the import page
       - in: query
         name: fuzz
         required: false
         schema:
           type: integer
+          minimum: 0
+          maximum: 100
+          default: 10
         description: fuzz value for removing background color
     post:
-      summary: Run color adjustments on deskewed image
+      summary: Run color adjustments on deskewed image of page
       tags:
-        - Imports
+        - Import Page
       responses:
         "200":
           description: Operation successfull
         "404":
-          description: Import not found
+          description: Import page not found
         "401":
           $ref: "#/components/responses/Unauthorized"
-  /imports/{guid}/edit/{page}/crop:
+  /import/page/{id}/edit/crop:
     parameters:
       - in: path
-        name: guid
-        required: true
-        schema:
-          type: string
-        description: GUID of the Import
-      - in: path
-        name: page
+        name: id
         required: true
         schema:
           type: integer
-        description: page number
+        description: ID of the import page
       - in: query
         name: fuzz
         required: false
         schema:
           type: integer
+          minimum: 0
+          maximum: 100
+          default: 20
         description: fuzz value for cropping background
     post:
-      summary: Run background removal on color adjusted image
+      summary: Run background removal on color adjusted image of page
       tags:
-        - Imports
+        - Import Page
       responses:
         "200":
           description: Operation successfull
         "404":
-          description: Import not found
+          description: Import page not found
         "401":
           $ref: "#/components/responses/Unauthorized"
-  /imports/{guid}/edit/complete:
+  /import/page/{id}/edit/thumbs:
     parameters:
       - in: path
-        name: guid
+        name: id
         required: true
         schema:
-          type: string
-        description: GUID of the Import
-      - in: query
-        name: deskew
-        required: false
-        schema:
           type: integer
-        description: deskew value
-      - in: query
-        name: colorFuzz
-        required: false
-        schema:
-          type: integer
-        description: fuzz value for removing background color
-      - in: query
-        name: cropFuzz
-        required: false
-        schema:
-          type: integer
-        description: fuzz value for cropping background
+        description: ID of the import page
     post:
-      summary: Run image editing on all pages and create new thumbnails
+      summary: Create thumbnails for page
       tags:
-        - Imports
+        - Import Page
       responses:
         "200":
           description: Operation successfull
         "404":
-          description: Import not found
+          description: Import page not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /import/block/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID of import block
+    get:
+      summary: Get a specific import block
+      tags:
+        - Import Block
+      responses:
+        "200":
+          description: Returns the specified import block
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportBlock"
+        "404":
+          description: Import block not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    put:
+      summary: Update a specific import block
+      tags:
+        - Import Block
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportBlock"
+      responses:
+        "200":
+          description: Import block updated successfully
+        "404":
+          description: Import block not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      summary: Delete a specific import block
+      tags:
+        - Import Block
+      responses:
+        "200":
+          description: Import block deleted successfully
+        "404":
+          description: Import block not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /import/line/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID of import line
+    get:
+      summary: Get a specific import line
+      tags:
+        - Import Line
+      responses:
+        "200":
+          description: Returns the specified import line
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportLine"
+        "404":
+          description: Import line not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    put:
+      summary: Update a specific import line
+      tags:
+        - Import Line
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportLine"
+      responses:
+        "200":
+          description: Import line updated successfully
+        "404":
+          description: Import line not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      summary: Delete a specific import line
+      tags:
+        - Import Line
+      responses:
+        "200":
+          description: Import line deleted successfully
+        "404":
+          description: Import line not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /import/word/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID of import word
+    get:
+      summary: Get a specific import word
+      tags:
+        - Import Word
+      responses:
+        "200":
+          description: Returns the specified import word
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportWord"
+        "404":
+          description: Import word not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    put:
+      summary: Update a specific import word
+      tags:
+        - Import Word
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportWord"
+      responses:
+        "200":
+          description: Import word updated successfully
+        "404":
+          description: Import word not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      summary: Delete a specific import word
+      tags:
+        - Import Word
+      responses:
+        "200":
+          description: Import word deleted successfully
+        "404":
+          description: Import word not found
         "401":
           $ref: "#/components/responses/Unauthorized"
 
@@ -480,20 +705,12 @@ components:
         - username
         - createdAt
 
-    Import:
+    ImportDocument:
       type: object
       properties:
-        id:
-          type: integer
         guid:
           type: string
-        type:
-          type: string
         ocrLanguage:
-          type: string
-        pages:
-          type: integer
-        text:
           type: string
         date:
           $ref: "#/components/schemas/LocalDate"
@@ -502,11 +719,108 @@ components:
         updatedAt:
           $ref: "#/components/schemas/LocalDateTime"
       required:
-        - id
         - guid
-        - type
-        - pages
         - createdAt
+
+    ImportPage:
+      type: object
+      properties:
+        id:
+          type: integer
+        text:
+          type: string
+        page:
+          type: integer
+        width:
+          type: integer
+        height:
+          type: integer
+        deskew:
+          type: integer
+        colorFuzz:
+          type: integer
+        cropFuzz:
+          type: integer
+        documentGuid:
+          type: string
+      required:
+        - id
+        - text
+        - page
+        - width
+        - height
+        - documentGuid
+
+    ImportBlock:
+      type: object
+      properties:
+        id:
+          type: integer
+        text:
+          type: string
+        x:
+          type: integer
+        y:
+          type: integer
+        width:
+          type: integer
+        height:
+          type: integer
+      required:
+        - id
+        - text
+        - x
+        - y
+        - width
+        - height
+
+    ImportLine:
+      type: object
+      properties:
+        id:
+          type: integer
+        text:
+          type: string
+        x:
+          type: integer
+        y:
+          type: integer
+        width:
+          type: integer
+        height:
+          type: integer
+      required:
+        - id
+        - text
+        - x
+        - y
+        - width
+        - height
+
+    ImportWord:
+      type: object
+      properties:
+        id:
+          type: integer
+        text:
+          type: string
+        x:
+          type: integer
+        y:
+          type: integer
+        width:
+          type: integer
+        height:
+          type: integer
+        ocrConfidence:
+          type: number
+      required:
+        - id
+        - text
+        - x
+        - y
+        - width
+        - height
 
     LocalDateTime:
       type: array

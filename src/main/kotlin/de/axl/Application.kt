@@ -2,8 +2,7 @@ package de.axl
 
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import de.axl.db.ImportDocumentDbService
-import de.axl.db.UserDbService
+import de.axl.db.*
 import de.axl.files.FileManagerImport
 import de.axl.importing.ImportService
 import de.axl.startup.configureStartup
@@ -65,14 +64,16 @@ fun Application.module() {
     }
     val version = "Version ${properties.getProperty("version")}"
     val missing = 47 - version.length
-    log.info("""
+    log.info(
+        """
 
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ ▄▀▀ █▀▄ ▄▀▄ ▄▀▀ ██▀   ▄▀▀ ██▀ █▀▄ █ █ ██▀ █▀▄ ┃
 ┃ ▄██ █▀  █▀█ ▀▄▄ █▄▄   ▄██ █▄▄ █▀▄ ▀▄▀ █▄▄ █▀▄ ┃
 ${"┗" + "━".repeat(if (missing % 2 == 0) missing / 2 else (missing / 2) + 1) + version + "━".repeat(missing / 2) + "┛"}
 
-    """.trimIndent())
+    """.trimIndent()
+    )
 
     configureSecurity()
 
@@ -83,10 +84,14 @@ ${"┗" + "━".repeat(if (missing % 2 == 0) missing / 2 else (missing / 2) + 1)
         password = "",
     )
     val userDbService = UserDbService(database, property("space.admin.user.username"))
-    val importDocumentDbService = ImportDocumentDbService(database)
+    val importDocumentDb = ImportDocumentDbService(database)
+    val importPageDb = ImportPageDbService(database)
+    val importBlockDb = ImportBlockDbService(database)
+    val importLineDb = ImportLineDbService(database)
+    val importWordDb = ImportWordDbService(database)
     val fileManagerImport = FileManagerImport(dataPath)
-    val importService = ImportService(fileManagerImport, importDocumentDbService)
+    val importService = ImportService(fileManagerImport, importDocumentDb, importPageDb, importBlockDb, importLineDb, importWordDb)
 
-    configureRouting(userDbService, importService, fileManagerImport)
+    configureRouting(userDbService, importService)
     configureStartup(userDbService, fileManagerImport)
 }

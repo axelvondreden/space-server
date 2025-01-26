@@ -15,11 +15,6 @@ import java.time.LocalDateTime
 data class ExposedImportDocument(
     val guid: String,
     val ocrLanguage: OCRLanguage = OCRLanguage.DEU,
-    val pages: Int = 1,
-    val text: String? = null,
-    val deskew: Int = 40,
-    val colorFuzz: Int = 10,
-    val cropFuzz: Int = 20,
     @Contextual val date: LocalDate? = null,
     @Contextual val createdAt: LocalDateTime = LocalDateTime.now(),
     @Contextual val updatedAt: LocalDateTime? = null
@@ -31,15 +26,10 @@ enum class OCRLanguage(val lang: String) {
 }
 
 class ImportDocumentDbService(database: Database) {
-    object Imports : Table() {
+    object ImportDocument : Table() {
         val id = integer("id").autoIncrement()
         val guid = varchar("guid", length = 36).uniqueIndex()
         val ocrLanguage = enumerationByName("ocrLanguage", 10, OCRLanguage::class).default(OCRLanguage.DEU)
-        val pages = integer("pages")
-        val text = text("text").nullable()
-        val deskew = integer("deskew").default(40)
-        val colorFuzz = integer("colorFuzz").default(10)
-        val cropFuzz = integer("cropFuzz").default(20)
         val date = date("date").nullable()
         val createdAt = datetime("createdAt")
         val updatedAt = datetime("updatedAt").nullable()
@@ -49,35 +39,28 @@ class ImportDocumentDbService(database: Database) {
 
     init {
         transaction(database) {
-            SchemaUtils.create(Imports)
+            SchemaUtils.create(ImportDocument)
         }
     }
 
     suspend fun create(import: ExposedImportDocument): String = dbQuery {
-        Imports.insert {
+        ImportDocument.insert {
             it[guid] = import.guid
             it[ocrLanguage] = import.ocrLanguage
-            it[pages] = import.pages
-            it[text] = import.text
             it[date] = import.date
             it[createdAt] = LocalDateTime.now()
-        }[Imports.guid]
+        }[ImportDocument.guid]
     }
 
     suspend fun findAll(): List<ExposedImportDocument> {
         return dbQuery {
-            Imports.selectAll().map {
+            ImportDocument.selectAll().map {
                 ExposedImportDocument(
-                    it[Imports.guid],
-                    it[Imports.ocrLanguage],
-                    it[Imports.pages],
-                    it[Imports.text],
-                    it[Imports.deskew],
-                    it[Imports.colorFuzz],
-                    it[Imports.cropFuzz],
-                    it[Imports.date],
-                    it[Imports.createdAt],
-                    it[Imports.updatedAt]
+                    it[ImportDocument.guid],
+                    it[ImportDocument.ocrLanguage],
+                    it[ImportDocument.date],
+                    it[ImportDocument.createdAt],
+                    it[ImportDocument.updatedAt]
                 )
             }
         }
@@ -85,20 +68,15 @@ class ImportDocumentDbService(database: Database) {
 
     suspend fun findByGuid(guid: String): ExposedImportDocument? {
         return dbQuery {
-            Imports.selectAll()
-                .where { Imports.guid eq guid }
+            ImportDocument.selectAll()
+                .where { ImportDocument.guid eq guid }
                 .map {
                     ExposedImportDocument(
-                        it[Imports.guid],
-                        it[Imports.ocrLanguage],
-                        it[Imports.pages],
-                        it[Imports.text],
-                        it[Imports.deskew],
-                        it[Imports.colorFuzz],
-                        it[Imports.cropFuzz],
-                        it[Imports.date],
-                        it[Imports.createdAt],
-                        it[Imports.updatedAt]
+                        it[ImportDocument.guid],
+                        it[ImportDocument.ocrLanguage],
+                        it[ImportDocument.date],
+                        it[ImportDocument.createdAt],
+                        it[ImportDocument.updatedAt]
                     )
                 }
                 .singleOrNull()
@@ -107,12 +85,8 @@ class ImportDocumentDbService(database: Database) {
 
     suspend fun update(import: ExposedImportDocument) {
         dbQuery {
-            Imports.update({ Imports.guid eq import.guid }) {
+            ImportDocument.update({ ImportDocument.guid eq import.guid }) {
                 it[ocrLanguage] = import.ocrLanguage
-                it[text] = import.text
-                it[deskew] = import.deskew
-                it[colorFuzz] = import.colorFuzz
-                it[cropFuzz] = import.cropFuzz
                 it[date] = import.date
                 it[updatedAt] = LocalDateTime.now()
             }
@@ -121,7 +95,7 @@ class ImportDocumentDbService(database: Database) {
 
     suspend fun delete(guid: String) {
         dbQuery {
-            Imports.deleteWhere { Imports.guid.eq(guid) }
+            ImportDocument.deleteWhere { ImportDocument.guid.eq(guid) }
         }
     }
 }

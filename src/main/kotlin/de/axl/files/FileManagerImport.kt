@@ -99,6 +99,12 @@ class FileManagerImport(val dataPath: String) {
 
     fun getImageColorAdjusted(guid: String, page: Int) = File("$dataPath/import/${guid}-coloradjusted-${page.toString().padStart(4, '0')}.png")
 
+    fun getImages(guid: String): List<File> =
+        File("$dataPath/import")
+            .listFiles { file -> file.name.startsWith("$guid-") && imageTypes.none { it in file.name } && file.extension == "png" }
+            .orEmpty().toList()
+            .sortedBy { it.nameWithoutExtension.substringAfterLast("-").toInt() }
+
     fun getImage(guid: String, page: Int) = File("$dataPath/import/${guid}-${page.toString().padStart(4, '0')}.png")
 
     fun getPdfOriginal(guid: String) = File("$dataPath/import/${guid}-original.pdf")
@@ -118,5 +124,6 @@ class FileManagerImport(val dataPath: String) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java.declaringClass)
+        private val imageTypes = listOf("-original-", "-deskewed-", "-coloradjusted-")
     }
 }
