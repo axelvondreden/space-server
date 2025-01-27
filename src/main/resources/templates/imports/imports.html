@@ -51,7 +51,10 @@
                 &nbsp;Image Editor
             </button>
             <button type="button" class="btn btn-primary w-100 mb-2"><i class="bi bi-save"></i>&nbsp;Import</button>
-            <button type="button" class="btn btn-danger w-100 mb-2"><i class="bi bi-trash"></i>&nbsp;Delete</button>
+            <button id="deleteButton" type="button" class="btn btn-danger w-100 mb-2"><i class="bi bi-trash"></i>
+                &nbsp;Delete
+                <span id="deleteButtonSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
+            </button>
         </div>
     </div>
     <div id="importNoDocSelected" class="d-flex container-fluid h-100 p-5 align-items-center justify-content-center">
@@ -355,6 +358,12 @@
 
     async function docSelected(imp) {
         selectedImport = imp;
+        if (imp == null) {
+            selectedPage = null;
+            importNoDocSelected.classList.remove("d-none");
+            importDocArea.classList.add("d-none");
+            return;
+        }
         const page1 = imp.pages.find(p => p.page === 1);
         await fetch("/api/v1/import/page/" + page1.id).then(async result => {
             if (result.ok) {
@@ -405,6 +414,22 @@
                     const ocr = await result.json();
                     pageText.value = ocr.text;
                     refreshTextSpinner.classList.add("d-none");
+                }
+            });
+        }
+    });
+
+    const deleteButton = document.getElementById("deleteButton");
+    const deleteButtonSpinner = document.getElementById("deleteButtonSpinner");
+
+    deleteButton.addEventListener("click", async () => {
+        if (selectedImport != null) {
+            deleteButtonSpinner.classList.remove("d-none");
+            await fetch("/api/v1/import/doc/" + selectedImport.guid, {method: "delete"}).then(async result => {
+                if (result.ok) {
+                    await docSelected(null);
+                    await fillSidebar();
+                    deleteButtonSpinner.classList.add("d-none");
                 }
             });
         }
