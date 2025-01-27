@@ -9,13 +9,13 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 @Serializable
 data class ExposedImportWord(
-    val id: Int,
+    val id: Int = 0,
     val text: String,
-    val x: Int,
-    val y: Int,
-    val width: Int,
-    val height: Int,
-    val ocrConfidence: Double?
+    val x: Int = 0,
+    val y: Int = 0,
+    val width: Int = 0,
+    val height: Int = 0,
+    val ocrConfidence: Double? = 0.0
 )
 
 class ImportWordDbService(database: Database) {

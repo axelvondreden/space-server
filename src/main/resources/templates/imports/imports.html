@@ -39,8 +39,12 @@
                 </select>
             </div>
             <div class="mb-3">
-                <label for="importText" class="form-label">Text</label>
-                <textarea class="form-control" id="importText" rows="20"></textarea>
+                <label for="pageText" class="form-label">Text</label>
+                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" id="refreshTextButton">
+                    Refresh
+                    <span id="refreshTextSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
+                </button>
+                <textarea class="form-control" id="pageText" rows="20"></textarea>
             </div>
 
             <button type="button" class="btn btn-secondary mb-2 mt-auto" data-bs-toggle="modal" data-bs-target="#imageModal"><i class="bi bi-image"></i>
@@ -172,7 +176,7 @@
     const statusIconFile = document.getElementById("statusIconFile");
 
     const host = window.location.host;
-    const ws = new WebSocket("ws://" + host + "/api/v1/imports/events");
+    const ws = new WebSocket("ws://" + host + "/api/v1/import/events");
 
     ws.onopen = () => {
         statusMessage.innerHTML = "WebSocket connected";
@@ -227,7 +231,7 @@
             statusMessage.innerHTML = "";
         }
         if (state.completedFile) {
-            await fetch("/api/v1/imports/" + state.guid).then(async result => {
+            await fetch("/api/v1/import/doc/" + state.guid).then(async result => {
                 if (result.ok) {
                     const imp = await result.json();
                     addImportToSidebar(imp);
@@ -235,7 +239,6 @@
             }).catch((error) => console.log("Something went wrong. " + error));
         }
     };
-
 
     const inputFile = document.getElementById("formFileMultiple");
     const modalDiv = document.getElementById("uploadModal");
@@ -277,7 +280,6 @@
         uploadModal.hide();
     });
 
-
     window.addEventListener("load", () => {
         Split(['#importDocImageArea', '#importDocDataArea'], {});
         fillSidebar();
@@ -288,7 +290,7 @@
 
     async function fillSidebar() {
         sidebar.innerHTML = "";
-        await fetch("/api/v1/imports").then(async result => {
+        await fetch("/api/v1/import/doc").then(async result => {
             if (result.ok) {
                 const imports = await result.json();
                 imports.forEach(imp => addImportToSidebar(imp));
@@ -299,15 +301,16 @@
     function addImportToSidebar(imp) {
         const date = (!imp.date) ? "" : imp.date[2] + "." + imp.date[1] + "." + imp.date[0];
         const a = document.createElement("a");
+        const page1 = imp.pages.find(p => p.page === 1);
         a.href = "#";
         a.className = "list-group-item list-group-item-action py-3 lh-sm";
         a.innerHTML = `
             <div class="d-flex w-100 align-items-center justify-content-between">
                 <strong class="mb-1">${date}</strong>
-                <span class="text-body-secondary"><i class="bi bi-file-earmark-text"></i> ${imp.pages}</span>
+                <span class="text-body-secondary"><i class="bi bi-file-earmark-text"></i> ${imp.pages.length}</span>
             </div>
             <div class="d-flex w-100">
-                <img id="${imp.guid}-thumb" src="/api/v1/imports/${imp.guid}/thumb/1/512x512" class="img-fluid" alt="Thumbnail">
+                <img id="${imp.guid}-thumb" src="/api/v1/import/page/${page1.id}/thumb" class="img-fluid" alt="Thumbnail">
             </div>
         `;
         a.addEventListener("click", () => {
@@ -322,7 +325,7 @@
     const pageImage = document.getElementById("pageImage");
     const importGuid = document.getElementById("importGuid");
     const languageSelect = document.getElementById("languageSelect");
-    const importText = document.getElementById("importText");
+    const pageText = document.getElementById("pageText");
 
     const sliderDeskew = document.getElementById("sliderDeskew");
     const sliderDeskewValue = document.getElementById("sliderDeskewValue");
@@ -346,73 +349,97 @@
 
     const imageModal = new bootstrap.Modal("#imageModal");
 
-    function docSelected(imp) {
-        importNoDocSelected.classList.add("d-none");
-        importDocArea.classList.remove("d-none");
-        pageImage.src = "/api/v1/imports/" + imp.guid + "/img";
-        importGuid.innerHTML = imp.guid;
-        let dateElem = $("#importDate");
-        dateElem.datepicker({
-            format: "dd.mm.yyyy",
+    let selectedImport = null;
+    let selectedPage = null;
+
+    async function docSelected(imp) {
+        selectedImport = imp;
+        const page1 = imp.pages.find(p => p.page === 1);
+        await fetch("/api/v1/import/page/" + page1.id).then(async result => {
+            if (result.ok) {
+                const page = await result.json();
+                selectedPage = page;
+                importNoDocSelected.classList.add("d-none");
+                importDocArea.classList.remove("d-none");
+                pageImage.src = "/api/v1/import/page/" + page.id + "/img";
+                importGuid.innerHTML = imp.guid;
+                let dateElem = $("#importDate");
+                dateElem.datepicker({
+                    format: "dd.mm.yyyy",
+                });
+                if (imp.date) {
+                    dateElem.datepicker("update", new Date(imp.date[0], imp.date[1] - 1, imp.date[2]));
+                }
+
+                languageSelect.value = imp.ocrLanguage;
+
+                pageText.value = page.text;
+
+                sliderDeskew.value = page.deskew;
+                sliderDeskewValue.innerText = page.deskew;
+                sliderColorFuzz.value = page.colorFuzz;
+                sliderColorFuzzValue.innerText = page.colorFuzz;
+                sliderCropFuzz.value = page.cropFuzz;
+                sliderCropFuzzValue.innerText = page.cropFuzz;
+
+                editImageOriginal.src = "/api/v1/import/page/" + page1.id + "/img?type=original";
+                editImageDeskewed.src = "/api/v1/import/page/" + page1.id + "/img?type=deskewed";
+                editImageColorAdjusted.src = "/api/v1/import/page/" + page1.id + "/img?type=color";
+                editImageCropped.src = "/api/v1/import/page/" + page1.id + "/img";
+
+                imageEditorChanged(false);
+            }
         });
-        if (imp.date) {
-            dateElem.datepicker("update", new Date(imp.date[0], imp.date[1] - 1, imp.date[2]));
-        }
-
-        languageSelect.value = imp.ocrLanguage;
-
-        importText.value = imp.text;
-
-        sliderDeskew.value = imp.deskew;
-        sliderDeskewValue.innerText = imp.deskew;
-        sliderColorFuzz.value = imp.colorFuzz;
-        sliderColorFuzzValue.innerText = imp.colorFuzz;
-        sliderCropFuzz.value = imp.cropFuzz;
-        sliderCropFuzzValue.innerText = imp.cropFuzz;
-
-        editImageOriginal.src = "/api/v1/imports/" + imp.guid + "/img?type=original";
-        editImageDeskewed.src = "/api/v1/imports/" + imp.guid + "/img?type=deskewed";
-        editImageColorAdjusted.src = "/api/v1/imports/" + imp.guid + "/img?type=color";
-        editImageCropped.src = "/api/v1/imports/" + imp.guid + "/img";
-
-        imageEditorChanged(false);
     }
+
+    const refreshTextButton = document.getElementById("refreshTextButton");
+    const refreshTextSpinner = document.getElementById("refreshTextSpinner");
+
+    refreshTextButton.addEventListener("click", async () => {
+        if (selectedImport != null && selectedPage != null) {
+            refreshTextSpinner.classList.remove("d-none");
+            pageText.value = "";
+            await fetch("/api/v1/import/page/" + selectedPage.id + "/edit/ocr", {method: "post"}).then(async result => {
+                if (result.ok) {
+                    const ocr = await result.json();
+                    pageText.value = ocr.text;
+                    refreshTextSpinner.classList.add("d-none");
+                }
+            });
+        }
+    });
 
     sliderDeskew.addEventListener("input", async () => sliderDeskewValue.innerText = sliderDeskew.value);
     sliderColorFuzz.addEventListener("input", async () => sliderColorFuzzValue.innerText = sliderColorFuzz.value);
     sliderCropFuzz.addEventListener("input", async () => sliderCropFuzzValue.innerText = sliderCropFuzz.value);
 
     sliderDeskew.addEventListener("change", async () => {
-        const guid = importGuid.innerHTML;
-        if (guid) {
+        if (selectedImport != null && selectedPage != null) {
             imageEditorChanged(true);
-            await deskewImg(guid, sliderDeskew.value, sliderColorFuzz.value, sliderCropFuzz.value);
+            await deskewImg(selectedPage, sliderDeskew.value, sliderColorFuzz.value, sliderCropFuzz.value);
         }
     });
 
     sliderColorFuzz.addEventListener("change", async () => {
-        const guid = importGuid.innerHTML;
-        if (guid) {
+        if (selectedImport != null && selectedPage != null) {
             imageEditorChanged(true);
-            await colorImg(guid, sliderColorFuzz.value, sliderCropFuzz.value);
+            await colorImg(selectedPage, sliderColorFuzz.value, sliderCropFuzz.value);
         }
     });
 
     sliderCropFuzz.addEventListener("change", async () => {
-        const guid = importGuid.innerHTML;
-        if (guid) {
+        if (selectedImport != null && selectedPage != null) {
             imageEditorChanged(true);
-            await cropImg(guid, sliderCropFuzz.value);
+            await cropImg(selectedPage, sliderCropFuzz.value);
         }
     });
 
     imageEditorConfirmButton.addEventListener("click", async () => {
-        const guid = importGuid.innerHTML;
-        if (guid) {
-            await fetch("/api/v1/imports/" + guid + "/edit/1/thumbs", {method: "post"}).then(async result => {
+        if (selectedImport != null && selectedPage != null) {
+            await fetch("/api/v1/import/page/" + selectedPage.id + "/edit/thumbs", {method: "post"}).then(async result => {
                 if (result.ok) {
-                    const img = document.getElementById(guid + "-thumb");
-                    img.src = "/api/v1/imports/" + guid + "/thumb/1/512x512?" + new Date().getTime();
+                    const img = document.getElementById(selectedImport.guid + "-thumb");
+                    img.src = "/api/v1/import/page/" + selectedPage.id + "/thumb?" + new Date().getTime();
                     imageModal.hide();
                 }
             });
@@ -429,38 +456,38 @@
         }
     }
 
-    async function deskewImg(guid, deskew, color, crop) {
+    async function deskewImg(page, deskew, color, crop) {
         editImageDeskewed.src = "";
         deskewImageSpinner.classList.remove("d-none");
-        await fetch("/api/v1/imports/" + guid + "/edit/1/deskew?deskew=" + deskew, {method: "post"}).then(async result => {
+        await fetch("/api/v1/import/page/" + page.id + "/edit/deskew?deskew=" + deskew, {method: "post"}).then(async result => {
             if (result.ok) {
                 deskewImageSpinner.classList.add("d-none");
-                editImageDeskewed.src = "/api/v1/imports/" + guid + "/img?type=deskewed&" + new Date().getTime();
-                await colorImg(guid, color, crop);
+                editImageDeskewed.src = "/api/v1/import/page/" + page.id + "/img?type=deskewed&" + new Date().getTime();
+                await colorImg(page, color, crop);
             }
         });
     }
 
-    async function colorImg(guid, color, crop) {
+    async function colorImg(page, color, crop) {
         editImageColorAdjusted.src = "";
         colorImageSpinner.classList.remove("d-none");
-        await fetch("/api/v1/imports/" + guid + "/edit/1/color?fuzz=" + color, {method: "post"}).then(async result => {
+        await fetch("/api/v1/import/page/" + page.id + "/edit/color?fuzz=" + color, {method: "post"}).then(async result => {
             if (result.ok) {
                 colorImageSpinner.classList.add("d-none");
-                editImageColorAdjusted.src = "/api/v1/imports/" + guid + "/img?type=color&" + new Date().getTime();
-                await cropImg(guid, crop);
+                editImageColorAdjusted.src = "/api/v1/import/page/" + page.id + "/img?type=color&" + new Date().getTime();
+                await cropImg(page, crop);
             }
         });
     }
 
-    async function cropImg(guid, crop) {
+    async function cropImg(page, crop) {
         editImageCropped.src = "";
         cropImageSpinner.classList.remove("d-none");
-        await fetch("/api/v1/imports/" + guid + "/edit/1/crop?fuzz=" + crop, {method: "post"}).then(async result => {
+        await fetch("/api/v1/import/page/" + page.id + "/edit/crop?fuzz=" + crop, {method: "post"}).then(async result => {
             if (result.ok) {
                 cropImageSpinner.classList.add("d-none");
-                editImageCropped.src = "/api/v1/imports/" + guid + "/img?" + new Date().getTime();
-                pageImage.src = "/api/v1/imports/" + guid + "/img?" + new Date().getTime();
+                editImageCropped.src = "/api/v1/import/page/" + page.id + "/img?" + new Date().getTime();
+                pageImage.src = "/api/v1/import/page/" + page.id + "/img?" + new Date().getTime();
             }
         });
     }

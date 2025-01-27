@@ -2,6 +2,7 @@ package de.axl.web.importing
 
 import de.axl.db.ExposedImportPage
 import de.axl.importing.ImportService
+import de.axl.serialization.api.OcrResult
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -64,7 +65,7 @@ fun Route.importPageRoute(importService: ImportService) {
         get("/thumb") {
             val page = findById(this, call.parameters["id"]?.toIntOrNull())
             if (page != null) {
-                val size = call.parameters["size"] ?: "512"
+                val size = call.parameters["size"] ?: "512x512"
                 call.respondFile(importService.getThumbnail(page, size))
             }
         }
@@ -98,6 +99,15 @@ fun Route.importPageRoute(importService: ImportService) {
             if (page != null) {
                 importService.createThumbnails(page)
                 call.respond(HttpStatusCode.OK)
+            }
+        }
+
+        post("/edit/ocr") {
+            val page = findById(this, call.parameters["id"]?.toIntOrNull())
+            if (page != null) {
+                importService.extractTextAndCreateDbObjects(page)
+                val text = importService.findPageById(page.id)?.text ?: ""
+                call.respond(HttpStatusCode.OK, OcrResult(text))
             }
         }
     }

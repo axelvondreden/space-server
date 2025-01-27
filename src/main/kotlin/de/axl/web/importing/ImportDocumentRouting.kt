@@ -55,19 +55,6 @@ fun Route.importDocumentRoute(importService: ImportService) {
                 val guid = call.parameters["guid"]!!
                 call.respondFile(importService.getPdfOriginal(guid))
             }
-
-            post("/edit/complete") {
-                val guid = call.parameters["guid"]
-                val deskew = call.request.queryParameters["deskew"]?.toIntOrNull() ?: 40
-                val colorFuzz = call.request.queryParameters["colorFuzz"]?.toIntOrNull() ?: 10
-                val cropFuzz = call.request.queryParameters["cropFuzz"]?.toIntOrNull() ?: 20
-                if (guid.isNullOrBlank()) {
-                    call.respond(HttpStatusCode.NotFound)
-                } else {
-                    importService.editImageComplete(guid, deskew, colorFuzz, cropFuzz)
-                    call.respond(HttpStatusCode.OK)
-                }
-            }
         }
     }
 }

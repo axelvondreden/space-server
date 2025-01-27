@@ -150,52 +150,6 @@ paths:
           description: Import document not found
         "401":
           $ref: "#/components/responses/Unauthorized"
-  /import/doc/{guid}/edit/complete:
-    parameters:
-      - in: path
-        name: guid
-        required: true
-        schema:
-          type: string
-        description: GUID of the Import
-      - in: query
-        name: deskew
-        required: false
-        schema:
-          type: integer
-          minimum: 0
-          maximum: 100
-          default: 40
-        description: deskew value
-      - in: query
-        name: colorFuzz
-        required: false
-        schema:
-          type: integer
-          minimum: 0
-          maximum: 100
-          default: 10
-        description: fuzz value for removing background color
-      - in: query
-        name: cropFuzz
-        required: false
-        schema:
-          type: integer
-          minimum: 0
-          maximum: 100
-          default: 20
-        description: fuzz value for cropping background
-    post:
-      summary: Run image editing on all pages and create new thumbnails
-      tags:
-        - Import Document
-      responses:
-        "200":
-          description: Operation successfull
-        "404":
-          description: Import not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
 
   /import/page/{id}:
     parameters:
@@ -296,12 +250,15 @@ paths:
         name: size
         required: false
         schema:
-          type: integer
+          type: string
           enum:
             - 128
+            - 128x128
             - 256
+            - 256x256
             - 512
-          default: 512
+            - 512x512
+          default: 512x512
         description: the size of the thumbnail
     get:
       summary: Get the thumbnail for the specified size
@@ -418,6 +375,29 @@ paths:
       responses:
         "200":
           description: Operation successfull
+        "404":
+          description: Import page not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /import/page/{id}/edit/ocr:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        description: ID of the import page
+    post:
+      summary: Run OCR on page
+      tags:
+        - Import Page
+      responses:
+        "200":
+          description: Returns the text
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportOcrResult"
         "404":
           description: Import page not found
         "401":
@@ -718,9 +698,21 @@ components:
           $ref: "#/components/schemas/LocalDateTime"
         updatedAt:
           $ref: "#/components/schemas/LocalDateTime"
+        words:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImportDocumentPage"
       required:
         - guid
         - createdAt
+
+    ImportDocumentPage:
+      type: object
+      properties:
+        page:
+          type: integer
+        id:
+          type: integer
 
     ImportPage:
       type: object
@@ -741,15 +733,19 @@ components:
           type: integer
         cropFuzz:
           type: integer
-        documentGuid:
-          type: string
+        documentId:
+          type: integer
+        blocks:
+          type: array
+          items:
+            type: integer
       required:
         - id
         - text
         - page
         - width
         - height
-        - documentGuid
+        - documentId
 
     ImportBlock:
       type: object
@@ -766,6 +762,10 @@ components:
           type: integer
         height:
           type: integer
+        lines:
+          type: array
+          items:
+            type: integer
       required:
         - id
         - text
@@ -789,6 +789,10 @@ components:
           type: integer
         height:
           type: integer
+        words:
+          type: array
+          items:
+            type: integer
       required:
         - id
         - text
@@ -821,6 +825,14 @@ components:
         - y
         - width
         - height
+
+    ImportOcrResult:
+      type: object
+      properties:
+        text:
+          type: string
+      required:
+        - text
 
     LocalDateTime:
       type: array

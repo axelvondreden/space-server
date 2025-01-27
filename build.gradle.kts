@@ -32,6 +32,7 @@ dependencies {
     implementation(libs.ktor.serialization.jackson)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.jackson.time)
+    implementation(libs.jackson.xml)
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.time)

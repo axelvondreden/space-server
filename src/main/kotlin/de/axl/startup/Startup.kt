@@ -3,12 +3,12 @@ package de.axl.startup
 import de.axl.createFolder
 import de.axl.db.ExposedUser
 import de.axl.db.UserDbService
-import de.axl.files.FileManagerImport
+import de.axl.files.ImportFileManager
 import de.axl.property
 import io.ktor.server.application.*
 import kotlinx.coroutines.runBlocking
 
-fun Application.configureStartup(userDbService: UserDbService, fileManagerImport: FileManagerImport) {
+fun Application.configureStartup(userDbService: UserDbService, importFileManager: ImportFileManager) {
     log.info("Looking for logback config in ${System.getProperty("logback.configurationFile")}")
 
     runBlocking {
@@ -19,14 +19,12 @@ fun Application.configureStartup(userDbService: UserDbService, fileManagerImport
         }
     }
 
-    fileManagerImport.apply {
+    importFileManager.apply {
         createFolder(dataPath)
         createFolder(dataPath, "upload")
         createFolder(dataPath, "import")
-        createFolder(dataPath, "docs")
-        createFolder(dataPath, "docs", "pdf")
-        createFolder(dataPath, "docs", "img")
-        createFolder(dataPath, "docs", "thumb")
+        createFolder(dataPath, "import", "pdf")
+        createFolder(dataPath, "import", "pages")
     }
 
     log.info("Startup checks completed!")

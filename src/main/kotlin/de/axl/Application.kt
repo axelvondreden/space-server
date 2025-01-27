@@ -3,7 +3,7 @@ package de.axl
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import de.axl.db.*
-import de.axl.files.FileManagerImport
+import de.axl.files.ImportFileManager
 import de.axl.importing.ImportService
 import de.axl.startup.configureStartup
 import de.axl.web.configureRouting
@@ -89,9 +89,9 @@ ${"┗" + "━".repeat(if (missing % 2 == 0) missing / 2 else (missing / 2) + 1)
     val importBlockDb = ImportBlockDbService(database)
     val importLineDb = ImportLineDbService(database)
     val importWordDb = ImportWordDbService(database)
-    val fileManagerImport = FileManagerImport(dataPath)
-    val importService = ImportService(fileManagerImport, importDocumentDb, importPageDb, importBlockDb, importLineDb, importWordDb)
+    val importFileManager = ImportFileManager(dataPath)
+    val importService = ImportService(importFileManager, importDocumentDb, importPageDb, importBlockDb, importLineDb, importWordDb)
 
     configureRouting(userDbService, importService)
-    configureStartup(userDbService, fileManagerImport)
+    configureStartup(userDbService, importFileManager)
 }

@@ -9,12 +9,13 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 @Serializable
 data class ExposedImportBlock(
-    val id: Int,
-    val text: String,
-    val x: Int,
-    val y: Int,
-    val width: Int,
-    val height: Int
+    val id: Int = 0,
+    val text: String = "",
+    val x: Int = 0,
+    val y: Int = 0,
+    val width: Int = 0,
+    val height: Int = 0,
+    val lines: List<Int> = emptyList()
 )
 
 class ImportBlockDbService(database: Database) {
@@ -40,16 +41,7 @@ class ImportBlockDbService(database: Database) {
         return dbQuery {
             ImportBlock.selectAll()
                 .where { ImportBlock.id eq id }
-                .map {
-                    ExposedImportBlock(
-                        it[ImportBlock.id],
-                        it[ImportBlock.text],
-                        it[ImportBlock.x],
-                        it[ImportBlock.y],
-                        it[ImportBlock.width],
-                        it[ImportBlock.height]
-                    )
-                }
+                .mapExposed()
                 .singleOrNull()
         }
     }
@@ -82,5 +74,27 @@ class ImportBlockDbService(database: Database) {
         dbQuery {
             ImportBlock.deleteWhere { ImportBlock.id.eq(id) }
         }
+    }
+
+    suspend fun deleteByPage(pageId: Int) {
+        dbQuery {
+            ImportBlock.deleteWhere { ImportBlock.page.eq(pageId) }
+        }
+    }
+
+    private suspend fun Query.mapExposed(): List<ExposedImportBlock> = map {
+        ExposedImportBlock(
+            it[ImportBlock.id],
+            it[ImportBlock.text],
+            it[ImportBlock.x],
+            it[ImportBlock.y],
+            it[ImportBlock.width],
+            it[ImportBlock.height],
+            dbQuery {
+                ImportLineDbService.ImportLine.selectAll()
+                    .where { ImportLineDbService.ImportLine.block eq it[ImportBlock.id] }
+                    .map { line -> line[ImportLineDbService.ImportLine.id] }
+            }
+        )
     }
 }

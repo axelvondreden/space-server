@@ -13,12 +13,17 @@ import java.time.LocalDateTime
 
 @Serializable
 data class ExposedImportDocument(
+    val id: Int = 0,
     val guid: String,
     val ocrLanguage: OCRLanguage = OCRLanguage.DEU,
     @Contextual val date: LocalDate? = null,
     @Contextual val createdAt: LocalDateTime = LocalDateTime.now(),
-    @Contextual val updatedAt: LocalDateTime? = null
+    @Contextual val updatedAt: LocalDateTime? = null,
+    val pages: List<ExposedImportDocumentPage> = emptyList()
 )
+
+@Serializable
+data class ExposedImportDocumentPage(val page: Int, val id: Int)
 
 enum class OCRLanguage(val lang: String) {
     DEU("deu"),
@@ -54,32 +59,19 @@ class ImportDocumentDbService(database: Database) {
 
     suspend fun findAll(): List<ExposedImportDocument> {
         return dbQuery {
-            ImportDocument.selectAll().map {
-                ExposedImportDocument(
-                    it[ImportDocument.guid],
-                    it[ImportDocument.ocrLanguage],
-                    it[ImportDocument.date],
-                    it[ImportDocument.createdAt],
-                    it[ImportDocument.updatedAt]
-                )
-            }
+            ImportDocument.selectAll().mapExposed()
         }
     }
 
     suspend fun findByGuid(guid: String): ExposedImportDocument? {
         return dbQuery {
-            ImportDocument.selectAll()
-                .where { ImportDocument.guid eq guid }
-                .map {
-                    ExposedImportDocument(
-                        it[ImportDocument.guid],
-                        it[ImportDocument.ocrLanguage],
-                        it[ImportDocument.date],
-                        it[ImportDocument.createdAt],
-                        it[ImportDocument.updatedAt]
-                    )
-                }
-                .singleOrNull()
+            ImportDocument.selectAll().where { ImportDocument.guid eq guid }.mapExposed().singleOrNull()
+        }
+    }
+
+    suspend fun findById(id: Int): ExposedImportDocument? {
+        return dbQuery {
+            ImportDocument.selectAll().where { ImportDocument.id eq id }.mapExposed().singleOrNull()
         }
     }
 
@@ -97,5 +89,21 @@ class ImportDocumentDbService(database: Database) {
         dbQuery {
             ImportDocument.deleteWhere { ImportDocument.guid.eq(guid) }
         }
+    }
+
+    private suspend fun Query.mapExposed(): List<ExposedImportDocument> = map {
+        ExposedImportDocument(
+            it[ImportDocument.id],
+            it[ImportDocument.guid],
+            it[ImportDocument.ocrLanguage],
+            it[ImportDocument.date],
+            it[ImportDocument.createdAt],
+            it[ImportDocument.updatedAt],
+            dbQuery {
+                ImportPageDbService.ImportPage.selectAll()
+                    .where { ImportPageDbService.ImportPage.document eq it[ImportDocument.id] }
+                    .map { ExposedImportDocumentPage(it[ImportPageDbService.ImportPage.page], it[ImportPageDbService.ImportPage.id]) }
+            }
+        )
     }
 }
