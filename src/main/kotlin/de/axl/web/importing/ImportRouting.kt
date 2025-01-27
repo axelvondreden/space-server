@@ -11,18 +11,11 @@ import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.utils.io.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.launch
 import kotlinx.io.readByteArray
 import java.io.File
-import java.util.concurrent.atomic.AtomicReference
 
 fun Route.importRoute(importService: ImportService, importFlow: MutableSharedFlow<ImportStateEvent>) {
-
-    val handleUploadsJob = AtomicReference<Job?>(null)
 
     post("/upload") {
         var fileName = ""
@@ -40,19 +33,14 @@ fun Route.importRoute(importService: ImportService, importFlow: MutableSharedFlo
 
         if (fileName.isNotBlank()) {
             call.respondText("File $fileName was uploaded!")
-            // Cancel if a scheduled job exists and schedule a new one
-            handleUploadsJob.getAndSet(
-                GlobalScope.launch {
-                    (5 downTo 1).forEach {
-                        importFlow.emit(ImportStateEvent(importing = false, message = "Starting import in $it second(s)"))
-                        delay(1_000)
-                    }
-                    importService.handleUploads(importFlow)
-                }
-            )?.cancel() // Cancel previous unfinished job
         } else {
             call.respond(HttpStatusCode.BadRequest, "No file found in request")
         }
+    }
+
+    post("/upload/collect") {
+        call.respond(HttpStatusCode.OK)
+        importService.handleUploads(importFlow)
     }
 
     route("/import") {

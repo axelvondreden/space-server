@@ -58,6 +58,16 @@ paths:
           description: OK
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /upload/collect:
+    post:
+      summary: Start collection of uploaded files
+      tags:
+        - Upload
+      responses:
+        "200":
+          description: OK
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /import/doc:
     get:

@@ -44,7 +44,7 @@
                     Refresh
                     <span id="refreshTextSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
                 </button>
-                <textarea class="form-control" id="pageText" rows="20"></textarea>
+                <textarea class="form-control" id="pageText" rows="20" disabled></textarea>
             </div>
 
             <button type="button" class="btn btn-secondary mb-2 mt-auto" data-bs-toggle="modal" data-bs-target="#imageModal"><i class="bi bi-image"></i>
@@ -278,6 +278,7 @@
             }).catch((error) => console.log("Something went wrong. " + error));
         }
         uploadModal.hide();
+        await fetch("/api/v1/upload/collect", {method: "post"});
     });
 
     window.addEventListener("load", () => {
