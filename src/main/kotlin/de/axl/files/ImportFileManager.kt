@@ -1,6 +1,8 @@
 package de.axl.files
 
+import de.axl.importing.events.ImportStateEvent
 import de.axl.runCommand
+import kotlinx.coroutines.flow.MutableSharedFlow
 import net.coobird.thumbnailator.Thumbnails
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.rendering.ImageType
@@ -16,17 +18,18 @@ import kotlin.io.path.Path
 
 class ImportFileManager(val dataPath: String) {
 
-    fun createImagesFromOriginalPdf(pdfGuid: String, dpi: Int = 400): SortedMap<Int, String> {
+    suspend fun createImagesFromOriginalPdf(pdfGuid: String, importFlow: MutableSharedFlow<ImportStateEvent>, state: ImportStateEvent, step: Double): SortedMap<Int, String> {
         val document = Loader.loadPDF(getPdfOriginal(pdfGuid))
         val pages = document.numberOfPages
         val pdfRenderer = PDFRenderer(document)
         val map = sortedMapOf<Int, String>()
         for (i in 0 until pages) {
-            logger.info("Creating image from original PDF page ${i + 1} / $pages")
+            logger.info("Creating image from PDF page ${i + 1} / $pages")
+            importFlow.emit(state.copy(progress = state.progress?.plus((step / pages) * i), message = "Creating image from PDF page ${i + 1} / $pages"))
             val guid = UUID.randomUUID().toString()
             File("$dataPath/import/pages/$guid").mkdir()
-            var img = pdfRenderer.renderImageWithDPI(i, dpi.toFloat(), ImageType.RGB)
-            ImageIOUtil.writeImage(img, "${dataPath}/import/pages/$guid/original.png", dpi)
+            var img = pdfRenderer.renderImageWithDPI(i, 400F, ImageType.RGB)
+            ImageIOUtil.writeImage(img, "${dataPath}/import/pages/$guid/original.png", 400)
             map[i + 1] = guid
         }
         document.close()

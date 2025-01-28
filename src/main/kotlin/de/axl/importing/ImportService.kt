@@ -81,17 +81,8 @@ class ImportService(
         files.forEachIndexed { index, file ->
             if (file.exists()) {
                 val guid = UUID.randomUUID().toString()
-                val percent = index.toDouble() / files.size.toDouble()
-                val state = ImportStateEvent(
-                    importing = true,
-                    currentFile = index + 1,
-                    fileCount = files.size,
-                    guid = guid,
-                    progress = percent,
-                    message = "Importing ${file.name}"
-                )
-                importFlow.emit(state)
-                handlePdfUpload(file, guid, importFlow, state, 1.0 / files.size)
+                val state = ImportStateEvent(importing = true, currentFile = index + 1, fileCount = files.size, guid = guid)
+                handlePdfUpload(file, guid, importFlow, state)
             } else {
                 logger.error("File ${file.name} does not exist")
             }
@@ -100,26 +91,30 @@ class ImportService(
         importing = false
     }
 
-    private suspend fun handlePdfUpload(file: File, pdfGuid: String, importFlow: MutableSharedFlow<ImportStateEvent>, state: ImportStateEvent, fullStep: Double) {
-        val step = fullStep / 7.0
-
+    private suspend fun handlePdfUpload(file: File, pdfGuid: String, importFlow: MutableSharedFlow<ImportStateEvent>, state: ImportStateEvent) {
+        importFlow.emit(state.copy(progress = 0.1, message = "Moving file and creating import directory"))
         fileManager.moveFileToImport(file, pdfGuid)
 
         logger.info("Creating import for $pdfGuid")
         docService.create(ExposedImportDocument(guid = pdfGuid, ocrLanguage = OCRLanguage.DEU))
         val document = docService.findByGuid(pdfGuid)!!
 
-        val pages = fileManager.createImagesFromOriginalPdf(pdfGuid)
-
+        val pages = fileManager.createImagesFromOriginalPdf(pdfGuid, importFlow, state.copy(progress = 0.2), 0.1)
+        val pageStep = 0.7 / pages.size
         pages.forEach { (page, guid) ->
             logger.info("Running image editing on page $page / ${pages.size}")
+            importFlow.emit(state.copy(progress = 0.3 + (pageStep * (page - 1)) + ((pageStep / 5) * 0), message = "Creating deskewed image for page $page"))
             fileManager.createDeskewedImage(guid)
+            importFlow.emit(state.copy(progress = 0.3 + (pageStep * (page - 1)) + ((pageStep / 5) * 1), message = "Creating color-adjusted image for page $page"))
             fileManager.createColorAdjustedImage(guid)
+            importFlow.emit(state.copy(progress = 0.3 + (pageStep * (page - 1)) + ((pageStep / 5) * 2), message = "Creating cropped image for page $page"))
             fileManager.createCroppedImage(guid)
+            importFlow.emit(state.copy(progress = 0.3 + (pageStep * (page - 1)) + ((pageStep / 5) * 3), message = "Creating thumbnails for page $page"))
             fileManager.createThumbnails(guid)
 
-            var page = ExposedImportPage(guid = guid, page = page, documentId = document.id)
-            extractTextAndCreateDbObjects(page)
+            var exposedPage = ExposedImportPage(guid = guid, page = page, documentId = document.id)
+            importFlow.emit(state.copy(progress = 0.3 + (pageStep * (page - 1)) + ((pageStep / 5) * 4), message = "Running OCR on page $page"))
+            extractTextAndCreateDbObjects(exposedPage)
         }
 
         val firstPage = pageService.findByDocumentId(document.id).first { it.page == 1 }
@@ -127,7 +122,7 @@ class ImportService(
         if (date != null) {
             docService.update(document.copy(date = date))
         }
-        importFlow.emit(state.copy(progress = state.progress?.plus((step * 7)), message = "Import complete", completedFile = true))
+        importFlow.emit(state.copy(progress = 1.0, message = "Import complete", completedFile = true))
     }
 
     suspend fun extractTextAndCreateDbObjects(page: ExposedImportPage) {
