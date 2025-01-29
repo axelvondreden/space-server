@@ -426,7 +426,6 @@
         currentWords = [];
         const containerWidth = canvasContainer.offsetWidth;
         const containerHeight = canvasContainer.offsetHeight;
-
         const stage = new Konva.Stage({
             container: 'canvasContainer',
             width: containerWidth,
@@ -479,30 +478,79 @@
         const layer2 = new Konva.Layer();
         stage.add(layer2);
 
-        const box = new Konva.Rect({
-            x: 100,
-            y: 100,
-            width: 200,
-            height: 100,
-            fill: "transparent",
-            stroke: "black",
-            strokeWidth: 2,
-            draggable: true,
-            name: "rect",
-        });
-
-        box.on('click', () => {
-            alert('Rectangle clicked');
-        });
-        layer2.add(box);
-        layer2.batchDraw();
-
         const tr = new Konva.Transformer();
         layer2.add(tr);
 
         stage.on('click tap', function (e) {
             if (!e.target.hasName("rect")) tr.nodes([]);
             else tr.nodes([e.target]);
+        });
+
+        await fetch("/api/v1/import/page/" + page.id + "/blocks").then(async result => {
+            if (result.ok) {
+                const blocks = await result.json();
+                blocks.forEach(block => {
+                    const blockBox = new Konva.Rect({
+                        x: block.x,
+                        y: block.y,
+                        width: block.width,
+                        height: block.height,
+                        fill: "transparent",
+                        stroke: "black",
+                        strokeWidth: 2,
+                        name: "rect",
+                        visible: false
+                    });
+
+                    blockBox.on('click', () => {
+
+                    });
+                    layer2.add(blockBox);
+                    currentBlocks.push(blockBox);
+
+                    block.lines.forEach(line => {
+                        const lineBox = new Konva.Rect({
+                            x: line.x,
+                            y: line.y,
+                            width: line.width,
+                            height: line.height,
+                            fill: "transparent",
+                            stroke: "black",
+                            strokeWidth: 2,
+                            name: "rect",
+                            visible: false
+                        });
+
+                        lineBox.on('click', () => {
+
+                        });
+                        layer2.add(lineBox);
+                        currentLines.push(lineBox);
+
+                        line.words.forEach(word => {
+                            const wordBox = new Konva.Rect({
+                                x: word.x,
+                                y: word.y,
+                                width: word.width,
+                                height: word.height,
+                                fill: "transparent",
+                                stroke: "black",
+                                strokeWidth: 2,
+                                name: "rect",
+                                visible: false
+                            });
+
+                            wordBox.on('click', () => {
+
+                            });
+                            layer2.add(wordBox);
+                            currentWords.push(wordBox);
+                        });
+                    });
+
+                });
+                layer2.batchDraw();
+            }
         });
     }
 

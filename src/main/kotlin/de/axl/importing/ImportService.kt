@@ -7,6 +7,7 @@ import de.axl.files.ImportFileManager
 import de.axl.importing.events.ImportStateEvent
 import de.axl.runCommand
 import de.axl.serialization.alto.Alto
+import de.axl.serialization.api.ExposedImportBlockFull
 import kotlinx.coroutines.flow.MutableSharedFlow
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -200,6 +201,10 @@ class ImportService(
         val date = datesSorted.maxByOrNull { it.value }?.key
         logger.info("Choosing date for document: $date")
         return date
+    }
+
+    suspend fun getFullBlocksForPage(page: ExposedImportPage): List<ExposedImportBlockFull> {
+        return blockService.findByPageIdFull(page.id)
     }
 
     companion object {

@@ -2,6 +2,8 @@ package de.axl.db
 
 import de.axl.db.ImportPageDbService.ImportPage
 import de.axl.dbQuery
+import de.axl.serialization.api.ExposedImportBlockFull
+import de.axl.serialization.api.ExposedImportLineFull
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -46,6 +48,11 @@ class ImportBlockDbService(database: Database) {
         }
     }
 
+    suspend fun findByPageIdFull(pageId: Int): List<ExposedImportBlockFull> = dbQuery {
+        ImportBlock.selectAll()
+            .where { ImportBlock.page eq pageId }
+            .mapFull()
+    }
 
     suspend fun create(block: ExposedImportBlock, pageId: Int): Int = dbQuery {
         ImportBlock.insert {
@@ -94,6 +101,45 @@ class ImportBlockDbService(database: Database) {
                 ImportLineDbService.ImportLine.selectAll()
                     .where { ImportLineDbService.ImportLine.block eq it[ImportBlock.id] }
                     .map { line -> line[ImportLineDbService.ImportLine.id] }
+            }
+        )
+    }
+
+    private suspend fun Query.mapFull(): List<ExposedImportBlockFull> = map {
+        ExposedImportBlockFull(
+            it[ImportBlock.id],
+            it[ImportBlock.text],
+            it[ImportBlock.x],
+            it[ImportBlock.y],
+            it[ImportBlock.width],
+            it[ImportBlock.height],
+            dbQuery {
+                ImportLineDbService.ImportLine.selectAll()
+                    .where { ImportLineDbService.ImportLine.block eq it[ImportBlock.id] }
+                    .map { line ->
+                        ExposedImportLineFull(
+                            line[ImportLineDbService.ImportLine.id],
+                            line[ImportLineDbService.ImportLine.text],
+                            line[ImportLineDbService.ImportLine.x],
+                            line[ImportLineDbService.ImportLine.y],
+                            line[ImportLineDbService.ImportLine.width],
+                            line[ImportLineDbService.ImportLine.height],
+                            dbQuery {
+                                ImportWordDbService.ImportWord.selectAll()
+                                    .where { ImportWordDbService.ImportWord.line eq line[ImportLineDbService.ImportLine.id] }
+                                    .map {
+                                        ExposedImportWord(
+                                            it[ImportWordDbService.ImportWord.id],
+                                            it[ImportWordDbService.ImportWord.text],
+                                            it[ImportWordDbService.ImportWord.x],
+                                            it[ImportWordDbService.ImportWord.y],
+                                            it[ImportWordDbService.ImportWord.width],
+                                            it[ImportWordDbService.ImportWord.height]
+                                        )
+                                    }
+                            }
+                        )
+                    }
             }
         )
     }

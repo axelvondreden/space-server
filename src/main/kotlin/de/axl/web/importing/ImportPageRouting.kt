@@ -49,6 +49,13 @@ fun Route.importPageRoute(importService: ImportService) {
             }
         }
 
+        get("/blocks") {
+            val page = findById(this, call.parameters["id"]?.toIntOrNull())
+            if (page != null) {
+                call.respond(HttpStatusCode.OK, importService.getFullBlocksForPage(page))
+            }
+        }
+
         get("/img") {
             val page = findById(this, call.parameters["id"]?.toIntOrNull())
             if (page != null) {

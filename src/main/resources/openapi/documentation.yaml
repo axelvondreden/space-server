@@ -197,6 +197,26 @@ paths:
           description: Import page not found
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /import/page/{id}/blocks:
+    parameters:
+      - $ref: "#/components/parameters/idParam"
+    get:
+      summary: Get all blocks, lines, and words for this page
+      tags:
+        - Import Page
+      responses:
+        "200":
+          description: Returns a list of blocks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ImportBlockFull"
+        "404":
+          description: Import page not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /import/page/{id}/img:
     parameters:
       - $ref: "#/components/parameters/idParam"
@@ -722,6 +742,33 @@ components:
         - width
         - height
 
+    ImportBlockFull:
+      type: object
+      properties:
+        id:
+          type: integer
+        text:
+          type: string
+        x:
+          type: integer
+        y:
+          type: integer
+        width:
+          type: integer
+        height:
+          type: integer
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImportLineFull"
+      required:
+        - id
+        - text
+        - x
+        - y
+        - width
+        - height
+
     ImportLine:
       type: object
       properties:
@@ -741,6 +788,33 @@ components:
           type: array
           items:
             type: integer
+      required:
+        - id
+        - text
+        - x
+        - y
+        - width
+        - height
+
+    ImportLineFull:
+      type: object
+      properties:
+        id:
+          type: integer
+        text:
+          type: string
+        x:
+          type: integer
+        y:
+          type: integer
+        width:
+          type: integer
+        height:
+          type: integer
+        words:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImportWord"
       required:
         - id
         - text
