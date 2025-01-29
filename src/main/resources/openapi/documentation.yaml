@@ -163,12 +163,7 @@ paths:
 
   /import/page/{id}:
     parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-        description: ID of import page
+      - $ref: "#/components/parameters/idParam"
     get:
       summary: Get a specific import page
       tags:
@@ -214,12 +209,7 @@ paths:
           $ref: "#/components/responses/Unauthorized"
   /import/page/{id}/img:
     parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-        description: ID of the Import page
+      - $ref: "#/components/parameters/idParam"
       - in: query
         name: type
         required: false
@@ -250,12 +240,7 @@ paths:
           $ref: "#/components/responses/Unauthorized"
   /import/page/{id}/thumb:
     parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-        description: ID of the Import page
+      - $ref: "#/components/parameters/idParam"
       - in: query
         name: size
         required: false
@@ -288,12 +273,7 @@ paths:
           $ref: "#/components/responses/Unauthorized"
   /import/page/{id}/edit/deskew:
     parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-        description: ID of the import page
+      - $ref: "#/components/parameters/idParam"
       - in: query
         name: deskew
         required: false
@@ -316,12 +296,7 @@ paths:
           $ref: "#/components/responses/Unauthorized"
   /import/page/{id}/edit/color:
     parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-        description: ID of the import page
+      - $ref: "#/components/parameters/idParam"
       - in: query
         name: fuzz
         required: false
@@ -344,12 +319,7 @@ paths:
           $ref: "#/components/responses/Unauthorized"
   /import/page/{id}/edit/crop:
     parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-        description: ID of the import page
+      - $ref: "#/components/parameters/idParam"
       - in: query
         name: fuzz
         required: false
@@ -372,12 +342,7 @@ paths:
           $ref: "#/components/responses/Unauthorized"
   /import/page/{id}/edit/thumbs:
     parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-        description: ID of the import page
+      - $ref: "#/components/parameters/idParam"
     post:
       summary: Create thumbnails for page
       tags:
@@ -391,12 +356,7 @@ paths:
           $ref: "#/components/responses/Unauthorized"
   /import/page/{id}/edit/ocr:
     parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-        description: ID of the import page
+      - $ref: "#/components/parameters/idParam"
     post:
       summary: Run OCR on page
       tags:
@@ -415,12 +375,7 @@ paths:
 
   /import/block/{id}:
     parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-        description: ID of import block
+      - $ref: "#/components/parameters/idParam"
     get:
       summary: Get a specific import block
       tags:
@@ -467,12 +422,7 @@ paths:
 
   /import/line/{id}:
     parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-        description: ID of import line
+      - $ref: "#/components/parameters/idParam"
     get:
       summary: Get a specific import line
       tags:
@@ -519,12 +469,7 @@ paths:
 
   /import/word/{id}:
     parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-        description: ID of import word
+      - $ref: "#/components/parameters/idParam"
     get:
       summary: Get a specific import word
       tags:
@@ -857,3 +802,13 @@ components:
   responses:
     Unauthorized:
       description: Unauthorized
+
+  parameters:
+    idParam:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+        minimum: 0
+      description: the ID of the object
