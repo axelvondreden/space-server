@@ -24,7 +24,7 @@
     </div>
     <div id="importDocArea" class="container-fluid d-flex p-0 d-none">
         <div id="importDocImageArea" class="split overflow-y-scroll">
-            <img id="pageImage" src="" class="img-fluid" alt="page image">
+            <div id="canvasContainer" class="position-relative w-100 h-100"></div>
         </div>
         <div id="importDocDataArea" class="split d-flex flex-md-column px-3 overflow-y-scroll">
             <h4 class="my-3" id="importGuid">GUID</h4>
@@ -45,6 +45,16 @@
                     Refresh
                     <span id="refreshTextSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
                 </button>
+                <span class="btn-group-sm" role="group">
+                    <input type="checkbox" class="btn-check" id="showBlocksCheck" autocomplete="off">
+                    <label class="btn btn-outline-secondary" for="showBlocksCheck">Show Blocks</label>
+
+                    <input type="checkbox" class="btn-check" id="showLinesCheck" autocomplete="off">
+                    <label class="btn btn-outline-secondary" for="showLinesCheck">Show Lines</label>
+
+                    <input type="checkbox" class="btn-check" id="showWordsCheck" autocomplete="off">
+                    <label class="btn btn-outline-secondary" for="showWordsCheck">Show Words</label>
+                </span>
                 <textarea class="form-control" id="pageText" rows="20" disabled></textarea>
             </div>
 
@@ -327,7 +337,6 @@
 
     const importDocArea = document.getElementById("importDocArea");
     const importNoDocSelected = document.getElementById("importNoDocSelected");
-    const pageImage = document.getElementById("pageImage");
     const importGuid = document.getElementById("importGuid");
     const languageSelect = document.getElementById("languageSelect");
     const pageText = document.getElementById("pageText");
@@ -372,7 +381,9 @@
                 selectedPage = page;
                 importNoDocSelected.classList.add("d-none");
                 importDocArea.classList.remove("d-none");
-                pageImage.src = "/api/v1/import/page/" + page.id + "/img";
+
+                await loadImageCanvas(page, false)
+
                 importGuid.innerHTML = imp.guid;
                 let dateElem = $("#importDate");
                 dateElem.datepicker({
@@ -403,6 +414,98 @@
         });
     }
 
+    const canvasContainer = document.getElementById("canvasContainer");
+    let currentBlocks = [];
+    let currentLines = [];
+    let currentWords = [];
+
+    async function loadImageCanvas(page, fresh) {
+        canvasContainer.innerHTML = "";
+        currentBlocks = [];
+        currentLines = [];
+        currentWords = [];
+        const containerWidth = canvasContainer.offsetWidth;
+        const containerHeight = canvasContainer.offsetHeight;
+
+        const stage = new Konva.Stage({
+            container: 'canvasContainer',
+            width: containerWidth,
+            height: containerHeight,
+            draggable: true
+        });
+
+        stage.on('wheel', (e) => {
+            e.evt.preventDefault();
+            let direction = e.evt.deltaY > 0 ? 1 : -1;
+            let scale = stage.scaleX();
+            const pointer = stage.getPointerPosition();
+            const mousePointTo = {
+                x: (pointer.x - stage.x()) / scale,
+                y: (pointer.y - stage.y()) / scale
+            };
+            if (direction < 0) {
+                scale = Math.min(scale + 0.1, 4);
+            } else {
+                scale = Math.max(scale - 0.1, 0.1);
+            }
+            stage.scale({ x: scale, y: scale });
+            const newPos = {
+                x: pointer.x - mousePointTo.x * scale,
+                y: pointer.y - mousePointTo.y * scale,
+            };
+            stage.position(newPos);
+        });
+
+        const layer = new Konva.Layer();
+        stage.add(layer);
+
+        const imageObj = new Image();
+        imageObj.onload = () => {
+            const konvaImage = new Konva.Image({
+                x: 0,
+                y: 0,
+                image: imageObj,
+                width: page.width,
+                height: page.height,
+            });
+
+            layer.add(konvaImage);
+            layer.batchDraw();
+        };
+
+        const param = (fresh) ? "?" + new Date().getTime() : "";
+        imageObj.src = "/api/v1/import/page/" + page.id + "/img" + param;
+
+        const layer2 = new Konva.Layer();
+        stage.add(layer2);
+
+        const box = new Konva.Rect({
+            x: 100,
+            y: 100,
+            width: 200,
+            height: 100,
+            fill: "transparent",
+            stroke: "black",
+            strokeWidth: 2,
+            draggable: true,
+            name: "rect",
+        });
+
+        box.on('click', () => {
+            alert('Rectangle clicked');
+        });
+        layer2.add(box);
+        layer2.batchDraw();
+
+        const tr = new Konva.Transformer();
+        layer2.add(tr);
+
+        stage.on('click tap', function (e) {
+            if (!e.target.hasName("rect")) tr.nodes([]);
+            else tr.nodes([e.target]);
+        });
+    }
+
     const refreshTextButton = document.getElementById("refreshTextButton");
     const refreshTextSpinner = document.getElementById("refreshTextSpinner");
 
@@ -417,6 +520,33 @@
                     refreshTextSpinner.classList.add("d-none");
                 }
             });
+        }
+    });
+
+    const showBlocksCheck = document.getElementById("showBlocksCheck");
+    showBlocksCheck.addEventListener("change", async (event) => {
+        if (event.target.checked) {
+            currentBlocks.forEach(block => block.show());
+        } else {
+            currentBlocks.forEach(block => block.hide());
+        }
+    });
+
+    const showLinesCheck = document.getElementById("showLinesCheck");
+    showLinesCheck.addEventListener("change", async (event) => {
+        if (event.target.checked) {
+            currentLines.forEach(line => line.show());
+        } else {
+            currentLines.forEach(line => line.hide());
+        }
+    });
+
+    const showWordsCheck = document.getElementById("showWordsCheck");
+    showWordsCheck.addEventListener("change", async (event) => {
+        if (event.target.checked) {
+            currentWords.forEach(word => word.show());
+        } else {
+            currentWords.forEach(word => word.hide());
         }
     });
 
@@ -514,7 +644,7 @@
             if (result.ok) {
                 cropImageSpinner.classList.add("d-none");
                 editImageCropped.src = "/api/v1/import/page/" + page.id + "/img?" + new Date().getTime();
-                pageImage.src = "/api/v1/import/page/" + page.id + "/img?" + new Date().getTime();
+                await loadImageCanvas(page, true);
             }
         });
     }
