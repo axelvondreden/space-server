@@ -14,27 +14,27 @@ fun Route.importDocumentRoute(importService: ImportService) {
             call.respond(HttpStatusCode.OK, importService.findAllDocuments())
         }
 
-        route("/{guid}") {
-            val findByGuid: suspend (RoutingContext, String?) -> ExposedImportDocument? = { context, guid ->
-                if (guid.isNullOrBlank()) {
+        route("/{id}") {
+            val findById: suspend (RoutingContext, Int?) -> ExposedImportDocument? = { context, id ->
+                if (id == null || id == 0) {
                     context.call.respond(HttpStatusCode.NotFound)
                     null
                 } else {
-                    val doc = importService.findDocumentByGuid(guid)
-                    if (doc == null) context.call.respond(HttpStatusCode.NotFound)
-                    doc
+                    val page = importService.findDocumentById(id)
+                    if (page == null) context.call.respond(HttpStatusCode.NotFound)
+                    page
                 }
             }
 
             get {
-                val doc = findByGuid(this, call.parameters["guid"])
+                val doc = findById(this, call.parameters["id"]?.toIntOrNull())
                 if (doc != null) {
                     call.respond(HttpStatusCode.OK, doc)
                 }
             }
 
             put {
-                val doc = findByGuid(this, call.parameters["guid"])
+                val doc = findById(this, call.parameters["id"]?.toIntOrNull())
                 if (doc != null) {
                     importService.updateDocument(call.receive<ExposedImportDocument>())
                     call.respond(HttpStatusCode.OK)
@@ -42,18 +42,20 @@ fun Route.importDocumentRoute(importService: ImportService) {
             }
 
             delete {
-                val guid = call.parameters["guid"]
-                if (guid.isNullOrBlank()) {
+                val id = call.parameters["id"]?.toIntOrNull() ?: 0
+                if (id <= 0) {
                     call.respond(HttpStatusCode.NotFound)
                 } else {
-                    importService.deleteDocument(guid)
+                    importService.deleteDocument(id)
                     call.respond(HttpStatusCode.OK)
                 }
             }
 
             get("/pdf") {
-                val guid = call.parameters["guid"]!!
-                call.respondFile(importService.getPdfOriginal(guid))
+                val doc = importService.findDocumentById(call.parameters["id"]?.toIntOrNull() ?: 0)
+                if (doc != null) {
+                    call.respondFile(importService.getPdfOriginal(doc.guid))
+                }
             }
         }
     }

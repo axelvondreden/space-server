@@ -25,7 +25,7 @@ data class ExposedImportPage(
 class ImportPageDbService(database: Database) {
     object ImportPage : Table() {
         val id = integer("id").autoIncrement()
-        val guid = varchar("guid", length = 36).uniqueIndex()
+        val guid = varchar("guid", length = 36)
         val text = text("text")
         val page = integer("page")
         val width = integer("width")

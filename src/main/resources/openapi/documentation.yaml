@@ -85,14 +85,9 @@ paths:
                   $ref: "#/components/schemas/ImportDocument"
         "401":
           $ref: "#/components/responses/Unauthorized"
-  /import/doc/{guid}:
+  /import/doc/{id}:
     parameters:
-      - in: path
-        name: guid
-        required: true
-        schema:
-          type: string
-        description: GUID of import document
+      - $ref: "#/components/parameters/idParam"
     get:
       summary: Get a specific import document
       tags:
@@ -136,14 +131,9 @@ paths:
           description: Import document not found
         "401":
           $ref: "#/components/responses/Unauthorized"
-  /import/doc/{guid}/pdf:
+  /import/doc/{id}/pdf:
     parameters:
-      - in: path
-        name: guid
-        required: true
-        schema:
-          type: string
-        description: GUID of the Import document
+      - $ref: "#/components/parameters/idParam"
     get:
       summary: Get the original PDF of the Import document
       tags:
@@ -643,6 +633,9 @@ components:
     ImportDocument:
       type: object
       properties:
+        id:
+          type: integer
+          minimum: 0
         guid:
           type: string
         ocrLanguage:

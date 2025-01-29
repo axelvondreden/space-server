@@ -10,5 +10,5 @@ data class ImportStateEvent(
     val guid: String? = null,
     val progress: Double? = null,
     val message: String? = null,
-    val completedFile: Boolean = false
+    val completedDocId: Int? = null
 )

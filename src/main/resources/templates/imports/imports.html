@@ -9,6 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/js/bootstrap-datepicker.js"></script>
     <script src="https://unpkg.com/split.js/dist/split.min.js"></script>
+    <script src="https://unpkg.com/konva@9/konva.min.js"></script>
     <script src="/scripts/theme.js"></script>
 </head>
 <body style="min-height: calc(100vh - 100px)">
@@ -233,8 +234,8 @@
         } else {
             statusMessage.innerHTML = "";
         }
-        if (state.completedFile) {
-            await fetch("/api/v1/import/doc/" + state.guid).then(async result => {
+        if (state.completedDocId != null) {
+            await fetch("/api/v1/import/doc/" + state.completedDocId).then(async result => {
                 if (result.ok) {
                     const imp = await result.json();
                     addImportToSidebar(imp);
@@ -425,7 +426,7 @@
     deleteButton.addEventListener("click", async () => {
         if (selectedImport != null) {
             deleteButtonSpinner.classList.remove("d-none");
-            await fetch("/api/v1/import/doc/" + selectedImport.guid, {method: "delete"}).then(async result => {
+            await fetch("/api/v1/import/doc/" + selectedImport.id, {method: "delete"}).then(async result => {
                 if (result.ok) {
                     await docSelected(null);
                     await fillSidebar();

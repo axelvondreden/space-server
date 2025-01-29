@@ -33,7 +33,7 @@ enum class OCRLanguage(val lang: String) {
 class ImportDocumentDbService(database: Database) {
     object ImportDocument : Table() {
         val id = integer("id").autoIncrement()
-        val guid = varchar("guid", length = 36).uniqueIndex()
+        val guid = varchar("guid", length = 36)
         val ocrLanguage = enumerationByName("ocrLanguage", 10, OCRLanguage::class).default(OCRLanguage.DEU)
         val date = date("date").nullable()
         val createdAt = datetime("createdAt")
@@ -48,24 +48,18 @@ class ImportDocumentDbService(database: Database) {
         }
     }
 
-    suspend fun create(import: ExposedImportDocument): String = dbQuery {
+    suspend fun create(import: ExposedImportDocument): Int = dbQuery {
         ImportDocument.insert {
             it[guid] = import.guid
             it[ocrLanguage] = import.ocrLanguage
             it[date] = import.date
             it[createdAt] = LocalDateTime.now()
-        }[ImportDocument.guid]
+        }[ImportDocument.id]
     }
 
     suspend fun findAll(): List<ExposedImportDocument> {
         return dbQuery {
             ImportDocument.selectAll().mapExposed()
-        }
-    }
-
-    suspend fun findByGuid(guid: String): ExposedImportDocument? {
-        return dbQuery {
-            ImportDocument.selectAll().where { ImportDocument.guid eq guid }.mapExposed().singleOrNull()
         }
     }
 
@@ -77,7 +71,7 @@ class ImportDocumentDbService(database: Database) {
 
     suspend fun update(import: ExposedImportDocument) {
         dbQuery {
-            ImportDocument.update({ ImportDocument.guid eq import.guid }) {
+            ImportDocument.update({ ImportDocument.id eq import.id }) {
                 it[ocrLanguage] = import.ocrLanguage
                 it[date] = import.date
                 it[updatedAt] = LocalDateTime.now()
@@ -85,9 +79,9 @@ class ImportDocumentDbService(database: Database) {
         }
     }
 
-    suspend fun delete(guid: String) {
+    suspend fun delete(id: Int) {
         dbQuery {
-            ImportDocument.deleteWhere { ImportDocument.guid.eq(guid) }
+            ImportDocument.deleteWhere { ImportDocument.id.eq(id) }
         }
     }
 

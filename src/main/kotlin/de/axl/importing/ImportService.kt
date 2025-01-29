@@ -28,9 +28,9 @@ class ImportService(
     val dataPath get() = fileManager.dataPath
 
     suspend fun findAllDocuments(): List<ExposedImportDocument> = docService.findAll()
-    suspend fun findDocumentByGuid(guid: String): ExposedImportDocument? = docService.findByGuid(guid)
+    suspend fun findDocumentById(id: Int): ExposedImportDocument? = docService.findById(id)
     suspend fun updateDocument(import: ExposedImportDocument) = docService.update(import)
-    suspend fun deleteDocument(guid: String) = docService.delete(guid)
+    suspend fun deleteDocument(id: Int) = docService.delete(id)
 
     suspend fun findPageById(id: Int): ExposedImportPage? = pageService.findById(id)
     suspend fun updatePage(page: ExposedImportPage) = pageService.update(page)
@@ -96,8 +96,7 @@ class ImportService(
         fileManager.moveFileToImport(file, pdfGuid)
 
         logger.info("Creating import for $pdfGuid")
-        docService.create(ExposedImportDocument(guid = pdfGuid, ocrLanguage = OCRLanguage.DEU))
-        val document = docService.findByGuid(pdfGuid)!!
+        val document = docService.findById(docService.create(ExposedImportDocument(guid = pdfGuid, ocrLanguage = OCRLanguage.DEU)))!!
 
         val pages = fileManager.createImagesFromOriginalPdf(pdfGuid, importFlow, state.copy(progress = 0.2), 0.1)
         val pageStep = 0.7 / pages.size
@@ -122,7 +121,7 @@ class ImportService(
         if (date != null) {
             docService.update(document.copy(date = date))
         }
-        importFlow.emit(state.copy(progress = 1.0, message = "Import complete", completedFile = true))
+        importFlow.emit(state.copy(progress = 1.0, message = "Import complete", completedDocId = document.id))
     }
 
     suspend fun extractTextAndCreateDbObjects(page: ExposedImportPage) {
