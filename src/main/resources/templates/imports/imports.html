@@ -415,6 +415,10 @@
     }
 
     const canvasContainer = document.getElementById("canvasContainer");
+    const showBlocksCheck = document.getElementById("showBlocksCheck");
+    const showLinesCheck = document.getElementById("showLinesCheck");
+    const showWordsCheck = document.getElementById("showWordsCheck");
+
     let currentBlocks = [];
     let currentLines = [];
     let currentWords = [];
@@ -478,14 +482,6 @@
         const layer2 = new Konva.Layer();
         stage.add(layer2);
 
-        const tr = new Konva.Transformer();
-        layer2.add(tr);
-
-        stage.on('click tap', function (e) {
-            if (!e.target.hasName("rect")) tr.nodes([]);
-            else tr.nodes([e.target]);
-        });
-
         await fetch("/api/v1/import/page/" + page.id + "/blocks").then(async result => {
             if (result.ok) {
                 const blocks = await result.json();
@@ -499,11 +495,7 @@
                         stroke: "black",
                         strokeWidth: 2,
                         name: "rect",
-                        visible: false
-                    });
-
-                    blockBox.on('click', () => {
-
+                        visible: showBlocksCheck.checked
                     });
                     layer2.add(blockBox);
                     currentBlocks.push(blockBox);
@@ -518,11 +510,7 @@
                             stroke: "black",
                             strokeWidth: 2,
                             name: "rect",
-                            visible: false
-                        });
-
-                        lineBox.on('click', () => {
-
+                            visible: showLinesCheck.checked
                         });
                         layer2.add(lineBox);
                         currentLines.push(lineBox);
@@ -537,11 +525,7 @@
                                 stroke: "black",
                                 strokeWidth: 2,
                                 name: "rect",
-                                visible: false
-                            });
-
-                            wordBox.on('click', () => {
-
+                                visible: showWordsCheck.checked
                             });
                             layer2.add(wordBox);
                             currentWords.push(wordBox);
@@ -571,7 +555,6 @@
         }
     });
 
-    const showBlocksCheck = document.getElementById("showBlocksCheck");
     showBlocksCheck.addEventListener("change", async (event) => {
         if (event.target.checked) {
             currentBlocks.forEach(block => block.show());
@@ -580,7 +563,6 @@
         }
     });
 
-    const showLinesCheck = document.getElementById("showLinesCheck");
     showLinesCheck.addEventListener("change", async (event) => {
         if (event.target.checked) {
             currentLines.forEach(line => line.show());
@@ -589,7 +571,6 @@
         }
     });
 
-    const showWordsCheck = document.getElementById("showWordsCheck");
     showWordsCheck.addEventListener("change", async (event) => {
         if (event.target.checked) {
             currentWords.forEach(word => word.show());
