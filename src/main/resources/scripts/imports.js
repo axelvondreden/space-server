@@ -194,6 +194,12 @@ let selectedPage = null;
 async function docSelected(imp) {
     selectedImport = imp;
     pageText.value = "";
+    languageSelect.value = "";
+    let dateElem = $("#importDate");
+    dateElem.datepicker({
+        format: "dd.mm.yyyy",
+    });
+    dateElem.datepicker("update", null);
     if (imp == null) {
         selectedPage = null;
         importNoDocSelected.classList.remove("d-none");
@@ -209,10 +215,7 @@ async function docSelected(imp) {
             importDocArea.classList.remove("d-none");
 
             importGuid.innerHTML = imp.guid;
-            let dateElem = $("#importDate");
-            dateElem.datepicker({
-                format: "dd.mm.yyyy",
-            });
+
             if (imp.date) {
                 dateElem.datepicker("update", new Date(imp.date[0], imp.date[1] - 1, imp.date[2]));
             }
@@ -391,6 +394,7 @@ refreshTextButton.addEventListener("click", async () => {
             if (result.ok) {
                 const ocr = await result.json();
                 pageText.value = ocr.text;
+                await loadImageCanvas(selectedPage, false)
                 refreshTextSpinner.classList.add("d-none");
             }
         });
