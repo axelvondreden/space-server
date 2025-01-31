@@ -171,8 +171,8 @@
 </div>
 
 <!-- Word edit modal -->
-<div class="modal fade" id="wordModal" tabindex="-1" aria-labelledby="wordModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+<div class="modal" id="wordModal" tabindex="-1" aria-labelledby="wordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h1 class="modal-title fs-5" id="wordModalLabel">Word Editor</h1>
@@ -495,8 +495,8 @@
         const param = (fresh) ? "?" + new Date().getTime() : "";
         imageObj.src = "/api/v1/import/page/" + page.id + "/img" + param;
 
-        const layer2 = new Konva.Layer();
-        stage.add(layer2);
+        const boxLayer = new Konva.Layer();
+        stage.add(boxLayer);
 
         await fetch("/api/v1/import/page/" + page.id + "/blocks").then(async result => {
             if (result.ok) {
@@ -513,7 +513,7 @@
                         name: "rect",
                         visible: showBlocksCheck.checked
                     });
-                    layer2.add(blockBox);
+                    boxLayer.add(blockBox);
                     currentBlocks.push(blockBox);
 
                     block.lines.forEach(line => {
@@ -528,7 +528,7 @@
                             name: "rect",
                             visible: showLinesCheck.checked
                         });
-                        layer2.add(lineBox);
+                        boxLayer.add(lineBox);
                         currentLines.push(lineBox);
 
                         line.words.forEach(word => {
@@ -552,13 +552,13 @@
                             wordBox.on("click", () => {
                                 showWordModal(word);
                             });
-                            layer2.add(wordBox);
+                            boxLayer.add(wordBox);
                             currentWords.push(wordBox);
                         });
                     });
 
                 });
-                layer2.batchDraw();
+                boxLayer.batchDraw();
             }
         });
     }
@@ -726,8 +726,9 @@
 
     function showWordModal(word) {
         selectedWord = word;
-        wordEditText.value = word.text;
         wordModal.show();
+        wordEditText.value = word.text;
+        wordEditText.focus();
     }
 </script>
 </body>
