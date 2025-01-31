@@ -170,6 +170,22 @@
     </div>
 </div>
 
+<!-- Word edit modal -->
+<div class="modal fade" id="wordModal" tabindex="-1" aria-labelledby="wordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="wordModalLabel">Word Editor</h1>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control" id="wordEditText" placeholder="Text" value="">
+            </div>
+            <div class="modal-footer">
+                <button id="wordEditConfirmButton" type="button" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script th:inline="javascript">
 
@@ -451,7 +467,7 @@
             } else {
                 scale = Math.max(scale - 0.1, 0.1);
             }
-            stage.scale({ x: scale, y: scale });
+            stage.scale({x: scale, y: scale});
             const newPos = {
                 x: pointer.x - mousePointTo.x * scale,
                 y: pointer.y - mousePointTo.y * scale,
@@ -526,6 +542,15 @@
                                 strokeWidth: 2,
                                 name: "rect",
                                 visible: showWordsCheck.checked
+                            });
+                            wordBox.on("mouseenter", () => {
+                                wordBox.strokeWidth(4);
+                            });
+                            wordBox.on("mouseleave", () => {
+                                wordBox.strokeWidth(2);
+                            });
+                            wordBox.on("click", () => {
+                                showWordModal(word);
                             });
                             layer2.add(wordBox);
                             currentWords.push(wordBox);
@@ -676,6 +701,33 @@
                 await loadImageCanvas(page, true);
             }
         });
+    }
+
+    const wordModal = new bootstrap.Modal("#wordModal");
+    const wordEditText = document.getElementById("wordEditText");
+    const wordEditConfirmButton = document.getElementById("wordEditConfirmButton");
+    let selectedWord = null;
+
+    wordEditConfirmButton.addEventListener("click", async () => {
+        if (selectedWord != null && wordEditText.value) {
+            selectedWord.text = wordEditText.value;
+            const body = JSON.stringify(selectedWord);
+            await fetch("/api/v1/import/word/" + selectedWord.id + "/text", {method: "post", body: wordEditText.value}).then(async result => {
+                if (result.ok) {
+                    await fetch("/api/v1/import/page/" + selectedPage.id).then(async result => {
+                        selectedPage = await result.json();
+                        pageText.value = selectedPage.text;
+                        wordModal.hide();
+                    });
+                }
+            });
+        }
+    });
+
+    function showWordModal(word) {
+        selectedWord = word;
+        wordEditText.value = word.text;
+        wordModal.show();
     }
 </script>
 </body>

@@ -7,5 +7,6 @@ data class ExposedImportBlockFull(
     val y: Int = 0,
     val width: Int = 0,
     val height: Int = 0,
+    val pageId: Int = 0,
     val lines: List<ExposedImportLineFull> = emptyList()
 )

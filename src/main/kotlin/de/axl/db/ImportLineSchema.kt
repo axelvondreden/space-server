@@ -15,6 +15,7 @@ data class ExposedImportLine(
     val y: Int = 0,
     val width: Int = 0,
     val height: Int = 0,
+    val blockId: Int = 0,
     val words: List<Int> = emptyList()
 )
 
@@ -37,13 +38,12 @@ class ImportLineDbService(database: Database) {
         }
     }
 
-    suspend fun findById(id: Int): ExposedImportLine? {
-        return dbQuery {
-            ImportLine.selectAll()
-                .where { ImportLine.id eq id }
-                .mapExposed()
-                .singleOrNull()
-        }
+    suspend fun findById(id: Int): ExposedImportLine? = dbQuery {
+        ImportLine.selectAll().where { ImportLine.id eq id }.mapExposed().singleOrNull()
+    }
+
+    suspend fun findByBlockId(id: Int): List<ExposedImportLine> = dbQuery {
+        ImportLine.selectAll().where { ImportLine.block eq id }.orderBy(ImportLine.y).mapExposed()
     }
 
     suspend fun create(line: ExposedImportLine, blockId: Int): Int = dbQuery {
@@ -55,18 +55,6 @@ class ImportLineDbService(database: Database) {
             it[height] = line.height
             it[block] = blockId
         }[ImportLine.id]
-    }
-
-    suspend fun update(line: ExposedImportLine) {
-        dbQuery {
-            ImportLine.update({ ImportLine.id eq line.id }) {
-                it[text] = line.text
-                it[x] = line.x
-                it[y] = line.y
-                it[width] = line.width
-                it[height] = line.height
-            }
-        }
     }
 
     suspend fun delete(id: Int) {
@@ -83,6 +71,7 @@ class ImportLineDbService(database: Database) {
             it[ImportLine.y],
             it[ImportLine.width],
             it[ImportLine.height],
+            it[ImportLine.block],
             dbQuery {
                 ImportWordDbService.ImportWord.selectAll()
                     .where { ImportWordDbService.ImportWord.line eq it[ImportLine.id] }

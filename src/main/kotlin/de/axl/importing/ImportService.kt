@@ -38,15 +38,15 @@ class ImportService(
     suspend fun deletePage(id: Int) = pageService.delete(id)
 
     suspend fun findBlockById(id: Int): ExposedImportBlock? = blockService.findById(id)
-    suspend fun updateBlock(block: ExposedImportBlock) = blockService.update(block)
     suspend fun deleteBlock(id: Int) = blockService.delete(id)
 
     suspend fun findLineById(id: Int): ExposedImportLine? = lineService.findById(id)
-    suspend fun updateLine(line: ExposedImportLine) = lineService.update(line)
     suspend fun deleteLine(id: Int) = lineService.delete(id)
 
     suspend fun findWordById(id: Int): ExposedImportWord? = wordService.findById(id)
-    suspend fun updateWord(word: ExposedImportWord) = wordService.update(word)
+    suspend fun updateWordText(id: Int, text: String) {
+        wordService.updateText(id, text)
+    }
     suspend fun deleteWord(id: Int) = wordService.delete(id)
 
     suspend fun createDeskewedImage(page: ExposedImportPage, deskew: Int) {
@@ -105,7 +105,12 @@ class ImportService(
             logger.info("Running image editing on page $page / ${pages.size}")
             importFlow.emit(state.copy(progress = 0.3 + (pageStep * (page - 1)) + ((pageStep / 5) * 0), message = "Creating deskewed image for page $page"))
             fileManager.createDeskewedImage(guid)
-            importFlow.emit(state.copy(progress = 0.3 + (pageStep * (page - 1)) + ((pageStep / 5) * 1), message = "Creating color-adjusted image for page $page"))
+            importFlow.emit(
+                state.copy(
+                    progress = 0.3 + (pageStep * (page - 1)) + ((pageStep / 5) * 1),
+                    message = "Creating color-adjusted image for page $page"
+                )
+            )
             fileManager.createColorAdjustedImage(guid)
             importFlow.emit(state.copy(progress = 0.3 + (pageStep * (page - 1)) + ((pageStep / 5) * 2), message = "Creating cropped image for page $page"))
             fileManager.createCroppedImage(guid)

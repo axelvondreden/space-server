@@ -401,23 +401,6 @@ paths:
           description: Import block not found
         "401":
           $ref: "#/components/responses/Unauthorized"
-    put:
-      summary: Update a specific import block
-      tags:
-        - Import Block
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ImportBlock"
-      responses:
-        "200":
-          description: Import block updated successfully
-        "404":
-          description: Import block not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
     delete:
       summary: Delete a specific import block
       tags:
@@ -444,23 +427,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ImportLine"
-        "404":
-          description: Import line not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-    put:
-      summary: Update a specific import line
-      tags:
-        - Import Line
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ImportLine"
-      responses:
-        "200":
-          description: Import line updated successfully
         "404":
           description: Import line not found
         "401":
@@ -495,23 +461,6 @@ paths:
           description: Import word not found
         "401":
           $ref: "#/components/responses/Unauthorized"
-    put:
-      summary: Update a specific import word
-      tags:
-        - Import Word
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ImportWord"
-      responses:
-        "200":
-          description: Import word updated successfully
-        "404":
-          description: Import word not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
     delete:
       summary: Delete a specific import word
       tags:
@@ -519,6 +468,26 @@ paths:
       responses:
         "200":
           description: Import word deleted successfully
+        "404":
+          description: Import word not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /import/word/{id}/text:
+    parameters:
+      - $ref: "#/components/parameters/idParam"
+    post:
+      summary: Update the text of a import word
+      tags:
+        - Import Word
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+      responses:
+        "200":
+          description: Import word updated successfully
         "404":
           description: Import word not found
         "401":
@@ -840,6 +809,8 @@ components:
           type: integer
         ocrConfidence:
           type: number
+        lineId:
+          type: integer
       required:
         - id
         - text
@@ -847,6 +818,7 @@ components:
         - y
         - width
         - height
+        - lineId
 
     ImportOcrResult:
       type: object

@@ -44,16 +44,12 @@ class ImportPageDbService(database: Database) {
         }
     }
 
-    suspend fun findById(id: Int): ExposedImportPage? {
-        return dbQuery {
-            (ImportPage innerJoin ImportDocument).selectAll().where { ImportPage.id eq id }.mapExposed().singleOrNull()
-        }
+    suspend fun findById(id: Int): ExposedImportPage? = dbQuery {
+        (ImportPage innerJoin ImportDocument).selectAll().where { ImportPage.id eq id }.mapExposed().singleOrNull()
     }
 
-    suspend fun findByDocumentId(id: Int): List<ExposedImportPage> {
-        return dbQuery {
-            (ImportPage innerJoin ImportDocument).selectAll().where { ImportPage.document eq id }.mapExposed()
-        }
+    suspend fun findByDocumentId(id: Int): List<ExposedImportPage> = dbQuery {
+        (ImportPage innerJoin ImportDocument).selectAll().where { ImportPage.document eq id }.mapExposed()
     }
 
     suspend fun create(page: ExposedImportPage): Int = dbQuery {

@@ -9,5 +9,6 @@ data class ExposedImportLineFull(
     val y: Int = 0,
     val width: Int = 0,
     val height: Int = 0,
+    val blockId: Int = 0,
     val words: List<ExposedImportWord> = emptyList()
 )

@@ -24,19 +24,6 @@ fun Route.importWordRoute(importService: ImportService) {
             findById(this, call.parameters["id"]?.toIntOrNull())?.let { call.respond(HttpStatusCode.OK, it) }
         }
 
-        put {
-            val id = call.parameters["id"]?.toIntOrNull()
-            val word = call.receive<ExposedImportWord>()
-            if (id != word.id) {
-                call.respond(HttpStatusCode.BadRequest, "Id in path and body must be equal")
-                return@put
-            }
-            if (findById(this, word.id) != null) {
-                importService.updateWord(word)
-                call.respond(HttpStatusCode.OK)
-            }
-        }
-
         delete {
             val id = call.parameters["id"]?.toIntOrNull() ?: 0
             if (id == 0) {
@@ -45,6 +32,13 @@ fun Route.importWordRoute(importService: ImportService) {
                 importService.deleteWord(id)
                 call.respond(HttpStatusCode.OK)
             }
+        }
+
+        post("/text") {
+            val id = call.parameters["id"]?.toIntOrNull() ?: 0
+            val text = call.receiveText()
+            importService.updateWordText(id, text)
+            call.respond(HttpStatusCode.OK)
         }
     }
 }

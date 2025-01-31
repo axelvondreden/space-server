@@ -1,6 +1,8 @@
 package de.axl.db
 
+import de.axl.db.ImportBlockDbService.ImportBlock
 import de.axl.db.ImportLineDbService.ImportLine
+import de.axl.db.ImportPageDbService.ImportPage
 import de.axl.dbQuery
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.*
@@ -15,7 +17,8 @@ data class ExposedImportWord(
     val y: Int = 0,
     val width: Int = 0,
     val height: Int = 0,
-    val ocrConfidence: Double? = 0.0
+    val ocrConfidence: Double? = 0.0,
+    val lineId: Int = 0
 )
 
 class ImportWordDbService(database: Database) {
@@ -38,23 +41,8 @@ class ImportWordDbService(database: Database) {
         }
     }
 
-    suspend fun findById(id: Int): ExposedImportWord? {
-        return dbQuery {
-            ImportWord.selectAll()
-                .where { ImportWord.id eq id }
-                .map {
-                    ExposedImportWord(
-                        it[ImportWord.id],
-                        it[ImportWord.text],
-                        it[ImportWord.x],
-                        it[ImportWord.y],
-                        it[ImportWord.width],
-                        it[ImportWord.height],
-                        it[ImportWord.ocrConfidence]
-                    )
-                }
-                .singleOrNull()
-        }
+    suspend fun findById(id: Int): ExposedImportWord? = dbQuery {
+        ImportWord.selectAll().where { ImportWord.id eq id }.mapExposed().singleOrNull()
     }
 
     suspend fun create(word: ExposedImportWord, lineId: Int): Int = dbQuery {
@@ -69,16 +57,32 @@ class ImportWordDbService(database: Database) {
         }[ImportWord.id]
     }
 
-    suspend fun update(word: ExposedImportWord) {
-        dbQuery {
-            ImportWord.update({ ImportWord.id eq word.id }) {
-                it[text] = word.text
-                it[x] = word.x
-                it[y] = word.y
-                it[width] = word.width
-                it[height] = word.height
-                it[ocrConfidence] = word.ocrConfidence
-            }
+    suspend fun updateText(id: Int, newText: String) = dbQuery {
+        val dbWord = ImportWord.selectAll().where { ImportWord.id eq id }.single()
+        val oldText = dbWord[ImportWord.text]
+        ImportWord.update({ ImportWord.id eq id }) {
+            it[text] = newText
+        }
+
+        val dbLine = ImportLine.selectAll().where { ImportLine.id eq dbWord[ImportWord.line] }.single()
+        val oldLineText = dbLine[ImportLine.text]
+        val newLineText = oldLineText.replace(oldText, newText)
+        ImportLine.update({ ImportLine.id eq dbWord[ImportWord.line] }) {
+            it[text] = newLineText
+        }
+
+        val dbBlock = ImportBlock.selectAll().where { ImportBlock.id eq dbLine[ImportLine.block] }.single()
+        val oldBlockText = dbBlock[ImportBlock.text]
+        val newBlockText = oldBlockText.replace(oldLineText, newLineText)
+        ImportBlock.update({ ImportBlock.id eq dbLine[ImportLine.block] }) {
+            it[text] = newBlockText
+        }
+
+        val dbPage = ImportPage.selectAll().where { ImportPage.id eq dbBlock[ImportBlock.page] }.single()
+        val oldPageText = dbPage[ImportPage.text]
+        val newPageText = oldPageText.replace(oldBlockText, newBlockText)
+        ImportPage.update({ ImportPage.id eq dbBlock[ImportBlock.page] }) {
+            it[text] = newPageText
         }
     }
 
@@ -86,5 +90,18 @@ class ImportWordDbService(database: Database) {
         dbQuery {
             ImportWord.deleteWhere { ImportWord.id.eq(id) }
         }
+    }
+
+    private fun Query.mapExposed(): List<ExposedImportWord> = map {
+        ExposedImportWord(
+            it[ImportWord.id],
+            it[ImportWord.text],
+            it[ImportWord.x],
+            it[ImportWord.y],
+            it[ImportWord.width],
+            it[ImportWord.height],
+            it[ImportWord.ocrConfidence],
+            it[ImportWord.line]
+        )
     }
 }
