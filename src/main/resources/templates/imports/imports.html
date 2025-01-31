@@ -704,6 +704,7 @@
     }
 
     const wordModal = new bootstrap.Modal("#wordModal");
+    const wordModalDiv = document.getElementById("wordModal");
     const wordEditText = document.getElementById("wordEditText");
     const wordEditConfirmButton = document.getElementById("wordEditConfirmButton");
     let selectedWord = null;
@@ -726,9 +727,23 @@
 
     function showWordModal(word) {
         selectedWord = word;
-        wordModal.show();
         wordEditText.value = word.text;
+        wordModal.show();
         wordEditText.focus();
+    }
+
+    wordModalDiv.addEventListener('show.bs.modal', () => {
+        wordEditText.addEventListener("keyup", handleEnterPress);
+    });
+
+    wordModalDiv.addEventListener('hide.bs.modal', () => {
+        wordEditText.removeEventListener("keyup", handleEnterPress);
+    });
+
+    function handleEnterPress(event) {
+        if (event.key === "Enter") {
+            wordEditConfirmButton.click();
+        }
     }
 </script>
 </body>
