@@ -181,7 +181,10 @@
                 <input type="text" class="form-control" id="wordEditText" placeholder="Text" value="">
             </div>
             <div class="modal-footer">
-                <button id="wordEditConfirmButton" type="button" class="btn btn-primary">Save</button>
+                <button id="wordEditConfirmButton" type="button" class="btn btn-primary">
+                    Save
+                    <span id="wordEditConfirmButtonSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
+                </button>
             </div>
         </div>
     </div>
@@ -477,8 +480,10 @@
 
         const layer = new Konva.Layer();
         stage.add(layer);
-
+        
         const imageObj = new Image();
+
+
         imageObj.onload = () => {
             const konvaImage = new Konva.Image({
                 x: 0,
@@ -488,6 +493,8 @@
                 height: page.height,
             });
 
+            const scale = containerWidth / page.width;
+            stage.scale({x: scale, y: scale});
             layer.add(konvaImage);
             layer.batchDraw();
         };
@@ -707,17 +714,19 @@
     const wordModalDiv = document.getElementById("wordModal");
     const wordEditText = document.getElementById("wordEditText");
     const wordEditConfirmButton = document.getElementById("wordEditConfirmButton");
+    const wordEditConfirmButtonSpinner = document.getElementById("wordEditConfirmButtonSpinner");
     let selectedWord = null;
 
     wordEditConfirmButton.addEventListener("click", async () => {
         if (selectedWord != null && wordEditText.value) {
+            wordEditConfirmButtonSpinner.classList.remove("d-none");
             selectedWord.text = wordEditText.value;
-            const body = JSON.stringify(selectedWord);
             await fetch("/api/v1/import/word/" + selectedWord.id + "/text", {method: "post", body: wordEditText.value}).then(async result => {
                 if (result.ok) {
                     await fetch("/api/v1/import/page/" + selectedPage.id).then(async result => {
                         selectedPage = await result.json();
                         pageText.value = selectedPage.text;
+                        wordEditConfirmButtonSpinner.classList.add("d-none");
                         wordModal.hide();
                     });
                 }
