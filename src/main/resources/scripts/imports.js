@@ -208,21 +208,36 @@ async function docSelected(imp) {
         importDocArea.classList.add("d-none");
         return;
     }
+    if (imp.date) {
+        dateElem.datepicker("update", new Date(imp.date[0], imp.date[1] - 1, imp.date[2]));
+    }
     const page1 = imp.pages.find(p => p.page === 1);
-    await fetch("/api/v1/import/page/" + page1.id).then(async result => {
+    await pageSelected(page1.id);
+
+    pagination.innerHTML = "";
+    imp.pages.forEach(page => {
+        const li = document.createElement("li");
+        if (page.page === 1) {
+            li.className = "page-item active";
+        } else {
+            li.className = "page-item";
+        }
+        li.innerHTML = "<a class='page-link' href='#' onclick='pageSelected(" + page.id + ")'>" + page.page + "</a>";
+        pagination.appendChild(li);
+    })
+}
+
+async function pageSelected(pageId) {
+    await fetch("/api/v1/import/page/" + pageId).then(async result => {
         if (result.ok) {
             const page = await result.json();
             selectedPage = page;
             importNoDocSelected.classList.add("d-none");
             importDocArea.classList.remove("d-none");
 
-            importGuid.innerHTML = imp.guid;
+            importGuid.innerHTML = selectedImport.guid;
 
-            if (imp.date) {
-                dateElem.datepicker("update", new Date(imp.date[0], imp.date[1] - 1, imp.date[2]));
-            }
-
-            languageSelect.value = imp.ocrLanguage;
+            languageSelect.value = selectedImport.ocrLanguage;
 
             await loadImageCanvas(page, false)
 
@@ -235,26 +250,23 @@ async function docSelected(imp) {
             sliderCropFuzz.value = page.cropFuzz;
             sliderCropFuzzValue.innerText = page.cropFuzz;
 
-            editImageOriginal.src = "/api/v1/import/page/" + page1.id + "/img?type=original";
-            editImageDeskewed.src = "/api/v1/import/page/" + page1.id + "/img?type=deskewed";
-            editImageColorAdjusted.src = "/api/v1/import/page/" + page1.id + "/img?type=color";
-            editImageCropped.src = "/api/v1/import/page/" + page1.id + "/img";
+            pagination.childNodes.forEach(node => {
+                if (node.className === "page-item active") {
+                    node.className = "page-item";
+                }
+                if (node.children[0].innerText == page.page) {
+                    node.className = "page-item active";
+                }
+            })
+
+            editImageOriginal.src = "/api/v1/import/page/" + page.id + "/img?type=original";
+            editImageDeskewed.src = "/api/v1/import/page/" + page.id + "/img?type=deskewed";
+            editImageColorAdjusted.src = "/api/v1/import/page/" + page.id + "/img?type=color";
+            editImageCropped.src = "/api/v1/import/page/" + page.id + "/img";
 
             imageEditorChanged(false);
         }
     });
-
-    pagination.innerHTML = "";
-    imp.pages.forEach(page => {
-        const li = document.createElement("li");
-        if (page.page === 1) {
-            li.className = "page-item active";
-        } else {
-            li.className = "page-item";
-        }
-        li.innerHTML = "<a class='page-link' href='#'>" + page.page + "</a>";
-        pagination.appendChild(li);
-    })
 }
 
 const canvasContainer = document.getElementById("canvasContainer");
