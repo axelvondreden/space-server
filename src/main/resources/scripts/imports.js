@@ -188,6 +188,8 @@ const imageEditorCloseButton = document.getElementById("imageEditCloseButton");
 
 const imageModal = new bootstrap.Modal("#imageModal");
 
+const pagination = document.getElementById("pagination");
+
 let selectedImport = null;
 let selectedPage = null;
 
@@ -241,6 +243,18 @@ async function docSelected(imp) {
             imageEditorChanged(false);
         }
     });
+
+    pagination.innerHTML = "";
+    imp.pages.forEach(page => {
+        const li = document.createElement("li");
+        if (page.page === 1) {
+            li.className = "page-item active";
+        } else {
+            li.className = "page-item";
+        }
+        li.innerHTML = "<a class='page-link' href='#'>" + page.page + "</a>";
+        pagination.appendChild(li);
+    })
 }
 
 const canvasContainer = document.getElementById("canvasContainer");

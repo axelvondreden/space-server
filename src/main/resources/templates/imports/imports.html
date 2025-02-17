@@ -24,7 +24,10 @@
     </div>
     <div id="importDocArea" class="container-fluid d-flex p-0 d-none">
         <div id="importDocImageArea" class="split overflow-y-scroll">
-            <div id="canvasContainer" class="position-relative w-100 h-100"></div>
+            <div id="canvasContainer" class="position-relative w-100" style="height: calc(100% - 60px)"></div>
+            <nav style="padding-top: 6px">
+                <ul id="pagination" class="pagination justify-content-center"></ul>
+            </nav>
         </div>
         <div id="importDocDataArea" class="split d-flex flex-md-column px-3 overflow-y-scroll">
             <h4 class="my-3" id="importGuid">GUID</h4>
