@@ -52,7 +52,7 @@ class ImportFileManager(val dataPath: String) {
         )
     }
 
-    fun createCroppedImage(guid: String, fuzz: Int = 20) {
+    fun createCroppedImage(guid: String, fuzz: Int = 10) {
         val img = getImageColorAdjusted(guid)
         logger.info("Creating cropped image for ${img.name}")
         runCommand(img.parentFile, "magick ${img.name} -fuzz $fuzz% -trim +repage final.png", logger)

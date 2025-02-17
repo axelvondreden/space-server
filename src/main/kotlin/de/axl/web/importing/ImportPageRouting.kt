@@ -96,7 +96,7 @@ fun Route.importPageRoute(importService: ImportService) {
         post("/edit/crop") {
             var page = findById(this, call.parameters["id"]?.toIntOrNull())
             if (page != null) {
-                importService.createCroppedImage(page, call.request.queryParameters["fuzz"]?.toIntOrNull() ?: 20)
+                importService.createCroppedImage(page, call.request.queryParameters["fuzz"]?.toIntOrNull() ?: 10)
                 call.respond(HttpStatusCode.OK)
             }
         }
