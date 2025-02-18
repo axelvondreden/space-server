@@ -19,7 +19,7 @@ class ImportPageDbService(database: Database) {
         val height = integer("height")
         val deskew = integer("deskew").default(40)
         val colorFuzz = integer("colorFuzz").default(10)
-        val cropFuzz = integer("cropFuzz").default(20)
+        val cropFuzz = integer("cropFuzz").default(10)
         val document = reference("document", ImportDocument.id, onDelete = ReferenceOption.CASCADE)
 
         override val primaryKey = PrimaryKey(id)
