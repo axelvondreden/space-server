@@ -45,7 +45,7 @@
             <div class="mb-3">
                 <label for="pageText" class="form-label">Text</label>
                 <button type="button" class="btn btn-outline-secondary btn-sm ms-2" id="refreshTextButton">
-                    Refresh
+                    Run OCR on page
                     <span id="refreshTextSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
                 </button>
                 <span class="btn-group-sm" role="group">
@@ -183,7 +183,11 @@
             <div class="modal-body">
                 <input type="text" class="form-control" id="wordEditText" placeholder="Text" value="">
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer justify-content-between">
+                <button id="wordEditDeleteButton" type="button" class="btn btn-danger justify-content-start">
+                    Delete
+                    <span id="wordEditDeleteButtonSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
+                </button>
                 <button id="wordEditConfirmButton" type="button" class="btn btn-primary">
                     Save
                     <span id="wordEditConfirmButtonSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>

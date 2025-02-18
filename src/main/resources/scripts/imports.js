@@ -239,7 +239,7 @@ async function pageSelected(pageId) {
 
             languageSelect.value = selectedImport.ocrLanguage;
 
-            await loadImageCanvas(page)
+            await loadImageCanvas(page, true)
 
             sliderDeskew.value = page.deskew;
             sliderDeskewValue.innerText = page.deskew;
@@ -283,17 +283,24 @@ let currentBlocks = [];
 let currentLines = [];
 let currentWords = [];
 
-async function loadImageCanvas(page) {
+let canvasPosition = {x: 0, y: 0};
+let canvasScale = 1;
+
+async function loadImageCanvas(page, reset = false) {
     canvasContainer.innerHTML = "";
     currentBlocks = [];
     currentLines = [];
     currentWords = [];
+    if (reset) {
+        canvasPosition = {x: 0, y: 0};
+    }
     const containerWidth = canvasContainer.offsetWidth;
     const containerHeight = canvasContainer.offsetHeight;
     const stage = new Konva.Stage({
         container: 'canvasContainer',
         width: containerWidth,
         height: containerHeight,
+        position: canvasPosition,
         draggable: true
     });
 
@@ -317,14 +324,18 @@ async function loadImageCanvas(page) {
             y: pointer.y - mousePointTo.y * scale,
         };
         stage.position(newPos);
+        canvasPosition = newPos;
+        canvasScale = scale;
     });
+
+    stage.on('dragmove', (e) => {
+        canvasPosition = e.target.position();
+    })
 
     const layer = new Konva.Layer();
     stage.add(layer);
 
     const imageObj = new Image();
-
-
     imageObj.onload = () => {
         const konvaImage = new Konva.Image({
             x: 0,
@@ -333,13 +344,13 @@ async function loadImageCanvas(page) {
             width: page.width,
             height: page.height,
         });
-
-        const scale = containerWidth / page.width;
-        stage.scale({x: scale, y: scale});
+        if (reset) {
+            canvasScale = containerWidth / page.width;
+        }
+        stage.scale({x: canvasScale, y: canvasScale});
         layer.add(konvaImage);
         layer.batchDraw();
     };
-
     imageObj.src = "/api/v1/import/page/" + page.id + "/img";
 
     const boxLayer = new Konva.Layer();
@@ -586,6 +597,8 @@ const wordModalDiv = document.getElementById("wordModal");
 const wordEditText = document.getElementById("wordEditText");
 const wordEditConfirmButton = document.getElementById("wordEditConfirmButton");
 const wordEditConfirmButtonSpinner = document.getElementById("wordEditConfirmButtonSpinner");
+const wordEditDeleteButton = document.getElementById("wordEditDeleteButton");
+const wordEditDeleteButtonSpinner = document.getElementById("wordEditDeleteButtonSpinner");
 let selectedWord = null;
 
 wordEditConfirmButton.addEventListener("click", async () => {
@@ -599,6 +612,26 @@ wordEditConfirmButton.addEventListener("click", async () => {
                         pageText.value = await result.text();
                         wordEditConfirmButtonSpinner.classList.add("d-none");
                         wordModal.hide();
+                        await loadImageCanvas(selectedPage);
+                    });
+                });
+            }
+        });
+    }
+});
+
+wordEditDeleteButton.addEventListener("click", async () => {
+    if (selectedWord != null) {
+        wordEditDeleteButtonSpinner.classList.remove("d-none");
+        await fetch("/api/v1/import/word/" + selectedWord.id, {method: "delete"}).then(async result => {
+            if (result.ok) {
+                await fetch("/api/v1/import/page/" + selectedPage.id).then(async result => {
+                    selectedPage = await result.json();
+                    await fetch("/api/v1/import/page/" + selectedPage.id + "/text").then(async result => {
+                        pageText.value = await result.text();
+                        wordEditDeleteButtonSpinner.classList.add("d-none");
+                        wordModal.hide();
+                        await loadImageCanvas(selectedPage);
                     });
                 });
             }

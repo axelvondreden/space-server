@@ -1,5 +1,6 @@
 package de.axl.db
 
+import de.axl.db.ImportBlockDbService.ImportBlock
 import de.axl.db.ImportLineDbService.ImportLine
 import de.axl.dbQuery
 import de.axl.serialization.api.ExposedImportWord
@@ -51,7 +52,17 @@ class ImportWordDbService(database: Database) {
 
     suspend fun delete(id: Int) {
         dbQuery {
-            ImportWord.deleteWhere { ImportWord.id.eq(id) }
+            val dbWord = ImportWord.selectAll().where { ImportWord.id eq id }.single()
+            ImportWord.deleteWhere { ImportWord.id eq id }
+
+            if (ImportWord.selectAll().where { ImportWord.line eq dbWord[ImportWord.line] }.count() == 0L) {
+                val dbLine = ImportLine.selectAll().where { ImportLine.id eq dbWord[ImportWord.line] }.single()
+                ImportLine.deleteWhere { ImportLine.id eq dbLine[ImportLine.id] }
+
+                if (ImportLine.selectAll().where { ImportLine.block eq dbLine[ImportLine.block] }.count() == 0L) {
+                    ImportBlock.deleteWhere { ImportBlock.id eq dbLine[ImportLine.block] }
+                }
+            }
         }
     }
 
