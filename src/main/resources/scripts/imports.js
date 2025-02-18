@@ -290,6 +290,11 @@ let currentWords = [];
 let canvasPosition = {x: 0, y: 0};
 let canvasScale = 1;
 
+let containerWidth = 0;
+let containerHeight = 0;
+
+let stage = null;
+
 async function loadImageCanvas(page, reset = false) {
     canvasContainer.innerHTML = "";
     currentBlocks = [];
@@ -298,9 +303,9 @@ async function loadImageCanvas(page, reset = false) {
     if (reset) {
         canvasPosition = {x: 0, y: 0};
     }
-    const containerWidth = canvasContainer.offsetWidth;
-    const containerHeight = canvasContainer.offsetHeight;
-    const stage = new Konva.Stage({
+    containerWidth = canvasContainer.offsetWidth;
+    containerHeight = canvasContainer.offsetHeight;
+    stage = new Konva.Stage({
         container: 'canvasContainer',
         width: containerWidth,
         height: containerHeight,
@@ -448,6 +453,27 @@ async function loadImageCanvas(page, reset = false) {
         }
     });
 }
+
+const alignHorizontalButton = document.getElementById("alignHorizontalButton");
+const alignVerticalButton = document.getElementById("alignVerticalButton");
+
+alignHorizontalButton.addEventListener("click", () => {
+    canvasPosition = {x: 0, y: 0};
+    canvasScale = containerWidth / selectedPage.width;
+    stage.position(canvasPosition);
+    stage.scale({x: canvasScale, y: canvasScale});
+});
+
+alignVerticalButton.addEventListener("click", () => {
+    canvasScale = containerHeight / selectedPage.height;
+    if (selectedPage.width * canvasScale < containerWidth) {
+        canvasPosition = {x: (containerWidth - (selectedPage.width * canvasScale)) / 2, y: 0};
+    } else {
+        canvasPosition = {x: 0, y: 0};
+    }
+    stage.position(canvasPosition);
+    stage.scale({x: canvasScale, y: canvasScale});
+})
 
 const refreshTextButton = document.getElementById("refreshTextButton");
 const refreshTextSpinner = document.getElementById("refreshTextSpinner");
