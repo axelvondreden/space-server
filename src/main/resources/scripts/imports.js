@@ -120,9 +120,13 @@ uploadButton.addEventListener("click", async () => {
     await fetch("/api/v1/upload/collect", {method: "post"});
 });
 
-window.addEventListener("load", () => {
-    Split(['#importDocImageArea', '#importDocDataArea'], {});
-    fillSidebar();
+window.addEventListener("load", async () => {
+    Split(['#importDocImageArea', '#importDocDataArea'], {
+        onDragEnd: async () => {
+            await loadImageCanvas(selectedPage, true);
+        }
+    });
+    await fillSidebar();
 });
 
 

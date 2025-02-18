@@ -25,8 +25,16 @@
     <div id="importDocArea" class="container-fluid d-flex p-0 d-none">
         <div id="importDocImageArea" class="split overflow-y-scroll">
             <div id="canvasContainer" class="position-relative w-100" style="height: calc(100% - 60px)"></div>
-            <nav style="padding-top: 6px">
-                <ul id="pagination" class="pagination justify-content-center"></ul>
+            <nav class="navbar p-0 pt-2">
+                <div class="container-fluid justify-content-between">
+                    <div class="btn-toolbar" role="toolbar">
+                        <div class="btn-group btn-group-lg me-2" role="group">
+                            <button type="button" class="btn btn-outline-primary" id="alignHorizontalButton"><i class="bi bi-distribute-horizontal"></i></button>
+                            <button type="button" class="btn btn-outline-primary" id="alignVerticalButton"><i class="bi bi-distribute-vertical"></i></button>
+                        </div>
+                    </div>
+                    <ul id="pagination" class="pagination m-0"></ul>
+                </div>
             </nav>
         </div>
         <div id="importDocDataArea" class="split d-flex flex-md-column px-3 overflow-y-scroll">
