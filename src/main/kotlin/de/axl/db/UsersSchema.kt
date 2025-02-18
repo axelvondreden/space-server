@@ -2,22 +2,12 @@ package de.axl.db
 
 import at.favre.lib.crypto.bcrypt.BCrypt
 import de.axl.dbQuery
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Serializable
+import de.axl.serialization.api.ExposedUser
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
-
-@Serializable
-data class ExposedUser(
-    val username: String,
-    val name: String?,
-    val admin: Boolean = false,
-    @Contextual val createdAt: LocalDateTime = LocalDateTime.now(),
-    @Contextual val updatedAt: LocalDateTime? = null
-)
 
 class UserDbService(database: Database, private val adminUsername: String) {
     object Users : Table() {

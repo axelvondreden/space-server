@@ -1,10 +1,10 @@
 package de.axl.startup
 
 import de.axl.createFolder
-import de.axl.db.ExposedUser
 import de.axl.db.UserDbService
 import de.axl.files.ImportFileManager
 import de.axl.property
+import de.axl.serialization.api.ExposedUser
 import io.ktor.server.application.*
 import kotlinx.coroutines.runBlocking
 

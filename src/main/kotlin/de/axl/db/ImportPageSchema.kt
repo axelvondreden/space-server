@@ -2,31 +2,18 @@ package de.axl.db
 
 import de.axl.db.ImportDocumentDbService.ImportDocument
 import de.axl.dbQuery
-import kotlinx.serialization.Serializable
+import de.axl.serialization.api.ExposedImportBlock
+import de.axl.serialization.api.ExposedImportLine
+import de.axl.serialization.api.ExposedImportPage
+import de.axl.serialization.api.ExposedImportWord
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
-
-@Serializable
-data class ExposedImportPage(
-    val id: Int = 0,
-    val guid: String,
-    val text: String = "",
-    val page: Int,
-    val width: Int = 0,
-    val height: Int = 0,
-    val deskew: Int = 40,
-    val colorFuzz: Int = 10,
-    val cropFuzz: Int = 20,
-    val documentId: Int = 0,
-    val blocks: List<Int> = emptyList()
-)
 
 class ImportPageDbService(database: Database) {
     object ImportPage : Table() {
         val id = integer("id").autoIncrement()
         val guid = varchar("guid", length = 36)
-        val text = text("text")
         val page = integer("page")
         val width = integer("width")
         val height = integer("height")
@@ -48,6 +35,30 @@ class ImportPageDbService(database: Database) {
         (ImportPage innerJoin ImportDocument).selectAll().where { ImportPage.id eq id }.mapExposed().singleOrNull()
     }
 
+    suspend fun findTextById(id: Int): String? = dbQuery {
+        val pageId = ImportPage.selectAll().where { ImportPage.id eq id }.singleOrNull()?.get(ImportPage.id) ?: return@dbQuery null
+        ImportBlockDbService.ImportBlock
+            .join(ImportLineDbService.ImportLine, JoinType.INNER, ImportLineDbService.ImportLine.block, ImportBlockDbService.ImportBlock.id)
+            .join(ImportWordDbService.ImportWord, JoinType.INNER, ImportWordDbService.ImportWord.line, ImportLineDbService.ImportLine.id)
+            .join(ImportPage, JoinType.INNER, ImportBlockDbService.ImportBlock.page, ImportPage.id)
+            .select(ImportBlockDbService.ImportBlock.y, ImportLineDbService.ImportLine.y, ImportWordDbService.ImportWord.x, ImportWordDbService.ImportWord.text)
+            .where { ImportPage.id eq pageId }
+            .orderBy(
+                ImportBlockDbService.ImportBlock.y to SortOrder.ASC,
+                ImportLineDbService.ImportLine.y to SortOrder.ASC,
+                ImportWordDbService.ImportWord.x to SortOrder.ASC
+            )
+            .groupBy { it[ImportBlockDbService.ImportBlock.y] }
+            .map { (_, blockGroup) ->
+                blockGroup.groupBy { it[ImportLineDbService.ImportLine.y] }
+                    .map { (_, lineGroup) ->
+                        lineGroup.joinToString(" ") { it[ImportWordDbService.ImportWord.text] }
+                    }
+                    .joinToString("\n")
+            }
+            .joinToString("\n")
+    }
+
     suspend fun findByDocumentId(id: Int): List<ExposedImportPage> = dbQuery {
         (ImportPage innerJoin ImportDocument).selectAll().where { ImportPage.document eq id }.mapExposed()
     }
@@ -55,7 +66,6 @@ class ImportPageDbService(database: Database) {
     suspend fun create(page: ExposedImportPage): Int = dbQuery {
         ImportPage.insert {
             it[guid] = page.guid
-            it[text] = page.text
             it[ImportPage.page] = page.page
             it[width] = page.width
             it[height] = page.height
@@ -69,7 +79,6 @@ class ImportPageDbService(database: Database) {
     suspend fun createPageContent(page: ExposedImportPage, blocks: Map<ExposedImportBlock, Map<ExposedImportLine, List<ExposedImportWord>>>) = dbQuery {
         blocks.forEach { (block, lines) ->
             val blockId = ImportBlockDbService.ImportBlock.insert {
-                it[text] = block.text
                 it[x] = block.x
                 it[y] = block.y
                 it[width] = block.width
@@ -78,7 +87,6 @@ class ImportPageDbService(database: Database) {
             }[ImportBlockDbService.ImportBlock.id]
             lines.forEach { (line, words) ->
                 val lineId = ImportLineDbService.ImportLine.insert {
-                    it[text] = line.text
                     it[x] = line.x
                     it[y] = line.y
                     it[width] = line.width
@@ -102,7 +110,6 @@ class ImportPageDbService(database: Database) {
     suspend fun update(page: ExposedImportPage) {
         dbQuery {
             ImportPage.update({ ImportPage.id eq page.id }) {
-                it[text] = page.text
                 it[ImportPage.page] = page.page
                 it[width] = page.width
                 it[height] = page.height
@@ -123,7 +130,6 @@ class ImportPageDbService(database: Database) {
         ExposedImportPage(
             it[ImportPage.id],
             it[ImportPage.guid],
-            it[ImportPage.text],
             it[ImportPage.page],
             it[ImportPage.width],
             it[ImportPage.height],

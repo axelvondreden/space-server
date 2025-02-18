@@ -1,7 +1,7 @@
 package de.axl.web.importing
 
-import de.axl.db.ExposedImportBlock
 import de.axl.importing.ImportService
+import de.axl.serialization.api.ExposedImportBlock
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*

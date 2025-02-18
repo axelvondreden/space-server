@@ -1,29 +1,14 @@
 package de.axl.db
 
 import de.axl.dbQuery
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Serializable
+import de.axl.serialization.api.ExposedImportDocument
+import de.axl.serialization.api.ExposedImportDocumentPage
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.time.LocalDate
 import java.time.LocalDateTime
-
-@Serializable
-data class ExposedImportDocument(
-    val id: Int = 0,
-    val guid: String,
-    val ocrLanguage: OCRLanguage = OCRLanguage.DEU,
-    @Contextual val date: LocalDate? = null,
-    @Contextual val createdAt: LocalDateTime = LocalDateTime.now(),
-    @Contextual val updatedAt: LocalDateTime? = null,
-    val pages: List<ExposedImportDocumentPage> = emptyList()
-)
-
-@Serializable
-data class ExposedImportDocumentPage(val page: Int, val id: Int)
 
 enum class OCRLanguage(val lang: String) {
     DEU("deu"),

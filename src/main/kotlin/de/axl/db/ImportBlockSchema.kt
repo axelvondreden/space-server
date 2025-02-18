@@ -2,29 +2,17 @@ package de.axl.db
 
 import de.axl.db.ImportPageDbService.ImportPage
 import de.axl.dbQuery
+import de.axl.serialization.api.ExposedImportBlock
 import de.axl.serialization.api.ExposedImportBlockFull
 import de.axl.serialization.api.ExposedImportLineFull
-import kotlinx.serialization.Serializable
+import de.axl.serialization.api.ExposedImportWord
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 
-@Serializable
-data class ExposedImportBlock(
-    val id: Int = 0,
-    val text: String = "",
-    val x: Int = 0,
-    val y: Int = 0,
-    val width: Int = 0,
-    val height: Int = 0,
-    val pageId: Int = 0,
-    val lines: List<Int> = emptyList()
-)
-
 class ImportBlockDbService(database: Database) {
     object ImportBlock : Table() {
         val id = integer("id").autoIncrement()
-        val text = text("text")
         val x = integer("x")
         val y = integer("y")
         val width = integer("width")
@@ -54,7 +42,6 @@ class ImportBlockDbService(database: Database) {
 
     suspend fun create(block: ExposedImportBlock, pageId: Int): Int = dbQuery {
         ImportBlock.insert {
-            it[text] = block.text
             it[x] = block.x
             it[y] = block.y
             it[width] = block.width
@@ -78,7 +65,6 @@ class ImportBlockDbService(database: Database) {
     private suspend fun Query.mapExposed(): List<ExposedImportBlock> = map {
         ExposedImportBlock(
             it[ImportBlock.id],
-            it[ImportBlock.text],
             it[ImportBlock.x],
             it[ImportBlock.y],
             it[ImportBlock.width],
@@ -95,7 +81,6 @@ class ImportBlockDbService(database: Database) {
     private fun Query.mapFull(): List<ExposedImportBlockFull> = map {
         ExposedImportBlockFull(
             it[ImportBlock.id],
-            it[ImportBlock.text],
             it[ImportBlock.x],
             it[ImportBlock.y],
             it[ImportBlock.width],
@@ -106,7 +91,6 @@ class ImportBlockDbService(database: Database) {
                 .map { line ->
                     ExposedImportLineFull(
                         line[ImportLineDbService.ImportLine.id],
-                        line[ImportLineDbService.ImportLine.text],
                         line[ImportLineDbService.ImportLine.x],
                         line[ImportLineDbService.ImportLine.y],
                         line[ImportLineDbService.ImportLine.width],

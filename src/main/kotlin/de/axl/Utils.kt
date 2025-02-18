@@ -1,6 +1,6 @@
 package de.axl
 
-import de.axl.db.ExposedUser
+import de.axl.serialization.api.ExposedUser
 import de.axl.db.UserDbService
 import de.axl.web.UserSession
 import io.ktor.server.application.*

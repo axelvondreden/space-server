@@ -7,7 +7,7 @@ import de.axl.files.ImportFileManager
 import de.axl.importing.events.ImportStateEvent
 import de.axl.runCommand
 import de.axl.serialization.alto.Alto
-import de.axl.serialization.api.ExposedImportBlockFull
+import de.axl.serialization.api.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -34,6 +34,7 @@ class ImportService(
     suspend fun deleteDocument(id: Int) = docService.delete(id)
 
     suspend fun findPageById(id: Int): ExposedImportPage? = pageService.findById(id)
+    suspend fun findPageTextById(id: Int): String? = pageService.findTextById(id)
     suspend fun updatePage(page: ExposedImportPage) = pageService.update(page)
     suspend fun deletePage(id: Int) = pageService.delete(id)
 
@@ -123,7 +124,7 @@ class ImportService(
         }
 
         val firstPage = pageService.findByDocumentId(document.id).first { it.page == 1 }
-        val date = findDateFromText(firstPage.text)
+        val date = findDateFromText(findPageTextById(firstPage.id) ?: "")
         if (date != null) {
             docService.update(document.copy(date = date))
         }
@@ -167,14 +168,11 @@ class ImportService(
                             ocrConfidence = word.confidence.toDouble()
                         )
                     }
-                    dbLine = dbLine.copy(text = exposedWords.joinToString(" ") { it.text })
                     map[dbLine] = exposedWords
                 }
-                dbBlock = dbBlock.copy(text = map.keys.sortedBy { (it.y * 10000) + it.x }.joinToString("\n") { it.text })
                 blocks[dbBlock] = map
             }
         }
-        pageService.update(dbPage.copy(text = blocks.keys.sortedBy { (it.y * 10000) + it.x }.joinToString("\n") { it.text }))
         logger.info("Creating new entries...")
         pageService.createPageContent(dbPage, blocks)
         logger.info("Finished creating new entries!")

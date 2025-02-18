@@ -239,9 +239,7 @@ async function pageSelected(pageId) {
 
             languageSelect.value = selectedImport.ocrLanguage;
 
-            await loadImageCanvas(page, false)
-
-            pageText.value = page.text;
+            await loadImageCanvas(page)
 
             sliderDeskew.value = page.deskew;
             sliderDeskewValue.innerText = page.deskew;
@@ -264,6 +262,10 @@ async function pageSelected(pageId) {
             editImageColorAdjusted.src = "/api/v1/import/page/" + page.id + "/img?type=color";
             editImageCropped.src = "/api/v1/import/page/" + page.id + "/img";
 
+            await fetch("/api/v1/import/page/" + page.id + "/text").then(async result => {
+                pageText.value = await result.text();
+            });
+
             imageEditorChanged(false);
         }
     });
@@ -281,7 +283,7 @@ let currentBlocks = [];
 let currentLines = [];
 let currentWords = [];
 
-async function loadImageCanvas(page, fresh) {
+async function loadImageCanvas(page) {
     canvasContainer.innerHTML = "";
     currentBlocks = [];
     currentLines = [];
@@ -338,11 +340,12 @@ async function loadImageCanvas(page, fresh) {
         layer.batchDraw();
     };
 
-    const param = (fresh) ? "?" + new Date().getTime() : "";
-    imageObj.src = "/api/v1/import/page/" + page.id + "/img" + param;
+    imageObj.src = "/api/v1/import/page/" + page.id + "/img";
 
     const boxLayer = new Konva.Layer();
     stage.add(boxLayer);
+    const textLayer = new Konva.Layer();
+    stage.add(textLayer);
 
     await fetch("/api/v1/import/page/" + page.id + "/blocks").then(async result => {
         if (result.ok) {
@@ -389,16 +392,38 @@ async function loadImageCanvas(page, fresh) {
                             name: "rect",
                             visible: showWordsCheck.checked
                         });
-                        wordBox.on("mouseenter", () => {
+                        const wordText = new Konva.Text({
+                            x: word.x,
+                            y: word.y,
+                            width: word.width,
+                            height: word.height,
+                            text: word.text,
+                            fontFamily: "Calibri",
+                            fontSize: word.height,
+                            padding: 0,
+                            textFill: "white",
+                            fill: "black",
+                            alpha: 0.75,
+                            align: "center",
+                            verticalAlign: "middle",
+                            visible: false,
+                            listening: false
+                        });
+                        wordBox.on("mousemove", () => {
                             wordBox.strokeWidth(4);
+                            wordBox.fill("white");
+                            wordText.show();
                         });
                         wordBox.on("mouseleave", () => {
                             wordBox.strokeWidth(2);
+                            wordBox.fill("transparent");
+                            wordText.hide();
                         });
                         wordBox.on("click", () => {
                             showWordModal(word);
                         });
                         boxLayer.add(wordBox);
+                        textLayer.add(wordText);
                         currentWords.push(wordBox);
                     });
                 });
@@ -420,7 +445,7 @@ refreshTextButton.addEventListener("click", async () => {
             if (result.ok) {
                 const ocr = await result.json();
                 pageText.value = ocr.text;
-                await loadImageCanvas(selectedPage, false)
+                await loadImageCanvas(selectedPage)
                 refreshTextSpinner.classList.add("d-none");
             }
         });
@@ -551,7 +576,7 @@ async function cropImg(page, crop) {
         if (result.ok) {
             cropImageSpinner.classList.add("d-none");
             editImageCropped.src = "/api/v1/import/page/" + page.id + "/img?" + new Date().getTime();
-            await loadImageCanvas(page, true);
+            await pageSelected(page.id);
         }
     });
 }
@@ -566,14 +591,15 @@ let selectedWord = null;
 wordEditConfirmButton.addEventListener("click", async () => {
     if (selectedWord != null && wordEditText.value) {
         wordEditConfirmButtonSpinner.classList.remove("d-none");
-        selectedWord.text = wordEditText.value;
         await fetch("/api/v1/import/word/" + selectedWord.id + "/text", {method: "post", body: wordEditText.value}).then(async result => {
             if (result.ok) {
                 await fetch("/api/v1/import/page/" + selectedPage.id).then(async result => {
                     selectedPage = await result.json();
-                    pageText.value = selectedPage.text;
-                    wordEditConfirmButtonSpinner.classList.add("d-none");
-                    wordModal.hide();
+                    await fetch("/api/v1/import/page/" + selectedPage.id + "/text").then(async result => {
+                        pageText.value = await result.text();
+                        wordEditConfirmButtonSpinner.classList.add("d-none");
+                        wordModal.hide();
+                    });
                 });
             }
         });

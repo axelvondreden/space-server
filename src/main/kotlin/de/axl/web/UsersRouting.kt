@@ -1,8 +1,8 @@
 package de.axl.web
 
-import de.axl.db.ExposedUser
 import de.axl.db.UserDbService
 import de.axl.getSessionUser
+import de.axl.serialization.api.ExposedUser
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*

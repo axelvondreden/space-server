@@ -281,6 +281,22 @@ paths:
           description: Import page not found
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /import/page/{id}/text:
+    parameters:
+      - $ref: "#/components/parameters/idParam"
+    get:
+      summary: Get the text for the page
+      tags:
+        - Import Page
+      responses:
+        "200":
+          description: Returns the text
+          content:
+            text/plain:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /import/page/{id}/edit/deskew:
     parameters:
       - $ref: "#/components/parameters/idParam"
@@ -656,8 +672,6 @@ components:
       properties:
         id:
           type: integer
-        text:
-          type: string
         page:
           type: integer
         width:
@@ -678,7 +692,6 @@ components:
             type: integer
       required:
         - id
-        - text
         - page
         - width
         - height
@@ -689,8 +702,6 @@ components:
       properties:
         id:
           type: integer
-        text:
-          type: string
         x:
           type: integer
         y:
@@ -705,7 +716,6 @@ components:
             type: integer
       required:
         - id
-        - text
         - x
         - y
         - width
@@ -716,8 +726,6 @@ components:
       properties:
         id:
           type: integer
-        text:
-          type: string
         x:
           type: integer
         y:
@@ -732,7 +740,6 @@ components:
             $ref: "#/components/schemas/ImportLineFull"
       required:
         - id
-        - text
         - x
         - y
         - width
@@ -743,8 +750,6 @@ components:
       properties:
         id:
           type: integer
-        text:
-          type: string
         x:
           type: integer
         y:
@@ -759,7 +764,6 @@ components:
             type: integer
       required:
         - id
-        - text
         - x
         - y
         - width
@@ -770,8 +774,6 @@ components:
       properties:
         id:
           type: integer
-        text:
-          type: string
         x:
           type: integer
         y:
@@ -786,7 +788,6 @@ components:
             $ref: "#/components/schemas/ImportWord"
       required:
         - id
-        - text
         - x
         - y
         - width

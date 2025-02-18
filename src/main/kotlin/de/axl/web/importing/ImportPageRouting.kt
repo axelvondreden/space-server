@@ -1,7 +1,7 @@
 package de.axl.web.importing
 
-import de.axl.db.ExposedImportPage
 import de.axl.importing.ImportService
+import de.axl.serialization.api.ExposedImportPage
 import de.axl.serialization.api.OcrResult
 import io.ktor.http.*
 import io.ktor.server.request.*
@@ -77,6 +77,10 @@ fun Route.importPageRoute(importService: ImportService) {
             }
         }
 
+        get("/text") {
+            call.respondText(importService.findPageTextById(call.parameters["id"]?.toIntOrNull() ?: 0) ?: "")
+        }
+
         post("/edit/deskew") {
             val page = findById(this, call.parameters["id"]?.toIntOrNull())
             if (page != null) {
@@ -113,8 +117,8 @@ fun Route.importPageRoute(importService: ImportService) {
             val page = findById(this, call.parameters["id"]?.toIntOrNull())
             if (page != null) {
                 importService.extractTextAndCreateDbObjects(page)
-                val text = importService.findPageById(page.id)?.text ?: ""
-                call.respond(HttpStatusCode.OK, OcrResult(text))
+                val text = importService.findPageTextById(page.id)
+                call.respond(HttpStatusCode.OK, OcrResult(text ?: ""))
             }
         }
     }
