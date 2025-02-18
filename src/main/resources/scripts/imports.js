@@ -671,6 +671,7 @@ async function cropImg(pageNr, pageId) {
 const wordModal = new bootstrap.Modal("#wordModal")
 const wordModalDiv = document.getElementById("wordModal")
 const wordEditText = document.getElementById("wordEditText")
+const wordEditConfidenceText = document.getElementById("wordEditConfidenceText")
 const wordEditConfirmButton = document.getElementById("wordEditConfirmButton")
 const wordEditConfirmButtonSpinner = document.getElementById("wordEditConfirmButtonSpinner")
 const wordEditDeleteButton = document.getElementById("wordEditDeleteButton")
@@ -718,6 +719,7 @@ wordEditDeleteButton.addEventListener("click", async () => {
 function showWordModal(word) {
     selectedWord = word
     wordEditText.value = word.text
+    wordEditConfidenceText.innerText = `Confidence: ${word.ocrConfidence * 100}%`
     wordModal.show()
     wordEditText.focus()
 }

@@ -100,6 +100,7 @@ class ImportPageDbService(database: Database) {
                         it[y] = word.y
                         it[width] = word.width
                         it[height] = word.height
+                        it[ocrConfidence] = word.ocrConfidence
                         it[ImportWordDbService.ImportWord.line] = lineId
                     }
                 }
