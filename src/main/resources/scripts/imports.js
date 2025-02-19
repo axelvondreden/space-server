@@ -476,9 +476,12 @@ function datePicked(date) {
     datePickButton.classList.remove("active")
     if (date != null) {
         const parts = date.split(".")
-        if (parts.length === 3 && parts.all(part => !isNaN(parseInt(part)))) {
+        if (parts.length === 3) {
+            const day = parseInt(parts[0])
+            const month = parseInt(parts[1]) - 1
+            const year = parseInt(parts[2])
             const dateElem = $("#importDate")
-            dateElem.datepicker("update", new Date(parts[2], parts[1] - 1, parts[0]))
+            dateElem.datepicker("update", new Date(year, month, day))
         }
     }
 }
@@ -797,7 +800,7 @@ function showWordModal(word) {
     wordCanvasContainer.innerHTML = ""
     const containerWidth = wordCanvasContainer.offsetWidth
     const scale = Math.min(containerWidth / word.width, 4.0)
-    wordCanvasContainer.style.height = `${(word.height * scale) + 12}px`
+    wordCanvasContainer.style.height = `${(word.height + 20) * scale}px`
     const containerHeight = wordCanvasContainer.offsetHeight
     const stage = new Konva.Stage({
         container: "wordCanvasContainer",
@@ -814,7 +817,7 @@ function showWordModal(word) {
     imageObj.onload = () => {
         const konvaImage = new Konva.Image({
             x: -word.x,
-            y: -word.y + 6,
+            y: -word.y + 10,
             image: imageObj,
             width: selectedPage.width,
             height: selectedPage.height
