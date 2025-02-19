@@ -168,6 +168,10 @@ const pageText = document.getElementById("pageText")
 
 const pagination = document.getElementById("pagination")
 
+const textTab = document.getElementById("tabText")
+const tagsTab = document.getElementById("tabTags")
+const invoiceTab = document.getElementById("tabInvoice")
+
 let selectedImport = null
 let selectedPage = null
 
@@ -188,6 +192,13 @@ async function docSelected(imp) {
     }
     const page1 = imp.pages.find(p => p.page === 1)
     await pageSelected(page1.id)
+
+    bootstrap.Tab.getInstance(textTab).show()
+    if (imp.isInvoice) {
+        invoiceTab.removeAttribute("disabled")
+    } else {
+        invoiceTab.setAttribute("disabled", "disabled")
+    }
 
     pagination.innerHTML = ""
     imp.pages.forEach(page => {

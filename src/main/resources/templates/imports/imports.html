@@ -29,7 +29,8 @@
                 <div class="container-fluid justify-content-between">
                     <div class="btn-toolbar" role="toolbar">
                         <div class="btn-group btn-group-lg me-2" role="group">
-                            <button type="button" class="btn btn-outline-primary" id="alignHorizontalButton"><i class="bi bi-distribute-horizontal"></i></button>
+                            <button type="button" class="btn btn-outline-primary" id="alignHorizontalButton"><i class="bi bi-distribute-horizontal"></i>
+                            </button>
                             <button type="button" class="btn btn-outline-primary" id="alignVerticalButton"><i class="bi bi-distribute-vertical"></i></button>
                         </div>
                     </div>
@@ -51,13 +52,24 @@
                     <option value="ENG">English</option>
                 </select>
             </div>
-            <div class="mb-3">
-                <label for="pageText" class="form-label">Text</label>
-                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" id="refreshTextButton">
-                    Run OCR on page
-                    <span id="refreshTextSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
-                </button>
-                <span class="btn-group-sm" role="group">
+            <ul class="nav nav-tabs mb-2" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tabText" data-bs-toggle="tab" data-bs-target="#tabTextContent" type="button" role="tab">Text</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tabTags" data-bs-toggle="tab" data-bs-target="#tabTagsContent" type="button" role="tab">Tags</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tabInvoice" data-bs-toggle="tab" data-bs-target="#tabInvoiceContent" type="button" role="tab">Invoice</button>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane show active" id="tabTextContent" role="tabpanel" tabindex="0">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="refreshTextButton">
+                        Run OCR
+                        <span id="refreshTextSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
+                    </button>
+                    <span class="btn-group-sm" role="group">
                     <input type="checkbox" class="btn-check" id="showBlocksCheck" autocomplete="off">
                     <label class="btn btn-outline-secondary" for="showBlocksCheck">Show Blocks</label>
                     <input type="checkbox" class="btn-check" id="showLinesCheck" autocomplete="off">
@@ -67,18 +79,21 @@
                     <input type="checkbox" class="btn-check" id="showWordConfidenceCheck" autocomplete="off">
                     <label class="btn btn-outline-secondary" for="showWordConfidenceCheck">Show Word Confidence</label>
                 </span>
-                <div id="pageText" class="bg-body-tertiary p-2 mt-1 overflow-y-scroll" style="height: 50vh">
-                    <div>
-                        <span>Test1</span>
-                        <span>Test2</span>
-                        <span>Test3</span>
-                    </div>
-                    <div>
-                        <span>Test1</span>
-                        <span>Test2</span>
-                        <span>Test3</span>
+                    <div id="pageText" class="bg-body-tertiary p-2 mt-1 overflow-y-scroll" style="height: 50vh">
+                        <div>
+                            <span>Test1</span>
+                            <span>Test2</span>
+                            <span>Test3</span>
+                        </div>
+                        <div>
+                            <span>Test1</span>
+                            <span>Test2</span>
+                            <span>Test3</span>
+                        </div>
                     </div>
                 </div>
+                <div class="tab-pane" id="tabTagsContent" role="tabpanel" tabindex="0">Tags</div>
+                <div class="tab-pane" id="tabInvoiceContent" role="tabpanel" tabindex="0">Invoice</div>
             </div>
 
             <button type="button" class="btn btn-secondary mb-2 mt-auto" data-bs-toggle="modal" data-bs-target="#imageModal"><i class="bi bi-image"></i>
