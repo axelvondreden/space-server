@@ -171,6 +171,7 @@ const pagination = document.getElementById("pagination")
 const textTab = document.getElementById("tabText")
 const tagsTab = document.getElementById("tabTags")
 const invoiceTab = document.getElementById("tabInvoice")
+const tabInvoiceCheck = document.getElementById("tabInvoiceCheck")
 
 let selectedImport = null
 let selectedPage = null
@@ -196,8 +197,10 @@ async function docSelected(imp) {
     bootstrap.Tab.getInstance(textTab).show()
     if (imp.isInvoice) {
         invoiceTab.removeAttribute("disabled")
+        tabInvoiceCheck.checked = true
     } else {
         invoiceTab.setAttribute("disabled", "disabled")
+        tabInvoiceCheck.checked = false
     }
 
     pagination.innerHTML = ""
@@ -241,6 +244,23 @@ async function pageSelected(pageId) {
         }
     })
 }
+
+tabInvoiceCheck.addEventListener("change", async (event) => {
+    const doc = selectedImport
+    doc.isInvoice = event.target.checked
+    await fetch(`/api/v1/import/doc/${selectedImport.id}`, {method: "put", headers: {"Content-Type": "application/json"}, body: JSON.stringify(doc)}).then(async result => {
+        if (result.ok) {
+            selectedImport.isInvoice = event.target.checked
+            if (selectedImport.isInvoice) {
+                invoiceTab.removeAttribute("disabled")
+            } else {
+                invoiceTab.setAttribute("disabled", "disabled")
+                bootstrap.Tab.getInstance(textTab).show()
+            }
+        }
+    })
+})
+
 
 const datePickButton = document.getElementById("datePickButton")
 let pickingDate = false
