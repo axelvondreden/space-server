@@ -855,5 +855,5 @@ function handleEnterPress(event) {
 }
 
 function getConfidenceColor(conf) {
-    return conf > 0.88 ? "green" : (conf > 0.65 ? "peru" : "red")
+    return conf > 0.88 ? "rgba(0, 128, 0, 0.6)" : (conf > 0.65 ? "rgba(255, 165, 0, 0.6)" : "rgba(255, 0, 0, 0.6)")
 }
