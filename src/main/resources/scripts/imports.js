@@ -214,7 +214,7 @@ async function pageSelected(pageId) {
 
             importGuid.innerHTML = selectedImport.guid
 
-            languageSelect.value = selectedImport.ocrLanguage
+            languageSelect.value = selectedImport.language
 
             await loadImageCanvas(page, true)
 

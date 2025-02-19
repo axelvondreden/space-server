@@ -10,7 +10,7 @@ import java.time.LocalDateTime
 data class ExposedImportDocument(
     val id: Int = 0,
     val guid: String,
-    val ocrLanguage: OCRLanguage = OCRLanguage.DEU,
+    val language: OCRLanguage = OCRLanguage.DEU,
     @Contextual val date: LocalDate? = null,
     @Contextual val createdAt: LocalDateTime = LocalDateTime.now(),
     @Contextual val updatedAt: LocalDateTime? = null,

@@ -98,7 +98,7 @@ class ImportService(
         fileManager.moveFileToImport(file, pdfGuid)
 
         logger.info("Creating import for $pdfGuid")
-        val document = docService.findById(docService.create(ExposedImportDocument(guid = pdfGuid, ocrLanguage = OCRLanguage.DEU)))!!
+        val document = docService.findById(docService.create(ExposedImportDocument(guid = pdfGuid, language = OCRLanguage.DEU)))!!
 
         val pages = fileManager.createImagesFromOriginalPdf(pdfGuid, importFlow, state.copy(progress = 0.2), 0.1)
         val pageStep = 0.7 / pages.size
@@ -134,8 +134,8 @@ class ImportService(
     suspend fun extractTextAndCreateDbObjects(page: ExposedImportPage) {
         val document = docService.findById(page.documentId)!!
         val image = fileManager.getImage(page.guid)
-        logger.info("Running OCR (${document.ocrLanguage.lang}) on page ${page.page}: ${image.name}")
-        val xml = getAltoForImage(image, document.ocrLanguage.lang)
+        logger.info("Running OCR (${document.language.lang}) on page ${page.page}: ${image.name}")
+        val xml = getAltoForImage(image, document.language.lang)
         val mapper = XmlMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         val alto = mapper.readValue(xml, Alto::class.java)
         val printSpace = alto.layout.page.printSpace
