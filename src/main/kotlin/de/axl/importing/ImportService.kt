@@ -127,6 +127,7 @@ class ImportService(
         val date = findDateFromText(dbPages.firstOrNull { it.first.page == 1 }?.second ?: "")
 
         val isInvoice = guessIsInvoice(dbPages.map { it.second }.joinToString("\n") { it.trim() })
+        logger.info("Guessed Invoice: $isInvoice")
 
         docService.update(document.copy(date = date, isInvoice = isInvoice))
 
@@ -213,7 +214,7 @@ class ImportService(
     }
 
     private fun guessIsInvoice(text: String) = text.lines().any { line ->
-        line.contains(Regex("\\bbrutto\\b", RegexOption.IGNORE_CASE)) || line.contains(Regex("\\bzu zahlen\\b", RegexOption.IGNORE_CASE))
+        invoiceTextPatterns.any { line.contains(Regex("\\b$it\\b", RegexOption.IGNORE_CASE)) }
     }
 
     companion object {
@@ -223,5 +224,7 @@ class ImportService(
             Regex("(3[01]|[12][0-9]|0?[1-9])\\.(1[012]|0?[1-9])\\.(\\d{4})") to "dd.MM.yyyy",
             Regex("(3[01]|[12][0-9]|0?[1-9])\\.(1[012]|0?[1-9])\\.(\\d{2})") to "dd.MM.yy",
         )
+
+        private val invoiceTextPatterns = listOf("netto", "brutto", "zu zahlen", "gesamtpreis", "rechnungsdatum")
     }
 }
