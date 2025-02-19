@@ -21,6 +21,7 @@ class ImportDocumentDbService(database: Database) {
         val guid = varchar("guid", length = 36)
         val language = enumerationByName("language", 10, OCRLanguage::class).default(OCRLanguage.DEU)
         val date = date("date").nullable()
+        val isInvoice = bool("isInvoice").default(false)
         val createdAt = datetime("createdAt")
         val updatedAt = datetime("updatedAt").nullable()
 
@@ -38,6 +39,7 @@ class ImportDocumentDbService(database: Database) {
             it[guid] = import.guid
             it[language] = import.language
             it[date] = import.date
+            it[isInvoice] = import.isInvoice
             it[createdAt] = LocalDateTime.now()
         }[ImportDocument.id]
     }
@@ -59,6 +61,7 @@ class ImportDocumentDbService(database: Database) {
             ImportDocument.update({ ImportDocument.id eq import.id }) {
                 it[language] = import.language
                 it[date] = import.date
+                it[isInvoice] = import.isInvoice
                 it[updatedAt] = LocalDateTime.now()
             }
         }
@@ -76,6 +79,7 @@ class ImportDocumentDbService(database: Database) {
             it[ImportDocument.guid],
             it[ImportDocument.language],
             it[ImportDocument.date],
+            it[ImportDocument.isInvoice],
             it[ImportDocument.createdAt],
             it[ImportDocument.updatedAt],
             dbQuery {

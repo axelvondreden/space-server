@@ -39,15 +39,16 @@ class ImportService(
     suspend fun deletePage(id: Int) = pageService.delete(id)
 
     suspend fun findBlockById(id: Int): ExposedImportBlock? = blockService.findById(id)
+    suspend fun getFullBlocksForPage(page: ExposedImportPage): List<ExposedImportBlockFull> = blockService.findByPageIdFull(page.id)
     suspend fun deleteBlock(id: Int) = blockService.delete(id)
-
     suspend fun findLineById(id: Int): ExposedImportLine? = lineService.findById(id)
-    suspend fun deleteLine(id: Int) = lineService.delete(id)
 
+    suspend fun deleteLine(id: Int) = lineService.delete(id)
     suspend fun findWordById(id: Int): ExposedImportWord? = wordService.findById(id)
     suspend fun updateWordText(id: Int, text: String) {
         wordService.updateText(id, text)
     }
+
     suspend fun deleteWord(id: Int) = wordService.delete(id)
 
     suspend fun createDeskewedImage(page: ExposedImportPage, deskew: Int) {
@@ -68,11 +69,11 @@ class ImportService(
     fun createThumbnails(page: ExposedImportPage) = fileManager.createThumbnails(page.guid)
 
     fun getPdfOriginal(guid: String) = fileManager.getPdfOriginal(guid)
-
     fun getImageOriginal(page: ExposedImportPage) = fileManager.getImageOriginal(page.guid)
     fun getImageDeskewed(page: ExposedImportPage) = fileManager.getImageDeskewed(page.guid)
     fun getImageColorAdjusted(page: ExposedImportPage) = fileManager.getImageColorAdjusted(page.guid)
     fun getImage(page: ExposedImportPage) = fileManager.getImage(page.guid)
+
     fun getThumbnail(page: ExposedImportPage, size: String) = fileManager.getThumbnail(page.guid, size)
 
     suspend fun handleUploads(importFlow: MutableSharedFlow<ImportStateEvent>) {
@@ -102,7 +103,7 @@ class ImportService(
 
         val pages = fileManager.createImagesFromOriginalPdf(pdfGuid, importFlow, state.copy(progress = 0.2), 0.1)
         val pageStep = 0.7 / pages.size
-        pages.forEach { (page, guid) ->
+        val dbPages = pages.map { (page, guid) ->
             logger.info("Running image editing on page $page / ${pages.size}")
             importFlow.emit(state.copy(progress = 0.3 + (pageStep * (page - 1)) + ((pageStep / 5) * 0), message = "Creating deskewed image for page $page"))
             fileManager.createDeskewedImage(guid)
@@ -123,15 +124,16 @@ class ImportService(
             extractTextAndCreateDbObjects(exposedPage)
         }
 
-        val firstPage = pageService.findByDocumentId(document.id).first { it.page == 1 }
-        val date = findDateFromText(findPageTextById(firstPage.id) ?: "")
-        if (date != null) {
-            docService.update(document.copy(date = date))
-        }
+        val date = findDateFromText(dbPages.firstOrNull { it.first.page == 1 }?.second ?: "")
+
+        val isInvoice = guessIsInvoice(dbPages.map { it.second }.joinToString("\n") { it.trim() })
+
+        docService.update(document.copy(date = date, isInvoice = isInvoice))
+
         importFlow.emit(state.copy(progress = 1.0, message = "Import complete", completedDocId = document.id))
     }
 
-    suspend fun extractTextAndCreateDbObjects(page: ExposedImportPage) {
+    suspend fun extractTextAndCreateDbObjects(page: ExposedImportPage): Pair<ExposedImportPage, String> {
         val document = docService.findById(page.documentId)!!
         val image = fileManager.getImage(page.guid)
         logger.info("Running OCR (${document.language.lang}) on page ${page.page}: ${image.name}")
@@ -149,6 +151,7 @@ class ImportService(
             pageService.create(page.copy(width = printSpace.width.toInt(), height = printSpace.height.toInt()))
         }
         val dbPage = pageService.findById(pageId)!!
+        var text = ""
 
         logger.info("Collecting new entries...")
         val blocks = mutableMapOf<ExposedImportBlock, Map<ExposedImportLine, List<ExposedImportWord>>>()
@@ -159,6 +162,7 @@ class ImportService(
                 block.textLines.sortedBy { (it.vpos.toInt() * 10000) + it.hpos.toInt() }.forEach { line ->
                     var dbLine = ExposedImportLine(x = line.hpos.toInt(), y = line.vpos.toInt(), width = line.width.toInt(), height = line.height.toInt())
                     val exposedWords = line.words.sortedBy { it.hpos.toInt() }.map { word ->
+                        text += "${word.content} "
                         ExposedImportWord(
                             text = word.content,
                             x = word.hpos.toInt(),
@@ -168,6 +172,7 @@ class ImportService(
                             ocrConfidence = word.confidence.toDouble()
                         )
                     }
+                    text += "\n"
                     map[dbLine] = exposedWords
                 }
                 blocks[dbBlock] = map
@@ -176,6 +181,7 @@ class ImportService(
         logger.info("Creating new entries...")
         pageService.createPageContent(dbPage, blocks)
         logger.info("Finished creating new entries!")
+        return dbPage to text
     }
 
     private fun getAltoForImage(file: File, lang: String): String {
@@ -206,8 +212,8 @@ class ImportService(
         return date
     }
 
-    suspend fun getFullBlocksForPage(page: ExposedImportPage): List<ExposedImportBlockFull> {
-        return blockService.findByPageIdFull(page.id)
+    private fun guessIsInvoice(text: String) = text.lines().any { line ->
+        line.contains(Regex("\\bbrutto\\b", RegexOption.IGNORE_CASE)) || line.contains(Regex("\\bzu zahlen\\b", RegexOption.IGNORE_CASE))
     }
 
     companion object {

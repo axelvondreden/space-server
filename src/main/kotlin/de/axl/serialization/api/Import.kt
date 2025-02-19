@@ -12,6 +12,7 @@ data class ExposedImportDocument(
     val guid: String,
     val language: OCRLanguage = OCRLanguage.DEU,
     @Contextual val date: LocalDate? = null,
+    val isInvoice: Boolean = false,
     @Contextual val createdAt: LocalDateTime = LocalDateTime.now(),
     @Contextual val updatedAt: LocalDateTime? = null,
     val pages: List<ExposedImportDocumentPage> = emptyList()
