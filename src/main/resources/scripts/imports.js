@@ -173,7 +173,6 @@ let selectedPage = null
 
 async function docSelected(imp) {
     selectedImport = imp
-    pageText.value = ""
     languageSelect.value = ""
     let dateElem = $("#importDate")
     dateElem.datepicker({format: "dd.mm.yyyy"})
@@ -228,10 +227,6 @@ async function pageSelected(pageId) {
                     node.className = "page-item active"
                 }
             })
-
-            await fetch(`/api/v1/import/page/${page.id}/text`).then(async result => {
-                pageText.value = await result.text()
-            })
         }
     })
 }
@@ -243,6 +238,8 @@ const showLinesCheck = document.getElementById("showLinesCheck")
 showLinesCheck.checked = (document.cookie.indexOf("showLines=1") >= 0)
 const showWordsCheck = document.getElementById("showWordsCheck")
 showWordsCheck.checked = (document.cookie.indexOf("showWords=1") >= 0)
+const showWordConfidenceCheck = document.getElementById("showWordConfidenceCheck")
+showWordConfidenceCheck.checked = (document.cookie.indexOf("showWordConfidence=1") >= 0)
 
 let currentBlocks = []
 let currentLines = []
@@ -258,6 +255,7 @@ let stage = null
 
 async function loadImageCanvas(page, reset = false) {
     canvasContainer.innerHTML = ""
+    pageText.innerHTML = ""
     currentBlocks = []
     currentLines = []
     currentWords = []
@@ -328,10 +326,17 @@ async function loadImageCanvas(page, reset = false) {
     const textLayer = new Konva.Layer()
     stage.add(textLayer)
 
+    const wordMarker = new Konva.Ellipse({
+        stroke: "red",
+        strokeWidth: 12,
+        visible: false
+    })
+    boxLayer.add(wordMarker)
+
     await fetch(`/api/v1/import/page/${page.id}/blocks`).then(async result => {
         if (result.ok) {
             const blocks = await result.json()
-            blocks.forEach(block => {
+            blocks.sort((a, b) => a.y - b.y).forEach(block => {
                 const blockBox = new Konva.Rect({
                     x: block.x,
                     y: block.y,
@@ -346,7 +351,7 @@ async function loadImageCanvas(page, reset = false) {
                 boxLayer.add(blockBox)
                 currentBlocks.push(blockBox)
 
-                block.lines.forEach(line => {
+                block.lines.sort((a, b) => a.y - b.y).forEach(line => {
                     const lineBox = new Konva.Rect({
                         x: line.x,
                         y: line.y,
@@ -361,7 +366,19 @@ async function loadImageCanvas(page, reset = false) {
                     boxLayer.add(lineBox)
                     currentLines.push(lineBox)
 
-                    line.words.forEach(word => {
+                    const lineDiv = document.createElement("div")
+                    pageText.appendChild(lineDiv)
+
+                    line.words.sort((a, b) => a.x - b.x).forEach(word => {
+                        const wordSpan = document.createElement("span")
+                        wordSpan.innerText = word.text
+                        wordSpan.dataset.confidence = word.ocrConfidence
+                        if (showWordConfidenceCheck.checked) {
+                            wordSpan.style.backgroundColor = getConfidenceColor(word.ocrConfidence)
+                        }
+                        lineDiv.appendChild(wordSpan)
+                        lineDiv.appendChild(document.createTextNode(" "))
+
                         const wordBox = new Konva.Rect({
                             x: word.x,
                             y: word.y,
@@ -390,19 +407,39 @@ async function loadImageCanvas(page, reset = false) {
                             visible: false,
                             listening: false
                         })
-                        wordBox.on("mousemove", () => {
+                        wordBox.on("mouseenter", () => {
                             wordBox.strokeWidth(4)
                             wordBox.fill("white")
                             wordText.show()
+                            wordSpan.style.outline = "2px solid white"
                         })
                         wordBox.on("mouseleave", () => {
                             wordBox.strokeWidth(2)
                             wordBox.fill("transparent")
                             wordText.hide()
+                            wordSpan.style.outline = "none"
                         })
                         wordBox.on("click", () => {
                             showWordModal(word)
                         })
+
+                        wordSpan.addEventListener("click", () => {
+                            showWordModal(word)
+                        })
+                        wordSpan.addEventListener("mouseenter", () => {
+                            wordBox.strokeWidth(4)
+                            wordSpan.style.outline = "2px solid white"
+                            wordMarker.position({x: word.x + word.width / 2, y: word.y + word.height / 2})
+                            wordMarker.radiusX(word.width)
+                            wordMarker.radiusY(word.height)
+                            wordMarker.visible(true)
+                        })
+                        wordSpan.addEventListener("mouseleave", () => {
+                            wordBox.strokeWidth(2)
+                            wordSpan.style.outline = "none"
+                            wordMarker.visible(false)
+                        })
+
                         boxLayer.add(wordBox)
                         textLayer.add(wordText)
                         currentWords.push(wordBox)
@@ -441,11 +478,9 @@ const refreshTextSpinner = document.getElementById("refreshTextSpinner")
 refreshTextButton.addEventListener("click", async () => {
     if (selectedImport != null && selectedPage != null) {
         refreshTextSpinner.classList.remove("d-none")
-        pageText.value = ""
+        pageText.innerHTML = ""
         await fetch(`/api/v1/import/page/${selectedPage.id}/edit/ocr`, {method: "post"}).then(async result => {
             if (result.ok) {
-                const ocr = await result.json()
-                pageText.value = ocr.text
                 await loadImageCanvas(selectedPage)
                 refreshTextSpinner.classList.add("d-none")
             }
@@ -480,6 +515,17 @@ showWordsCheck.addEventListener("change", async (event) => {
     } else {
         currentWords.forEach(word => word.hide())
         document.cookie = "showWords=0; path=/; max-age=31536000"
+    }
+})
+
+showWordConfidenceCheck.addEventListener("change", async (event) => {
+    const wordSpans = document.querySelectorAll("[data-confidence]")
+    if (event.target.checked) {
+        wordSpans.forEach(wordSpan => wordSpan.style.backgroundColor = getConfidenceColor(wordSpan.dataset.confidence))
+        document.cookie = "showWordConfidence=1; path=/; max-age=31536000"
+    } else {
+        wordSpans.forEach(wordSpan => wordSpan.style.backgroundColor = "transparent")
+        document.cookie = "showWordConfidence=0; path=/; max-age=31536000"
     }
 })
 
@@ -685,12 +731,9 @@ wordEditConfirmButton.addEventListener("click", async () => {
             if (result.ok) {
                 await fetch(`/api/v1/import/page/${selectedPage.id}`).then(async result => {
                     selectedPage = await result.json()
-                    await fetch(`/api/v1/import/page/${selectedPage.id}/text`).then(async result => {
-                        pageText.value = await result.text()
-                        wordEditConfirmButtonSpinner.classList.add("d-none")
-                        wordModal.hide()
-                        await loadImageCanvas(selectedPage)
-                    })
+                    wordEditConfirmButtonSpinner.classList.add("d-none")
+                    wordModal.hide()
+                    await loadImageCanvas(selectedPage)
                 })
             }
         })
@@ -704,12 +747,9 @@ wordEditDeleteButton.addEventListener("click", async () => {
             if (result.ok) {
                 await fetch(`/api/v1/import/page/${selectedPage.id}`).then(async result => {
                     selectedPage = await result.json()
-                    await fetch(`/api/v1/import/page/${selectedPage.id}/text`).then(async result => {
-                        pageText.value = await result.text()
-                        wordEditDeleteButtonSpinner.classList.add("d-none")
-                        wordModal.hide()
-                        await loadImageCanvas(selectedPage)
-                    })
+                    wordEditDeleteButtonSpinner.classList.add("d-none")
+                    wordModal.hide()
+                    await loadImageCanvas(selectedPage)
                 })
             }
         })
@@ -736,4 +776,8 @@ function handleEnterPress(event) {
     if (event.key === "Enter") {
         wordEditConfirmButton.click()
     }
+}
+
+function getConfidenceColor(conf) {
+    return conf > 0.88 ? "green" : (conf > 0.65 ? "peru" : "red")
 }

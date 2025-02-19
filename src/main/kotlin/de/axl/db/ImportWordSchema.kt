@@ -47,6 +47,7 @@ class ImportWordDbService(database: Database) {
     suspend fun updateText(id: Int, newText: String) = dbQuery {
         ImportWord.update({ ImportWord.id eq id }) {
             it[text] = newText
+            it[ocrConfidence] = 1.0
         }
     }
 

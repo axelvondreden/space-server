@@ -59,14 +59,25 @@
                 <span class="btn-group-sm" role="group">
                     <input type="checkbox" class="btn-check" id="showBlocksCheck" autocomplete="off">
                     <label class="btn btn-outline-secondary" for="showBlocksCheck">Show Blocks</label>
-
                     <input type="checkbox" class="btn-check" id="showLinesCheck" autocomplete="off">
                     <label class="btn btn-outline-secondary" for="showLinesCheck">Show Lines</label>
-
                     <input type="checkbox" class="btn-check" id="showWordsCheck" autocomplete="off">
                     <label class="btn btn-outline-secondary" for="showWordsCheck">Show Words</label>
+                    <input type="checkbox" class="btn-check" id="showWordConfidenceCheck" autocomplete="off">
+                    <label class="btn btn-outline-secondary" for="showWordConfidenceCheck">Show Word Confidence</label>
                 </span>
-                <textarea class="form-control" id="pageText" rows="20" disabled></textarea>
+                <div id="pageText" class="bg-body-tertiary p-2 mt-1 overflow-y-scroll" style="height: 50vh">
+                    <div>
+                        <span>Test1</span>
+                        <span>Test2</span>
+                        <span>Test3</span>
+                    </div>
+                    <div>
+                        <span>Test1</span>
+                        <span>Test2</span>
+                        <span>Test3</span>
+                    </div>
+                </div>
             </div>
 
             <button type="button" class="btn btn-secondary mb-2 mt-auto" data-bs-toggle="modal" data-bs-target="#imageModal"><i class="bi bi-image"></i>
