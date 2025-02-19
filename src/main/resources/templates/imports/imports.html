@@ -41,6 +41,7 @@
             <h4 class="my-3" id="importGuid">GUID</h4>
             <div class="mb-3">
                 <label for="importDate" class="form-label">Document Date</label>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="datePickButton"><i class="bi bi-crosshair"></i></button>
                 <input type="text" class="form-control" id="importDate"/>
             </div>
             <div class="mb-3">
@@ -163,6 +164,7 @@
                 <h1 class="modal-title fs-5" id="wordModalLabel">Word Editor</h1>
             </div>
             <div class="modal-body">
+                <div id="wordCanvasContainer" class="w-100 mb-2 d-flex justify-content-center"></div>
                 <input type="text" class="form-control" id="wordEditText" placeholder="Text" value="">
                 <div id="wordEditConfidenceText" class="form-text">Confidence: 0%</div>
             </div>

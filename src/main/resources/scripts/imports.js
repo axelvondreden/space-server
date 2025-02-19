@@ -231,6 +231,9 @@ async function pageSelected(pageId) {
     })
 }
 
+const datePickButton = document.getElementById("datePickButton")
+let pickingDate = false
+
 const canvasContainer = document.getElementById("canvasContainer")
 const showBlocksCheck = document.getElementById("showBlocksCheck")
 showBlocksCheck.checked = (document.cookie.indexOf("showBlocks=1") >= 0)
@@ -420,11 +423,19 @@ async function loadImageCanvas(page, reset = false) {
                             wordSpan.style.outline = "none"
                         })
                         wordBox.on("click", () => {
-                            showWordModal(word)
+                            if (pickingDate) {
+                                datePicked(word.text)
+                            } else {
+                                showWordModal(word)
+                            }
                         })
 
                         wordSpan.addEventListener("click", () => {
-                            showWordModal(word)
+                            if (pickingDate) {
+                                datePicked(word.text)
+                            } else {
+                                showWordModal(word)
+                            }
                         })
                         wordSpan.addEventListener("mouseenter", () => {
                             wordBox.strokeWidth(4)
@@ -449,6 +460,27 @@ async function loadImageCanvas(page, reset = false) {
             boxLayer.batchDraw()
         }
     })
+}
+
+datePickButton.addEventListener("click", () => {
+    if (pickingDate) {
+        datePicked(null)
+    } else {
+        pickingDate = true
+        datePickButton.classList.add("active")
+    }
+})
+
+function datePicked(date) {
+    pickingDate = false
+    datePickButton.classList.remove("active")
+    if (date != null) {
+        const parts = date.split(".")
+        if (parts.length === 3 && parts.all(part => !isNaN(parseInt(part)))) {
+            const dateElem = $("#importDate")
+            dateElem.datepicker("update", new Date(parts[2], parts[1] - 1, parts[0]))
+        }
+    }
 }
 
 const alignHorizontalButton = document.getElementById("alignHorizontalButton")
@@ -722,6 +754,7 @@ const wordEditConfirmButton = document.getElementById("wordEditConfirmButton")
 const wordEditConfirmButtonSpinner = document.getElementById("wordEditConfirmButtonSpinner")
 const wordEditDeleteButton = document.getElementById("wordEditDeleteButton")
 const wordEditDeleteButtonSpinner = document.getElementById("wordEditDeleteButtonSpinner")
+const wordCanvasContainer = document.getElementById("wordCanvasContainer")
 let selectedWord = null
 
 wordEditConfirmButton.addEventListener("click", async () => {
@@ -761,6 +794,35 @@ function showWordModal(word) {
     wordEditText.value = word.text
     wordEditConfidenceText.innerText = `Confidence: ${word.ocrConfidence * 100}%`
     wordModal.show()
+    wordCanvasContainer.innerHTML = ""
+    const containerWidth = wordCanvasContainer.offsetWidth
+    const scale = Math.min(containerWidth / word.width, 4.0)
+    wordCanvasContainer.style.height = `${(word.height * scale) + 12}px`
+    const containerHeight = wordCanvasContainer.offsetHeight
+    const stage = new Konva.Stage({
+        container: "wordCanvasContainer",
+        width: Math.min(containerWidth, word.width * scale),
+        height: containerHeight,
+        scaleX: scale,
+        scaleY: scale
+    })
+
+    const layer = new Konva.Layer()
+    stage.add(layer)
+
+    const imageObj = new Image()
+    imageObj.onload = () => {
+        const konvaImage = new Konva.Image({
+            x: -word.x,
+            y: -word.y + 6,
+            image: imageObj,
+            width: selectedPage.width,
+            height: selectedPage.height
+        })
+        layer.add(konvaImage)
+        layer.batchDraw()
+    }
+    imageObj.src = `/api/v1/import/page/${selectedPage.id}/img`
     wordEditText.focus()
 }
 
