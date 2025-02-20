@@ -10,10 +10,7 @@ import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
 
-enum class OCRLanguage(val lang: String) {
-    DEU("deu"),
-    ENG("eng")
-}
+enum class OCRLanguage { DEU, ENG }
 
 class ImportDocumentDbService(database: Database) {
     object ImportDocument : Table() {

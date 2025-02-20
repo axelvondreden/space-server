@@ -812,6 +812,10 @@ components:
           type: integer
         ocrConfidence:
           type: number
+        spellingSuggestions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImportSpellingSuggestion"
         lineId:
           type: integer
       required:
@@ -822,6 +826,17 @@ components:
         - width
         - height
         - lineId
+
+    ImportSpellingSuggestion:
+      type: object
+      properties:
+        id:
+          type: integer
+        suggestion:
+          type: string
+      required:
+        - id
+        - suggestion
 
     ImportOcrResult:
       type: object

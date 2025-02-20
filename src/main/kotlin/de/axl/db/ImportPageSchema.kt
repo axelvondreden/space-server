@@ -94,7 +94,7 @@ class ImportPageDbService(database: Database) {
                     it[ImportLineDbService.ImportLine.block] = blockId
                 }[ImportLineDbService.ImportLine.id]
                 words.forEach { word ->
-                    ImportWordDbService.ImportWord.insert {
+                    val wordId = ImportWordDbService.ImportWord.insert {
                         it[text] = word.text
                         it[x] = word.x
                         it[y] = word.y
@@ -102,6 +102,12 @@ class ImportPageDbService(database: Database) {
                         it[height] = word.height
                         it[ocrConfidence] = word.ocrConfidence
                         it[ImportWordDbService.ImportWord.line] = lineId
+                    }[ImportWordDbService.ImportWord.id]
+                    word.spellingSuggestions.forEach { suggestion ->
+                        ImportWordDbService.ImportSpellingSuggestion.insert {
+                            it[ImportWordDbService.ImportSpellingSuggestion.suggestion] = suggestion.suggestion
+                            it[ImportWordDbService.ImportSpellingSuggestion.word] = wordId
+                        }
                     }
                 }
             }

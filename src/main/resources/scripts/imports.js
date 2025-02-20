@@ -167,7 +167,7 @@ const languageSelect = document.getElementById("languageSelect")
 const pageText = document.getElementById("pageText")
 const datePicker = $("#importDate")
 datePicker.datepicker({format: "dd.mm.yyyy"})
-datePicker.datepicker().on("changeDate", function(e) {
+datePicker.datepicker().on("changeDate", function (e) {
     setDocumentDate(e.date)
 })
 
@@ -254,7 +254,11 @@ async function pageSelected(pageId) {
 tabInvoiceCheck.addEventListener("change", async (event) => {
     const doc = selectedImport
     doc.isInvoice = event.target.checked
-    await fetch(`/api/v1/import/doc/${selectedImport.id}`, {method: "put", headers: {"Content-Type": "application/json"}, body: JSON.stringify(doc)}).then(async result => {
+    await fetch(`/api/v1/import/doc/${selectedImport.id}`, {
+        method: "put",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(doc)
+    }).then(async result => {
         if (result.ok) {
             selectedImport.isInvoice = event.target.checked
             if (selectedImport.isInvoice) {
@@ -271,7 +275,11 @@ tabInvoiceCheck.addEventListener("change", async (event) => {
 languageSelect.addEventListener("change", async (event) => {
     const doc = selectedImport
     doc.language = event.target.value
-    await fetch(`/api/v1/import/doc/${selectedImport.id}`, {method: "put", headers: {"Content-Type": "application/json"}, body: JSON.stringify(doc)}).then(async result => {
+    await fetch(`/api/v1/import/doc/${selectedImport.id}`, {
+        method: "put",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(doc)
+    }).then(async result => {
         if (result.ok) {
             bootstrap.Toast.getOrCreateInstance(savedToast).show()
         }
@@ -829,6 +837,8 @@ const wordEditConfirmButtonSpinner = document.getElementById("wordEditConfirmBut
 const wordEditDeleteButton = document.getElementById("wordEditDeleteButton")
 const wordEditDeleteButtonSpinner = document.getElementById("wordEditDeleteButtonSpinner")
 const wordCanvasContainer = document.getElementById("wordCanvasContainer")
+const suggestionsCollapse = document.getElementById("suggestionsCollapse")
+const suggestionsButton = document.getElementById("suggestionsButton")
 let selectedWord = null
 
 wordEditConfirmButton.addEventListener("click", async () => {
@@ -897,8 +907,47 @@ function showWordModal(word) {
         layer.batchDraw()
     }
     imageObj.src = `/api/v1/import/page/${selectedPage.id}/img`
+
+    if (suggestionsCollapse.classList.contains("d-none")) {
+        suggestionsButton.innerHTML = `<span class="badge text-bg-secondary">${word.spellingSuggestions.length}</span> Show Suggestions`
+    } else {
+        suggestionsButton.innerHTML = `<span class="badge text-bg-secondary">${word.spellingSuggestions.length}</span> Hide Suggestions`
+    }
+
+    suggestionsCollapse.innerHTML = ""
+
+    if (word.spellingSuggestions.length > 0) {
+        suggestionsButton.removeAttribute("disabled")
+    } else {
+        suggestionsButton.setAttribute("disabled", "disabled")
+    }
+
+    word.spellingSuggestions.forEach(suggestion => {
+        const div = document.createElement("div")
+        div.classList.add("col-sm-auto")
+        const button = document.createElement("button")
+        button.type = "button"
+        button.classList.add("btn", "btn-outline-secondary", "btn-sm", "m-1")
+        button.innerText = suggestion.suggestion
+        button.addEventListener("click", () => {
+            wordEditText.value = suggestion.suggestion
+        })
+        div.appendChild(button)
+        suggestionsCollapse.appendChild(div)
+    })
+
     wordEditText.focus()
 }
+
+suggestionsButton.addEventListener("click", () => {
+    if (!suggestionsCollapse.classList.contains("d-none")) {
+        suggestionsCollapse.classList.add("d-none")
+        suggestionsButton.innerHTML = `<span class="badge text-bg-secondary">${selectedWord.spellingSuggestions.length}</span> Show Suggestions`
+    } else {
+        suggestionsCollapse.classList.remove("d-none")
+        suggestionsButton.innerHTML = `<span class="badge text-bg-secondary">${selectedWord.spellingSuggestions.length}</span> Hide Suggestions`
+    }
+})
 
 wordModalDiv.addEventListener("show.bs.modal", () => {
     wordEditText.addEventListener("keyup", handleEnterPress)

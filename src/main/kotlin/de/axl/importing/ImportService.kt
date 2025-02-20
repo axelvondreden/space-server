@@ -9,11 +9,16 @@ import de.axl.runCommand
 import de.axl.serialization.alto.Alto
 import de.axl.serialization.api.*
 import kotlinx.coroutines.flow.MutableSharedFlow
+import org.languagetool.JLanguageTool
+import org.languagetool.Language
+import org.languagetool.language.BritishEnglish
+import org.languagetool.language.GermanyGerman
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
+
 
 class ImportService(
     private val fileManager: ImportFileManager,
@@ -137,8 +142,8 @@ class ImportService(
     suspend fun extractTextAndCreateDbObjects(page: ExposedImportPage): Pair<ExposedImportPage, String> {
         val document = docService.findById(page.documentId)!!
         val image = fileManager.getImage(page.guid)
-        logger.info("Running OCR (${document.language.lang}) on page ${page.page}: ${image.name}")
-        val xml = getAltoForImage(image, document.language.lang)
+        logger.info("Running OCR (${document.language.name}) on page ${page.page}: ${image.name}")
+        val xml = getAltoForImage(image, document.language.name)
         val mapper = XmlMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         val alto = mapper.readValue(xml, Alto::class.java)
         val printSpace = alto.layout.page.printSpace
@@ -154,6 +159,10 @@ class ImportService(
         val dbPage = pageService.findById(pageId)!!
         var text = ""
 
+        val langTool = JLanguageTool(langSpellcheckMapping[document.language.name]).apply {
+            allRules.filterNot { it.isDictionaryBasedSpellingRule }.forEach { disableRule(it.id) }
+        }
+
         logger.info("Collecting new entries...")
         val blocks = mutableMapOf<ExposedImportBlock, Map<ExposedImportLine, List<ExposedImportWord>>>()
         printSpace.composedBlocks.sortedBy { (it.vpos.toInt() * 10000) + it.hpos.toInt() }.forEach { cBlock ->
@@ -164,13 +173,19 @@ class ImportService(
                     var dbLine = ExposedImportLine(x = line.hpos.toInt(), y = line.vpos.toInt(), width = line.width.toInt(), height = line.height.toInt())
                     val exposedWords = line.words.sortedBy { it.hpos.toInt() }.map { word ->
                         text += "${word.content} "
+                        val spellingSuggestions = langTool.check(word.content).flatMap {
+                            it.suggestedReplacementObjects.map { suggestion ->
+                                ExposedImportSpellingSuggestion(suggestion = suggestion.replacement)
+                            }
+                        }
                         ExposedImportWord(
                             text = word.content,
                             x = word.hpos.toInt(),
                             y = word.vpos.toInt(),
                             width = word.width.toInt(),
                             height = word.height.toInt(),
-                            ocrConfidence = word.confidence.toDouble()
+                            ocrConfidence = word.confidence.toDouble(),
+                            spellingSuggestions = spellingSuggestions
                         )
                     }
                     text += "\n"
@@ -186,7 +201,7 @@ class ImportService(
     }
 
     private fun getAltoForImage(file: File, lang: String): String {
-        runCommand(file.parentFile, "tesseract ${file.name} ${file.nameWithoutExtension} -l $lang alto", logger)
+        runCommand(file.parentFile, "tesseract ${file.name} ${file.nameWithoutExtension} -l ${lang.lowercase()} alto", logger)
         val xml = File(file.parentFile, file.nameWithoutExtension + ".xml")
         val text = xml.readText()
         xml.delete()
@@ -226,5 +241,10 @@ class ImportService(
         )
 
         private val invoiceTextPatterns = listOf("netto", "brutto", "zu zahlen", "gesamtpreis", "rechnungsdatum")
+
+        private val langSpellcheckMapping = mapOf<String, Language>(
+            "ENG" to BritishEnglish(),
+            "DEU" to GermanyGerman()
+        )
     }
 }

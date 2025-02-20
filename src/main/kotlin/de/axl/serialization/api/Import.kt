@@ -88,5 +88,9 @@ data class ExposedImportWord(
     val width: Int = 0,
     val height: Int = 0,
     val ocrConfidence: Double? = 0.0,
+    val spellingSuggestions: List<ExposedImportSpellingSuggestion>,
     val lineId: Int = 0
 )
+
+@Serializable
+data class ExposedImportSpellingSuggestion(val id: Int = 0, val suggestion: String)

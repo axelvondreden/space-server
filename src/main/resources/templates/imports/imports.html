@@ -85,18 +85,7 @@
                     <input type="checkbox" class="btn-check" id="showWordConfidenceCheck" autocomplete="off">
                     <label class="btn btn-outline-secondary" for="showWordConfidenceCheck">Show Word Confidence</label>
                 </span>
-                    <div id="pageText" class="bg-body-tertiary p-2 mt-1 overflow-y-scroll" style="height: 50vh">
-                        <div>
-                            <span>Test1</span>
-                            <span>Test2</span>
-                            <span>Test3</span>
-                        </div>
-                        <div>
-                            <span>Test1</span>
-                            <span>Test2</span>
-                            <span>Test3</span>
-                        </div>
-                    </div>
+                    <div id="pageText" class="bg-body-tertiary p-2 mt-1 overflow-y-scroll" style="height: 50vh"></div>
                 </div>
                 <div class="tab-pane" id="tabTagsContent" role="tabpanel" tabindex="0">Tags</div>
                 <div class="tab-pane" id="tabInvoiceContent" role="tabpanel" tabindex="0">Invoice</div>
@@ -195,18 +184,24 @@
             </div>
             <div class="modal-body">
                 <div id="wordCanvasContainer" class="w-100 mb-2 d-flex justify-content-center"></div>
-                <input type="text" class="form-control" id="wordEditText" placeholder="Text" value="">
                 <div id="wordEditConfidenceText" class="form-text">Confidence: 0%</div>
+                <input type="text" class="form-control" id="wordEditText" placeholder="Text" value="">
+                <div id="suggestionsCollapse" class="row justify-content-md-center d-none mt-3"></div>
             </div>
             <div class="modal-footer justify-content-between">
                 <button id="wordEditDeleteButton" type="button" class="btn btn-danger justify-content-start">
                     Delete
                     <span id="wordEditDeleteButtonSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
                 </button>
-                <button id="wordEditConfirmButton" type="button" class="btn btn-primary">
-                    Save
-                    <span id="wordEditConfirmButtonSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
-                </button>
+                <div>
+                    <button id="suggestionsButton" class="btn btn-outline-secondary" type="button" data-bs-toggle="button">
+                        <span class="badge text-bg-secondary">0</span> Show Suggestions
+                    </button>
+                    <button id="wordEditConfirmButton" type="button" class="btn btn-primary">
+                        Save
+                        <span id="wordEditConfirmButtonSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

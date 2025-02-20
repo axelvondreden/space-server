@@ -3,6 +3,7 @@ package de.axl.db
 import de.axl.db.ImportBlockDbService.ImportBlock
 import de.axl.db.ImportLineDbService.ImportLine
 import de.axl.dbQuery
+import de.axl.serialization.api.ExposedImportSpellingSuggestion
 import de.axl.serialization.api.ExposedImportWord
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -22,9 +23,18 @@ class ImportWordDbService(database: Database) {
         override val primaryKey = PrimaryKey(id)
     }
 
+    object ImportSpellingSuggestion : Table() {
+        val id = integer("id").autoIncrement()
+        val suggestion = text("suggestion")
+        val word = reference("word", ImportWord.id, onDelete = ReferenceOption.CASCADE)
+
+        override val primaryKey = PrimaryKey(id)
+    }
+
     init {
         transaction(database) {
             SchemaUtils.create(ImportWord)
+            SchemaUtils.create(ImportSpellingSuggestion)
         }
     }
 
@@ -33,7 +43,7 @@ class ImportWordDbService(database: Database) {
     }
 
     suspend fun create(word: ExposedImportWord, lineId: Int): Int = dbQuery {
-        ImportWord.insert {
+        val id = ImportWord.insert {
             it[text] = word.text
             it[x] = word.x
             it[y] = word.y
@@ -42,6 +52,13 @@ class ImportWordDbService(database: Database) {
             it[ocrConfidence] = word.ocrConfidence
             it[line] = lineId
         }[ImportWord.id]
+        word.spellingSuggestions.forEach { spelling ->
+            ImportSpellingSuggestion.insert {
+                it[suggestion] = spelling.suggestion
+                it[ImportSpellingSuggestion.word] = id
+            }
+        }
+        id
     }
 
     suspend fun updateText(id: Int, newText: String) = dbQuery {
@@ -67,16 +84,21 @@ class ImportWordDbService(database: Database) {
         }
     }
 
-    private fun Query.mapExposed(): List<ExposedImportWord> = map {
+    private fun Query.mapExposed(): List<ExposedImportWord> = map { word ->
         ExposedImportWord(
-            it[ImportWord.id],
-            it[ImportWord.text],
-            it[ImportWord.x],
-            it[ImportWord.y],
-            it[ImportWord.width],
-            it[ImportWord.height],
-            it[ImportWord.ocrConfidence],
-            it[ImportWord.line]
+            word[ImportWord.id],
+            word[ImportWord.text],
+            word[ImportWord.x],
+            word[ImportWord.y],
+            word[ImportWord.width],
+            word[ImportWord.height],
+            word[ImportWord.ocrConfidence],
+            ImportSpellingSuggestion.selectAll().where { ImportSpellingSuggestion.word eq word[ImportWord.id] }.mapSpellingExposed(),
+            word[ImportWord.line]
         )
+    }
+
+    private fun Query.mapSpellingExposed(): List<ExposedImportSpellingSuggestion> = map {
+        ExposedImportSpellingSuggestion(it[ImportSpellingSuggestion.id], it[ImportSpellingSuggestion.suggestion])
     }
 }

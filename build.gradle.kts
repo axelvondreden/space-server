@@ -43,6 +43,8 @@ dependencies {
     implementation(libs.pdfbox)
     implementation(libs.pdfbox.tools)
     implementation(libs.thumbnailinator)
+    implementation(libs.languagetool.en)
+    implementation(libs.languagetool.de)
 }
 
 ktor {

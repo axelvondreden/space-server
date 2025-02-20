@@ -32,6 +32,8 @@ thymeleaf-time = { module = "org.thymeleaf.extras:thymeleaf-extras-java8time", v
 pdfbox = { module = "org.apache.pdfbox:pdfbox", version = "3.0.3" }
 pdfbox-tools = { module = "org.apache.pdfbox:pdfbox-tools", version = "3.0.3" }
 thumbnailinator = { module = "net.coobird:thumbnailator", version = "0.4.20" }
+languagetool-en = { module = "org.languagetool:language-en", version = "6.5" }
+languagetool-de = { module = "org.languagetool:language-de", version = "6.5" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-version" }

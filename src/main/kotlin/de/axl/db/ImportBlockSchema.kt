@@ -1,11 +1,10 @@
 package de.axl.db
 
 import de.axl.db.ImportPageDbService.ImportPage
+import de.axl.db.ImportWordDbService.ImportSpellingSuggestion
+import de.axl.db.ImportWordDbService.ImportWord
 import de.axl.dbQuery
-import de.axl.serialization.api.ExposedImportBlock
-import de.axl.serialization.api.ExposedImportBlockFull
-import de.axl.serialization.api.ExposedImportLineFull
-import de.axl.serialization.api.ExposedImportWord
+import de.axl.serialization.api.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -96,18 +95,21 @@ class ImportBlockDbService(database: Database) {
                         line[ImportLineDbService.ImportLine.width],
                         line[ImportLineDbService.ImportLine.height],
                         line[ImportLineDbService.ImportLine.block],
-                        ImportWordDbService.ImportWord.selectAll()
-                            .where { ImportWordDbService.ImportWord.line eq line[ImportLineDbService.ImportLine.id] }
-                            .map {
+                        ImportWord.selectAll()
+                            .where { ImportWord.line eq line[ImportLineDbService.ImportLine.id] }
+                            .map { word ->
                                 ExposedImportWord(
-                                    it[ImportWordDbService.ImportWord.id],
-                                    it[ImportWordDbService.ImportWord.text],
-                                    it[ImportWordDbService.ImportWord.x],
-                                    it[ImportWordDbService.ImportWord.y],
-                                    it[ImportWordDbService.ImportWord.width],
-                                    it[ImportWordDbService.ImportWord.height],
-                                    it[ImportWordDbService.ImportWord.ocrConfidence],
-                                    it[ImportWordDbService.ImportWord.line]
+                                    word[ImportWord.id],
+                                    word[ImportWord.text],
+                                    word[ImportWord.x],
+                                    word[ImportWord.y],
+                                    word[ImportWord.width],
+                                    word[ImportWord.height],
+                                    word[ImportWord.ocrConfidence],
+                                    ImportSpellingSuggestion.selectAll().where { ImportSpellingSuggestion.word eq word[ImportWord.id] }.map {
+                                        ExposedImportSpellingSuggestion(it[ImportSpellingSuggestion.id], it[ImportSpellingSuggestion.suggestion])
+                                    },
+                                    word[ImportWord.line]
                                 )
                             }
                     )
