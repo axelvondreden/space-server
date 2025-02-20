@@ -147,7 +147,7 @@ function addImportToSidebar(imp) {
     a.className = "list-group-item list-group-item-action py-3 lh-sm"
     a.innerHTML = `
         <div class="d-flex w-100 align-items-center justify-content-between">
-            <strong class="mb-1">${date}</strong>
+            <strong id="${imp.guid}-date" class="mb-1">${date}</strong>
             <span class="text-body-secondary"><i class="bi bi-file-earmark-text"></i> ${imp.pages.length}</span>
         </div>
         <div class="d-flex w-100">
@@ -283,6 +283,9 @@ async function setDocumentDate(date) {
             selectedImport.date = doc.date
             datePickButtonSpinner.classList.add("d-none")
             datePickButtonIcon.classList.remove("d-none")
+            const sidebarEntry = document.getElementById(`${doc.guid}-date`)
+            sidebarEntry.innerText = `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`
+            datePicker.datepicker("hide")
         }
     })
 }
