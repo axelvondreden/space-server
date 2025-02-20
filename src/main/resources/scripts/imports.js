@@ -178,6 +178,8 @@ const tagsTab = document.getElementById("tabTags")
 const invoiceTab = document.getElementById("tabInvoice")
 const tabInvoiceCheck = document.getElementById("tabInvoiceCheck")
 
+const savedToast = document.getElementById("savedToast")
+
 let selectedImport = null
 let selectedPage = null
 
@@ -185,6 +187,8 @@ async function docSelected(imp) {
     selectedImport = imp
     languageSelect.value = ""
     datePicker.datepicker("update", null)
+    importNoDocSelected.classList.add("d-none")
+    importDocArea.classList.remove("d-none")
     if (imp == null) {
         selectedPage = null
         importNoDocSelected.classList.remove("d-none")
@@ -194,6 +198,11 @@ async function docSelected(imp) {
     if (imp.date) {
         datePicker.datepicker("update", new Date(imp.date[0], imp.date[1] - 1, imp.date[2]))
     }
+
+    languageSelect.value = selectedImport.language
+
+    importGuid.innerHTML = selectedImport.guid
+
     const page1 = imp.pages.find(p => p.page === 1)
     await pageSelected(page1.id)
 
@@ -226,12 +235,6 @@ async function pageSelected(pageId) {
         if (result.ok) {
             const page = await result.json()
             selectedPage = page
-            importNoDocSelected.classList.add("d-none")
-            importDocArea.classList.remove("d-none")
-
-            importGuid.innerHTML = selectedImport.guid
-
-            languageSelect.value = selectedImport.language
 
             await loadImageCanvas(page, true)
 
@@ -260,6 +263,17 @@ tabInvoiceCheck.addEventListener("change", async (event) => {
                 invoiceTab.setAttribute("disabled", "disabled")
                 bootstrap.Tab.getInstance(textTab).show()
             }
+            bootstrap.Toast.getOrCreateInstance(savedToast).show()
+        }
+    })
+})
+
+languageSelect.addEventListener("change", async (event) => {
+    const doc = selectedImport
+    doc.language = event.target.value
+    await fetch(`/api/v1/import/doc/${selectedImport.id}`, {method: "put", headers: {"Content-Type": "application/json"}, body: JSON.stringify(doc)}).then(async result => {
+        if (result.ok) {
+            bootstrap.Toast.getOrCreateInstance(savedToast).show()
         }
     })
 })
@@ -286,6 +300,7 @@ async function setDocumentDate(date) {
             const sidebarEntry = document.getElementById(`${doc.guid}-date`)
             sidebarEntry.innerText = `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`
             datePicker.datepicker("hide")
+            bootstrap.Toast.getOrCreateInstance(savedToast).show()
         }
     })
 }
