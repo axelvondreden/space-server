@@ -165,6 +165,11 @@ const importNoDocSelected = document.getElementById("importNoDocSelected")
 const importGuid = document.getElementById("importGuid")
 const languageSelect = document.getElementById("languageSelect")
 const pageText = document.getElementById("pageText")
+const datePicker = $("#importDate")
+datePicker.datepicker({format: "dd.mm.yyyy"})
+datePicker.datepicker().on("changeDate", function(e) {
+    setDocumentDate(e.date)
+})
 
 const pagination = document.getElementById("pagination")
 
@@ -179,9 +184,7 @@ let selectedPage = null
 async function docSelected(imp) {
     selectedImport = imp
     languageSelect.value = ""
-    let dateElem = $("#importDate")
-    dateElem.datepicker({format: "dd.mm.yyyy"})
-    dateElem.datepicker("update", null)
+    datePicker.datepicker("update", null)
     if (imp == null) {
         selectedPage = null
         importNoDocSelected.classList.remove("d-none")
@@ -189,7 +192,7 @@ async function docSelected(imp) {
         return
     }
     if (imp.date) {
-        dateElem.datepicker("update", new Date(imp.date[0], imp.date[1] - 1, imp.date[2]))
+        datePicker.datepicker("update", new Date(imp.date[0], imp.date[1] - 1, imp.date[2]))
     }
     const page1 = imp.pages.find(p => p.page === 1)
     await pageSelected(page1.id)
@@ -261,9 +264,28 @@ tabInvoiceCheck.addEventListener("change", async (event) => {
     })
 })
 
-
 const datePickButton = document.getElementById("datePickButton")
+const datePickButtonIcon = document.getElementById("datePickButtonIcon")
+const datePickButtonSpinner = document.getElementById("datePickButtonSpinner")
 let pickingDate = false
+
+async function setDocumentDate(date) {
+    const doc = selectedImport
+    datePickButtonSpinner.classList.remove("d-none")
+    datePickButtonIcon.classList.add("d-none")
+    doc.date = [date.getFullYear(), date.getMonth() + 1, date.getDate()]
+    await fetch(`/api/v1/import/doc/${selectedImport.id}`, {
+        method: "put",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(doc)
+    }).then(async result => {
+        if (result.ok) {
+            selectedImport.date = doc.date
+            datePickButtonSpinner.classList.add("d-none")
+            datePickButtonIcon.classList.remove("d-none")
+        }
+    })
+}
 
 const canvasContainer = document.getElementById("canvasContainer")
 const showBlocksCheck = document.getElementById("showBlocksCheck")
@@ -493,26 +515,26 @@ async function loadImageCanvas(page, reset = false) {
     })
 }
 
-datePickButton.addEventListener("click", () => {
+datePickButton.addEventListener("click", async () => {
     if (pickingDate) {
-        datePicked(null)
+        await datePicked(null)
     } else {
         pickingDate = true
         datePickButton.classList.add("active")
     }
 })
 
-function datePicked(date) {
+async function datePicked(date) {
     pickingDate = false
-    datePickButton.classList.remove("active")
     if (date != null) {
         const parts = date.split(".")
         if (parts.length === 3) {
             const day = parseInt(parts[0])
             const month = parseInt(parts[1]) - 1
             const year = parseInt(parts[2])
-            const dateElem = $("#importDate")
-            dateElem.datepicker("update", new Date(year, month, day))
+            datePicker.datepicker("update", new Date(year, month, day))
+            datePickButton.classList.remove("active")
+            await setDocumentDate(new Date(year, month, day))
         }
     }
 }
