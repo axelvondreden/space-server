@@ -630,7 +630,7 @@ components:
           default: true
         backgroundFilter:
           type: integer
-          minimum: 0
+          minimum: 1
           default: 15
         noiseFilter:
           type: integer

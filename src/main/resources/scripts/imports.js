@@ -636,65 +636,7 @@ document.getElementById("imageModal").addEventListener("show.bs.modal", () => {
             await fetch(`/api/v1/import/page/${id}`).then(async result => {
                 if (result.ok) {
                     const page = await result.json()
-                    const row = `
-                        <div class="accordion-item">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button ${page.page === 1 ? "" : "collapsed"}" type="button" data-bs-toggle="collapse" data-bs-target="#imageCollapse${page.page}">
-                                Page #${page.page}
-                                </button>
-                            </h2>
-                            <div id="imageCollapse${page.page}" class="accordion-collapse collapse ${page.page === 1 ? "show" : ""}" data-bs-parent="#imageModalBody">
-                                <div class="accordion-body">
-                                    <div class="row">
-                                        <div class="col">
-                                            <div class="d-flex align-items-center justify-content-between">
-                                                <h5 class="mb-1">Original</h5>
-                                                <p class="font-monospace mb-1">This is in monospace</p>
-                                            </div>
-                                            <img src="/api/v1/import/page/${id}/img?type=original&${new Date().getTime()}" class="img-fluid" alt="" onload="setImageInfo(this)">
-                                        </div>
-                                        <div class="col-2">
-                                            <div class="d-flex flex-column">
-                                                <div id="imageStatusProgress${page.page}" class="progress mt-1" role="progressbar" style="visibility: hidden">
-                                                    <div class="progress-bar progress-bar-animated" style="width: 0"></div>
-                                                </div>
-                                                <button id="imageCleanButton${page.page}" type="button" class="btn btn-primary my-2" onclick="cleanImage(${page.page}, ${page.id})">
-                                                    <i class="bi bi-magic"></i>&nbsp;Clean Image
-                                                </button>
-                                                <label for="imageLayoutSelect${page.page}" class="form-label">Layout</label>
-                                                <select id="imageLayoutSelect" class="form-select">
-                                                    <option value="portrait" ${page.layout === "portrait" ? "selected" : ""}>Portrait</option>
-                                                    <option value="landscape" ${page.layout === "landscape" ? "selected" : ""}>Landscape</option>
-                                                </select>
-                                                
-                                                <!--<label for="imageLayoutSelect${page.page}" class="form-label">Crop: <span id="sliderCleanFuzzValue${page.page}">${page.cropFuzz}</span></label>
-                                                <input 
-                                                    type="range" 
-                                                    class="form-range" 
-                                                    id="sliderCleanFuzz${page.page}" 
-                                                    min="0" 
-                                                    max="100" 
-                                                    step="1" 
-                                                    value="${page.cropFuzz}" 
-                                                    oninput="setSliderText('sliderCleanFuzzValue${page.page}', this.value)"
-                                                    onchange="cleanImage(${page.page}, ${page.id})">-->
-                                            </div>
-                                        </div>
-                                        <div class="col">
-                                            <div class="d-flex align-items-center justify-content-between">
-                                                <p class="font-monospace mb-1">This is in monospace</p>
-                                                <h5 class="mb-1">Cleaned</h5>
-                                            </div>
-                                            <img id="cleanImage${page.page}" src="/api/v1/import/page/${id}/img?${new Date().getTime()}" class="img-fluid" alt="" onload="setImageInfo(this)">
-                                            <div id="cleanImageSpinner${page.page}" class="d-flex justify-content-center d-none">
-                                                <div class="spinner-border" role="status"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>`
-                    map.set(page.page, row)
+                    map.set(page.page, getImageRow(page))
                     if (map.size === selectedImport.pages.length) {
                         map.entries().toArray().sort((a, b) => a[0] - b[0]).forEach(entry => {
                             imageModalBody.innerHTML += entry[1]
@@ -705,6 +647,102 @@ document.getElementById("imageModal").addEventListener("show.bs.modal", () => {
         })
     }
 })
+
+const getImageRow = page => `
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button ${page.page === 1 ? "" : "collapsed"}" type="button" data-bs-toggle="collapse" data-bs-target="#imageCollapse${page.page}">
+            Page #${page.page}
+            </button>
+        </h2>
+        <div id="imageCollapse${page.page}" class="accordion-collapse collapse ${page.page === 1 ? "show" : ""}" data-bs-parent="#imageModalBody">
+            <div class="accordion-body">
+                <div class="row">
+                    <div class="col">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h5 class="mb-1">Original</h5>
+                            <p class="font-monospace mb-1"></p>
+                        </div>
+                        <img src="/api/v1/import/page/${page.id}/img?type=original&${new Date().getTime()}" class="img-fluid" alt="" onload="setImageInfo(this)">
+                    </div>
+                    <div class="col-2">
+                        <div class="d-flex flex-column">
+                            <div id="imageStatusProgress${page.page}" class="progress mt-1" role="progressbar" style="visibility: hidden">
+                                <div class="progress-bar progress-bar-animated" style="width: 0"></div>
+                            </div>
+                            <button id="imageCleanButton${page.page}" type="button" class="btn btn-primary my-2" onclick="cleanImage(${page.page}, ${page.id})">
+                                <i class="bi bi-magic"></i>&nbsp;Clean Image
+                            </button>
+                            <label for="imageLayoutSelect${page.page}">Layout</label>
+                            <select id="imageLayoutSelect${page.page}" class="form-select mb-2">
+                                <option value="portrait" ${page.layout === "portrait" ? "selected" : ""}>Portrait</option>
+                                <option value="landscape" ${page.layout === "landscape" ? "selected" : ""}>Landscape</option>
+                            </select>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="" id="imageGrayscaleCheck${page.page}" ${page.grayscale ? "checked" : ""}>
+                                <label class="form-check-label" for="imageGrayscaleCheck${page.page}">Grayscale</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" value="" id="imageEnhanceCheck${page.page}" ${page.enhance ? "checked" : ""}>
+                                <label class="form-check-label" for="imageEnhanceCheck${page.page}">Enhance</label>
+                            </div>
+                            <label for="imageBackgroundFilterSlider${page.page}">
+                                Background Filter: <span id="imageBackgroundFilterSliderValue${page.page}">${page.backgroundFilter}</span>
+                            </label>
+                            <input type="range" class="form-range mb-2" id="imageBackgroundFilterSlider${page.page}"
+                                min="1" max="50" step="1" value="${page.backgroundFilter}" 
+                                oninput="setSliderText('imageBackgroundFilterSliderValue${page.page}', this.value)">
+                            <label for="imageNoiseFilterSlider${page.page}">
+                                Noise Filter: <span id="imageNoiseFilterSliderValue${page.page}">${page.noiseFilter}</span>
+                            </label>
+                            <input type="range" class="form-range mb-2" id="imageNoiseFilterSlider${page.page}"
+                                min="0" max="50" step="1" value="${page.noiseFilter}" 
+                                oninput="setSliderText('imageNoiseFilterSliderValue${page.page}', this.value)">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="imageTextSmoothingCheck${page.page}" ${page.textSmoothing ? "checked" : ""}
+                                    value="" onchange="document.getElementById('imageTextSmoothingSlider${page.page}').disabled = !this.checked">
+                                <label class="form-check-label" for="imageTextSmoothingCheck${page.page}">Text Smoothing</label>
+                            </div>
+                            <label for="imageTextSmoothingSlider${page.page}">
+                                Smoothing Percent: <span id="imageTextSmoothingSliderValue${page.page}">${page.textSmoothing ? page.textSmoothing : 50}</span>
+                            </label>
+                            <input type="range" class="form-range mb-2" id="imageTextSmoothingSlider${page.page}"
+                                min="0" max="100" step="1" value="${page.textSmoothing ? page.textSmoothing : 50}" 
+                                oninput="setSliderText('imageTextSmoothingSliderValue${page.page}', this.value)" ${page.textSmoothing ? "" : "disabled"}>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="" id="imageUnrotateCheck${page.page}" ${page.unrotate ? "checked" : ""}>
+                                <label class="form-check-label" for="imageUnrotateCheck${page.page}">Unrotate</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" value="" id="imagePreserveSizeCheck${page.page}" ${page.preserveSize ? "checked" : ""}>
+                                <label class="form-check-label" for="imagePreserveSizeCheck${page.page}">Preserve Size</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" value="" id="imageTrimBackgroundCheck${page.page}" ${page.trimBackground ? "checked" : ""}>
+                                <label class="form-check-label" for="imageTrimBackgroundCheck${page.page}">Trim Background</label>
+                            </div>
+                            <label for="imageBorderPaddingSlider${page.page}">
+                                Border Padding: <span id="imageBorderPaddingSliderValue${page.page}">${page.borderPadding}</span>
+                            </label>
+                            <input type="range" class="form-range mb-2" id="imageBorderPaddingSlider${page.page}"
+                                min="0" max="100" step="1" value="${page.borderPadding}" 
+                                oninput="setSliderText('imageBorderPaddingSliderValue${page.page}', this.value)">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <p class="font-monospace mb-1"></p>
+                            <h5 class="mb-1">Cleaned</h5>
+                        </div>
+                        <img id="cleanImage${page.page}" src="/api/v1/import/page/${page.id}/img?${new Date().getTime()}" class="img-fluid" alt="" onload="setImageInfo(this)">
+                        <div id="cleanImageSpinner${page.page}" class="d-flex justify-content-center d-none">
+                            <div class="spinner-border" role="status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`
 
 async function setImageInfo(img) {
     const imageInfo = img.parentElement.querySelector(".font-monospace")
@@ -729,26 +767,27 @@ async function cleanImage(pageNr, pageId) {
     imageStatusProgress.firstElementChild.style.width = "50%"
     imageStatusProgress.firstElementChild.innerHTML = "Cleaning Image..."
     const img = document.getElementById(`cleanImage${pageNr}`)
-    const spinner = document.getElementById(`cleanImageSpinner${pageNr}`)
-    //const crop = document.getElementById(`sliderCropFuzz${pageNr}`).value
     img.src = ""
+    img.parentElement.querySelector(".font-monospace").innerHTML = ""
+    const spinner = document.getElementById(`cleanImageSpinner${pageNr}`)
     spinner.classList.remove("d-none")
 
     await fetch(`/api/v1/import/page/${pageId}`).then(async result => {
         const page = await result.json()
 
+        page.layout = document.getElementById(`imageLayoutSelect${pageNr}`).value
+        page.grayscale = document.getElementById(`imageGrayscaleCheck${pageNr}`).checked
+        page.enhance = document.getElementById(`imageEnhanceCheck${pageNr}`).checked
+        page.backgroundFilter = document.getElementById(`imageBackgroundFilterSlider${pageNr}`).value
+        page.noiseFilter = document.getElementById(`imageNoiseFilterSlider${pageNr}`).value
+        page.textSmoothing = document.getElementById(`imageTextSmoothingCheck${pageNr}`).checked ? document.getElementById(`imageTextSmoothingSlider${pageNr}`).value : null
+        page.unrotate = document.getElementById(`imageUnrotateCheck${pageNr}`).checked
+        page.preserveSize = document.getElementById(`imagePreserveSizeCheck${pageNr}`).checked
+        page.trimBackground = document.getElementById(`imageTrimBackgroundCheck${pageNr}`).checked
+        page.borderPadding = document.getElementById(`imageBorderPaddingSlider${pageNr}`).value
+
         /*
-        val layout: String = ImportPageDbService.Orientation.PORTRAIT.name.lowercase(),
         val crop: ImportPageCrop? = null,
-        val grayscale: Boolean = false,
-        val enhance: Boolean = true,
-        val backgroundFilter: Int = 15,
-        val noiseFilter: Int = 5,
-        val unrotate: Boolean = true,
-        val preserveSize: Boolean = false,
-        val textSmoothing: Int? = null,
-        val trimBackground: Boolean = true,
-        val borderPadding: Int = 0,
          */
         await fetch(`/api/v1/import/page/${pageId}`, {
             method: "put",
@@ -776,7 +815,7 @@ async function cleanImage(pageNr, pageId) {
                                 await fetch(`/api/v1/import/page/${pageId}/edit/ocr`, {method: "post"}).then(async result => {
                                     if (result.ok) {
                                         if (pageId === selectedPage.id) {
-                                            await loadImageCanvas(page)
+                                            await pageSelected(pageId)
                                         }
                                         imageCleanButton.disabled = false
                                         imageStatusProgress.style.visibility = "hidden"
