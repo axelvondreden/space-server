@@ -218,8 +218,6 @@ async function docSelected(imp) {
         li.innerHTML = `<a class="page-link" href="#" onclick="pageSelected(${page.id})">${page.page}</a>`
         pagination.appendChild(li)
     })
-
-    imageEditorChanged(false)
 }
 
 async function pageSelected(pageId) {
@@ -647,14 +645,29 @@ document.getElementById("imageModal").addEventListener("show.bs.modal", () => {
                             </h2>
                             <div id="imageCollapse${page.page}" class="accordion-collapse collapse ${page.page === 1 ? "show" : ""}" data-bs-parent="#imageModalBody">
                                 <div class="accordion-body">
-                                    <div class="row w-100 row-cols-2">
+                                    <div class="row">
                                         <div class="col">
-                                            <div style="height: 60px" class="d-flex align-items-center"><span class="form-label">Page ${page.page}:</span></div>
-                                            <img src="/api/v1/import/page/${id}/img?type=original&${new Date().getTime()}" class="img-fluid" alt="original">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <h5 class="mb-1">Original</h5>
+                                                <p class="font-monospace mb-1">This is in monospace</p>
+                                            </div>
+                                            <img src="/api/v1/import/page/${id}/img?type=original&${new Date().getTime()}" class="img-fluid" alt="" onload="setImageInfo(this)">
                                         </div>
-                                        <div class="col">
-                                            <div style="height: 60px">
-                                                <label for="sliderCleanFuzz${page.page}" class="form-label">Crop: <span id="sliderCleanFuzzValue${page.page}">${page.cropFuzz}</span></label>
+                                        <div class="col-2">
+                                            <div class="d-flex flex-column">
+                                                <div id="imageStatusProgress${page.page}" class="progress mt-1" role="progressbar" style="visibility: hidden">
+                                                    <div class="progress-bar progress-bar-animated" style="width: 0"></div>
+                                                </div>
+                                                <button id="imageCleanButton${page.page}" type="button" class="btn btn-primary my-2" onclick="cleanImage(${page.page}, ${page.id})">
+                                                    <i class="bi bi-magic"></i>&nbsp;Clean Image
+                                                </button>
+                                                <label for="imageLayoutSelect${page.page}" class="form-label">Layout</label>
+                                                <select id="imageLayoutSelect" class="form-select">
+                                                    <option value="portrait" ${page.layout === "portrait" ? "selected" : ""}>Portrait</option>
+                                                    <option value="landscape" ${page.layout === "landscape" ? "selected" : ""}>Landscape</option>
+                                                </select>
+                                                
+                                                <!--<label for="imageLayoutSelect${page.page}" class="form-label">Crop: <span id="sliderCleanFuzzValue${page.page}">${page.cropFuzz}</span></label>
                                                 <input 
                                                     type="range" 
                                                     class="form-range" 
@@ -664,9 +677,15 @@ document.getElementById("imageModal").addEventListener("show.bs.modal", () => {
                                                     step="1" 
                                                     value="${page.cropFuzz}" 
                                                     oninput="setSliderText('sliderCleanFuzzValue${page.page}', this.value)"
-                                                    onchange="cleanImage(${page.page}, ${page.id})">
+                                                    onchange="cleanImage(${page.page}, ${page.id})">-->
                                             </div>
-                                            <img id="imgClean${page.page}" src="/api/v1/import/page/${id}/img?${new Date().getTime()}" class="img-fluid" alt="cropped">
+                                        </div>
+                                        <div class="col">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <p class="font-monospace mb-1">This is in monospace</p>
+                                                <h5 class="mb-1">Cleaned</h5>
+                                            </div>
+                                            <img id="cleanImage${page.page}" src="/api/v1/import/page/${id}/img?${new Date().getTime()}" class="img-fluid" alt="" onload="setImageInfo(this)">
                                             <div id="cleanImageSpinner${page.page}" class="d-flex justify-content-center d-none">
                                                 <div class="spinner-border" role="status"></div>
                                             </div>
@@ -687,46 +706,29 @@ document.getElementById("imageModal").addEventListener("show.bs.modal", () => {
     }
 })
 
+async function setImageInfo(img) {
+    const imageInfo = img.parentElement.querySelector(".font-monospace")
+    await fetch(img.src).then(async result => {
+        if (result.ok) {
+            const fileSize = await result.blob().then(blob => blob.size / 1024 / 1024)
+            imageInfo.innerHTML = `${img.naturalWidth}x${img.naturalHeight} | ${fileSize.toFixed(2)}MB`
+        }
+    })
+}
+
 function setSliderText(spanId, value) {
     const span = document.getElementById(spanId)
     span.innerText = value
 }
 
-const imageModal = new bootstrap.Modal("#imageModal")
-const imageEditorConfirmButton = document.getElementById("imageEditConfirmButton")
-imageEditorConfirmButton.addEventListener("click", async () => {
-    if (selectedImport != null) {
-        let first = true
-        for (const id of selectedImport.pages.map(page => page.id)) {
-            await fetch(`/api/v1/import/page/${id}/edit/thumbs`, {method: "post"}).then(async result => {
-                if (result.ok && first) {
-                    first = false
-                    const img = document.getElementById(selectedImport.guid + "-thumb")
-                    img.src = "/api/v1/import/page/" + selectedPage.id + "/thumb?" + new Date().getTime()
-                }
-            })
-        }
-        imageModal.hide()
-        imageEditorChanged(false)
-        await loadImageCanvas(selectedPage, true)
-    }
-})
-
-const imageEditorCloseButton = document.getElementById("imageEditCloseButton")
-
-function imageEditorChanged(changed) {
-    if (changed) {
-        imageEditorConfirmButton.classList.remove("d-none")
-        imageEditorCloseButton.classList.add("d-none")
-    } else {
-        imageEditorConfirmButton.classList.add("d-none")
-        imageEditorCloseButton.classList.remove("d-none")
-    }
-}
-
 async function cleanImage(pageNr, pageId) {
-    imageEditorChanged(true)
-    const img = document.getElementById(`imgClean${pageNr}`)
+    const imageCleanButton = document.getElementById(`imageCleanButton${pageNr}`)
+    imageCleanButton.disabled = true
+    const imageStatusProgress = document.getElementById(`imageStatusProgress${pageNr}`)
+    imageStatusProgress.style.visibility = "visible"
+    imageStatusProgress.firstElementChild.style.width = "50%"
+    imageStatusProgress.firstElementChild.innerHTML = "Cleaning Image..."
+    const img = document.getElementById(`cleanImage${pageNr}`)
     const spinner = document.getElementById(`cleanImageSpinner${pageNr}`)
     //const crop = document.getElementById(`sliderCropFuzz${pageNr}`).value
     img.src = ""
@@ -759,6 +761,29 @@ async function cleanImage(pageNr, pageId) {
                     if (result.ok) {
                         spinner.classList.add("d-none")
                         img.src = `/api/v1/import/page/${pageId}/img?${new Date().getTime()}`
+
+                        imageStatusProgress.firstElementChild.style.width = "70%"
+                        imageStatusProgress.firstElementChild.innerHTML = "Creating Thumbnails..."
+                        await fetch(`/api/v1/import/page/${pageId}/edit/thumbs`, {method: "post"}).then(async result => {
+                            if (result.ok) {
+                                if (pageNr === 1) {
+                                    const img = document.getElementById(selectedImport.guid + "-thumb")
+                                    img.src = `/api/v1/import/page/${pageId}/thumb?${new Date().getTime()}`
+                                }
+
+                                imageStatusProgress.firstElementChild.style.width = "90%"
+                                imageStatusProgress.firstElementChild.innerHTML = "Running OCR..."
+                                await fetch(`/api/v1/import/page/${pageId}/edit/ocr`, {method: "post"}).then(async result => {
+                                    if (result.ok) {
+                                        if (pageId === selectedPage.id) {
+                                            await loadImageCanvas(page)
+                                        }
+                                        imageCleanButton.disabled = false
+                                        imageStatusProgress.style.visibility = "hidden"
+                                    }
+                                })
+                            }
+                        })
                     }
                 })
             }
