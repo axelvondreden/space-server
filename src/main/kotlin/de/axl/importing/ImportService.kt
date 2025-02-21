@@ -3,6 +3,8 @@ package de.axl.importing
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import de.axl.db.*
+import de.axl.db.ImportDocumentDbService.OCRLanguage
+import de.axl.db.ImportPageDbService.Orientation
 import de.axl.files.ImportFileManager
 import de.axl.importing.events.ImportStateEvent
 import de.axl.runCommand
@@ -18,6 +20,7 @@ import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
+import javax.imageio.ImageIO
 
 
 class ImportService(
@@ -56,29 +59,15 @@ class ImportService(
 
     suspend fun deleteWord(id: Int) = wordService.delete(id)
 
-    suspend fun createDeskewedImage(page: ExposedImportPage, deskew: Int) {
-        updatePage(page.copy(deskew = deskew))
-        fileManager.createDeskewedImage(page.guid, deskew)
-    }
-
-    suspend fun createColorAdjustedImage(page: ExposedImportPage, fuzz: Int) {
-        updatePage(page.copy(colorFuzz = fuzz))
-        fileManager.createColorAdjustedImage(page.guid, fuzz)
-    }
-
-    suspend fun createCroppedImage(page: ExposedImportPage, fuzz: Int) {
-        updatePage(page.copy(cropFuzz = fuzz))
-        fileManager.createCroppedImage(page.guid, fuzz)
+    fun createCleanedImage(page: ExposedImportPage) {
+        fileManager.createCleanedImage(page)
     }
 
     fun createThumbnails(page: ExposedImportPage) = fileManager.createThumbnails(page.guid)
 
     fun getPdfOriginal(guid: String) = fileManager.getPdfOriginal(guid)
     fun getImageOriginal(page: ExposedImportPage) = fileManager.getImageOriginal(page.guid)
-    fun getImageDeskewed(page: ExposedImportPage) = fileManager.getImageDeskewed(page.guid)
-    fun getImageColorAdjusted(page: ExposedImportPage) = fileManager.getImageColorAdjusted(page.guid)
-    fun getImage(page: ExposedImportPage) = fileManager.getImage(page.guid)
-
+    fun getImageCleaned(page: ExposedImportPage) = fileManager.getImage(page.guid)
     fun getThumbnail(page: ExposedImportPage, size: String) = fileManager.getThumbnail(page.guid, size)
 
     suspend fun handleUploads(importFlow: MutableSharedFlow<ImportStateEvent>) {
@@ -110,22 +99,20 @@ class ImportService(
         val pageStep = 0.7 / pages.size
         val dbPages = pages.map { (page, guid) ->
             logger.info("Running image editing on page $page / ${pages.size}")
-            importFlow.emit(state.copy(progress = 0.3 + (pageStep * (page - 1)) + ((pageStep / 5) * 0), message = "Creating deskewed image for page $page"))
-            fileManager.createDeskewedImage(guid)
-            importFlow.emit(
-                state.copy(
-                    progress = 0.3 + (pageStep * (page - 1)) + ((pageStep / 5) * 1),
-                    message = "Creating color-adjusted image for page $page"
-                )
+            importFlow.emit(state.copy(progress = 0.3 + (pageStep * (page - 1)) + ((pageStep / 3) * 0), message = "Creating cleaned image for page $page"))
+            val img = ImageIO.read(fileManager.getImageOriginal(guid))
+            val exposedPage = ExposedImportPage(
+                guid = guid,
+                page = page,
+                documentId = document.id,
+                layout = if (img.width > img.height) Orientation.LANDSCAPE.name.lowercase() else Orientation.PORTRAIT.name.lowercase()
             )
-            fileManager.createColorAdjustedImage(guid)
-            importFlow.emit(state.copy(progress = 0.3 + (pageStep * (page - 1)) + ((pageStep / 5) * 2), message = "Creating cropped image for page $page"))
-            fileManager.createCroppedImage(guid)
-            importFlow.emit(state.copy(progress = 0.3 + (pageStep * (page - 1)) + ((pageStep / 5) * 3), message = "Creating thumbnails for page $page"))
+            fileManager.createCleanedImage(exposedPage)
+
+            importFlow.emit(state.copy(progress = 0.3 + (pageStep * (page - 1)) + ((pageStep / 3) * 1), message = "Creating thumbnails for page $page"))
             fileManager.createThumbnails(guid)
 
-            var exposedPage = ExposedImportPage(guid = guid, page = page, documentId = document.id)
-            importFlow.emit(state.copy(progress = 0.3 + (pageStep * (page - 1)) + ((pageStep / 5) * 4), message = "Running OCR on page $page"))
+            importFlow.emit(state.copy(progress = 0.3 + (pageStep * (page - 1)) + ((pageStep / 3) * 2), message = "Running OCR on page $page"))
             extractTextAndCreateDbObjects(exposedPage)
         }
 

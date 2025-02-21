@@ -2,10 +2,7 @@ package de.axl.db
 
 import de.axl.db.ImportDocumentDbService.ImportDocument
 import de.axl.dbQuery
-import de.axl.serialization.api.ExposedImportBlock
-import de.axl.serialization.api.ExposedImportLine
-import de.axl.serialization.api.ExposedImportPage
-import de.axl.serialization.api.ExposedImportWord
+import de.axl.serialization.api.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -17,13 +14,23 @@ class ImportPageDbService(database: Database) {
         val page = integer("page")
         val width = integer("width")
         val height = integer("height")
-        val deskew = integer("deskew").default(40)
-        val colorFuzz = integer("colorFuzz").default(10)
-        val cropFuzz = integer("cropFuzz").default(10)
+        val layout = enumerationByName("layout", 10, Orientation::class).default(Orientation.PORTRAIT)
+        val crop = array<Int>("crop").nullable()
+        val grayscale = bool("grayscale").default(false)
+        val enhance = bool("enhance").default(true)
+        val backgroundFilter = integer("backgroundFilter").default(15)
+        val noiseFilter = integer("noiseFilter").default(5)
+        val unrotate = bool("unrotate").default(true)
+        val preserveSize = bool("preserveSize").default(false)
+        val textSmoothing = integer("textSmoothing").nullable()
+        val trimBackground = bool("trimBackground").default(true)
+        val borderPadding = integer("borderPadding").default(0)
         val document = reference("document", ImportDocument.id, onDelete = ReferenceOption.CASCADE)
 
         override val primaryKey = PrimaryKey(id)
     }
+
+    enum class Orientation { PORTRAIT, LANDSCAPE }
 
     init {
         transaction(database) {
@@ -69,9 +76,19 @@ class ImportPageDbService(database: Database) {
             it[ImportPage.page] = page.page
             it[width] = page.width
             it[height] = page.height
-            it[deskew] = page.deskew
-            it[colorFuzz] = page.colorFuzz
-            it[cropFuzz] = page.cropFuzz
+            it[layout] = Orientation.valueOf(page.layout.uppercase())
+            page.crop?.let { crop ->
+                it[ImportPage.crop] = listOf(crop.left, crop.top, crop.right, crop.bottom)
+            }
+            it[grayscale] = page.grayscale
+            it[enhance] = page.enhance
+            it[backgroundFilter] = page.backgroundFilter
+            it[noiseFilter] = page.noiseFilter
+            it[unrotate] = page.unrotate
+            it[preserveSize] = page.preserveSize
+            page.textSmoothing?.let { smoothing -> it[textSmoothing] = smoothing }
+            it[trimBackground] = page.trimBackground
+            it[borderPadding] = page.borderPadding
             it[document] = page.documentId
         }[ImportPage.id]
     }
@@ -120,9 +137,19 @@ class ImportPageDbService(database: Database) {
                 it[ImportPage.page] = page.page
                 it[width] = page.width
                 it[height] = page.height
-                it[deskew] = page.deskew
-                it[colorFuzz] = page.colorFuzz
-                it[cropFuzz] = page.cropFuzz
+                it[layout] = Orientation.valueOf(page.layout.uppercase())
+                page.crop?.let { crop ->
+                    it[ImportPage.crop] = listOf(crop.left, crop.top, crop.right, crop.bottom)
+                }
+                it[grayscale] = page.grayscale
+                it[enhance] = page.enhance
+                it[backgroundFilter] = page.backgroundFilter
+                it[noiseFilter] = page.noiseFilter
+                it[unrotate] = page.unrotate
+                it[preserveSize] = page.preserveSize
+                page.textSmoothing?.let { smoothing -> it[textSmoothing] = smoothing }
+                it[trimBackground] = page.trimBackground
+                it[borderPadding] = page.borderPadding
             }
         }
     }
@@ -140,9 +167,17 @@ class ImportPageDbService(database: Database) {
             it[ImportPage.page],
             it[ImportPage.width],
             it[ImportPage.height],
-            it[ImportPage.deskew],
-            it[ImportPage.colorFuzz],
-            it[ImportPage.cropFuzz],
+            it[ImportPage.layout].name.lowercase(),
+            it[ImportPage.crop]?.let { crop -> ImportPageCrop(crop[0], crop[1], crop[2], crop[3]) },
+            it[ImportPage.grayscale],
+            it[ImportPage.enhance],
+            it[ImportPage.backgroundFilter],
+            it[ImportPage.noiseFilter],
+            it[ImportPage.unrotate],
+            it[ImportPage.preserveSize],
+            it[ImportPage.textSmoothing],
+            it[ImportPage.trimBackground],
+            it[ImportPage.borderPadding],
             it[ImportDocument.id],
             dbQuery {
                 ImportBlockDbService.ImportBlock.selectAll()

@@ -10,8 +10,6 @@ import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
 
-enum class OCRLanguage { DEU, ENG }
-
 class ImportDocumentDbService(database: Database) {
     object ImportDocument : Table() {
         val id = integer("id").autoIncrement()
@@ -24,6 +22,8 @@ class ImportDocumentDbService(database: Database) {
 
         override val primaryKey = PrimaryKey(id)
     }
+
+    enum class OCRLanguage { DEU, ENG }
 
     init {
         transaction(database) {

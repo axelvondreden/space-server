@@ -2,6 +2,7 @@ package de.axl.files
 
 import de.axl.importing.events.ImportStateEvent
 import de.axl.runCommand
+import de.axl.serialization.api.ExposedImportPage
 import kotlinx.coroutines.flow.MutableSharedFlow
 import net.coobird.thumbnailator.Thumbnails
 import org.apache.pdfbox.Loader
@@ -36,26 +37,19 @@ class ImportFileManager(val dataPath: String) {
         return map
     }
 
-    fun createDeskewedImage(guid: String, deskew: Int = 40) {
-        val img = getImageOriginal(guid)
-        logger.info("Creating deskewed image for ${img.name}")
-        runCommand(img.parentFile, "magick ${img.name} -deskew $deskew% -trim +repage deskewed.png", logger)
-    }
+    fun createCleanedImage(page: ExposedImportPage) {
+        val img = getImageOriginal(page.guid)
+        logger.info("Creating cleaned image for ${img.name}")
 
-    fun createColorAdjustedImage(guid: String, fuzz: Int = 10) {
-        val img = getImageDeskewed(guid)
-        logger.info("Creating color-adjusted image for ${img.name}")
-        runCommand(
-            img.parentFile,
-            "magick ${img.name} -fuzz $fuzz% -fill white -opaque #B6BBBF -trim +repage coloradjusted.png",
-            logger
-        )
-    }
-
-    fun createCroppedImage(guid: String, fuzz: Int = 10) {
-        val img = getImageColorAdjusted(guid)
-        logger.info("Creating cropped image for ${img.name}")
-        runCommand(img.parentFile, "magick ${img.name} -fuzz $fuzz% -trim +repage final.png", logger)
+        val crop = if (page.crop != null) "-c ${page.crop.left},${page.crop.top},${page.crop.right},${page.crop.bottom} " else ""
+        val grayscale = if (page.grayscale) "-g " else ""
+        val enhance = if (page.enhance) "stretch" else "none"
+        val unrotate = if (page.unrotate) "-u " else ""
+        val preserveSize = if (page.preserveSize) "-P " else ""
+        val smoothing = if (page.textSmoothing != null) "-t ${page.textSmoothing} " else ""
+        val trimBackground = if (page.trimBackground) "-T " else ""
+        val args = "-l ${page.layout} $crop$grayscale-e $enhance -f ${page.backgroundFilter} -o ${page.noiseFilter} $unrotate$preserveSize$smoothing$trimBackground-p ${page.borderPadding}"
+        runCommand(img.parentFile, "./../../../../script/textcleaner $args ${img.name} cleaned.png", logger)
     }
 
     fun createThumbnails(guid: String) {
@@ -98,11 +92,7 @@ class ImportFileManager(val dataPath: String) {
 
     fun getImageOriginal(guid: String) = File("$dataPath/import/pages/$guid/original.png")
 
-    fun getImageDeskewed(guid: String) = File("$dataPath/import/pages/$guid/deskewed.png")
-
-    fun getImageColorAdjusted(guid: String) = File("$dataPath/import/pages/$guid/coloradjusted.png")
-
-    fun getImage(guid: String) = File("$dataPath/import/pages/$guid/final.png")
+    fun getImage(guid: String) = File("$dataPath/import/pages/$guid/cleaned.png")
 
     fun getPdfOriginal(guid: String) = File("$dataPath/import/pdf/${guid}-original.pdf")
 

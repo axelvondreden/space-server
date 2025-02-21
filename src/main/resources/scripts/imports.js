@@ -1,6 +1,6 @@
-const tooltipTriggerList = document.querySelectorAll(`[data-bs-toggle="tooltip"]`)
-// noinspection JSUnusedGlobalSymbols
-const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+//-------------------------------------------------------
+// WebSocket
+//-------------------------------------------------------
 
 const statusFilecount = document.getElementById("statusFilecount")
 const statusProgress = document.getElementById("statusProgress")
@@ -15,8 +15,7 @@ const statusIconPause = document.getElementById("statusIconPause")
 const statusIconPlay = document.getElementById("statusIconPlay")
 const statusIconFile = document.getElementById("statusIconFile")
 
-const host = window.location.host
-const ws = new WebSocket("ws://" + host + "/api/v1/import/events")
+const ws = new WebSocket(`ws://${window.location.host}/api/v1/import/events`)
 
 ws.onopen = () => {
     statusMessage.innerHTML = "WebSocket connected"
@@ -79,42 +78,9 @@ ws.onmessage = async (event) => {
     }
 }
 
-const inputFile = document.getElementById("formFileMultiple")
-const modalDiv = document.getElementById("uploadModal")
-const fileList = document.getElementById("fileList")
-
-modalDiv.addEventListener("shown.bs.modal", () => {
-    inputFile.value = ""
-})
-
-inputFile.addEventListener("change", () => {
-    fileList.innerHTML = ""
-    for (const file of inputFile.files) {
-        const li = document.createElement("li")
-        li.innerHTML = file.name
-        li.id = file.name
-        li.classList.add("list-group-item")
-        fileList.appendChild(li)
-    }
-})
-
-const uploadButton = document.getElementById("uploadButton")
-const uploadModal = new bootstrap.Modal("#uploadModal")
-
-uploadButton.addEventListener("click", async () => {
-    for (const file of inputFile.files) {
-        const formData = new FormData()
-        formData.append("file", file)
-        await fetch("/api/v1/upload", {method: "post", body: formData}).then(result => {
-            if (result.ok) {
-                const li = document.getElementById(file.name)
-                li.classList.add("list-group-item-success")
-            }
-        }).catch((error) => console.log(`Something went wrong. ${error}`))
-    }
-    uploadModal.hide()
-    await fetch("/api/v1/upload/collect", {method: "post"})
-})
+//-------------------------------------------------------
+// Sidebar
+//-------------------------------------------------------
 
 window.addEventListener("load", async () => {
     // noinspection JSUnusedGlobalSymbols
@@ -125,7 +91,6 @@ window.addEventListener("load", async () => {
     })
     await fillSidebar()
 })
-
 
 const sidebar = document.getElementById("sidebar")
 
@@ -153,23 +118,40 @@ function addImportToSidebar(imp) {
         <div class="d-flex w-100">
             <img id="${imp.guid}-thumb" src="/api/v1/import/page/${page1.id}/thumb" class="img-fluid" alt="Thumbnail">
         </div>`
-    a.addEventListener("click", async () => {
-        await docSelected(imp)
-    })
+    a.addEventListener("click", async () => await docSelected(imp))
 
     sidebar.appendChild(a)
 }
 
-const importDocArea = document.getElementById("importDocArea")
-const importNoDocSelected = document.getElementById("importNoDocSelected")
-const importGuid = document.getElementById("importGuid")
+//-------------------------------------------------------
+// Document Area
+//-------------------------------------------------------
+
+let selectedImport = null
+let selectedPage = null
+
 const languageSelect = document.getElementById("languageSelect")
-const pageText = document.getElementById("pageText")
+languageSelect.addEventListener("change", async (event) => {
+    const doc = selectedImport
+    doc.language = event.target.value
+    await fetch(`/api/v1/import/doc/${selectedImport.id}`, {
+        method: "put",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(doc)
+    }).then(async result => {
+        if (result.ok) {
+            bootstrap.Toast.getOrCreateInstance(savedToast).show()
+        }
+    })
+})
+
 const datePicker = $("#importDate")
 datePicker.datepicker({format: "dd.mm.yyyy"})
-datePicker.datepicker().on("changeDate", function (e) {
-    setDocumentDate(e.date)
+datePicker.datepicker().on("changeDate", async function (e) {
+    await setDocumentDate(e.date)
 })
+
+const savedToast = document.getElementById("savedToast")
 
 const pagination = document.getElementById("pagination")
 
@@ -177,15 +159,31 @@ const textTab = document.getElementById("tabText")
 const tagsTab = document.getElementById("tabTags")
 const invoiceTab = document.getElementById("tabInvoice")
 const tabInvoiceCheck = document.getElementById("tabInvoiceCheck")
-
-const savedToast = document.getElementById("savedToast")
-
-let selectedImport = null
-let selectedPage = null
+tabInvoiceCheck.addEventListener("change", async (event) => {
+    const doc = selectedImport
+    doc.isInvoice = event.target.checked
+    await fetch(`/api/v1/import/doc/${selectedImport.id}`, {
+        method: "put",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(doc)
+    }).then(async result => {
+        if (result.ok) {
+            selectedImport.isInvoice = event.target.checked
+            if (selectedImport.isInvoice) {
+                invoiceTab.removeAttribute("disabled")
+            } else {
+                invoiceTab.setAttribute("disabled", "disabled")
+                bootstrap.Tab.getInstance(textTab).show()
+            }
+            bootstrap.Toast.getOrCreateInstance(savedToast).show()
+        }
+    })
+})
 
 async function docSelected(imp) {
+    const importDocArea = document.getElementById("importDocArea")
+    const importNoDocSelected = document.getElementById("importNoDocSelected")
     selectedImport = imp
-    languageSelect.value = ""
     datePicker.datepicker("update", null)
     importNoDocSelected.classList.add("d-none")
     importDocArea.classList.remove("d-none")
@@ -200,11 +198,9 @@ async function docSelected(imp) {
     }
 
     languageSelect.value = selectedImport.language
+    document.getElementById("importGuid").innerHTML = selectedImport.guid
 
-    importGuid.innerHTML = selectedImport.guid
-
-    const page1 = imp.pages.find(p => p.page === 1)
-    await pageSelected(page1.id)
+    await pageSelected(imp.pages.find(p => p.page === 1).id)
 
     bootstrap.Tab.getInstance(textTab).show()
     if (imp.isInvoice) {
@@ -218,11 +214,7 @@ async function docSelected(imp) {
     pagination.innerHTML = ""
     imp.pages.forEach(page => {
         const li = document.createElement("li")
-        if (page.page === 1) {
-            li.className = "page-item active"
-        } else {
-            li.className = "page-item"
-        }
+        li.className = page.page === 1 ? "page-item active" : "page-item";
         li.innerHTML = `<a class="page-link" href="#" onclick="pageSelected(${page.id})">${page.page}</a>`
         pagination.appendChild(li)
     })
@@ -251,45 +243,33 @@ async function pageSelected(pageId) {
     })
 }
 
-tabInvoiceCheck.addEventListener("change", async (event) => {
-    const doc = selectedImport
-    doc.isInvoice = event.target.checked
-    await fetch(`/api/v1/import/doc/${selectedImport.id}`, {
-        method: "put",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(doc)
-    }).then(async result => {
-        if (result.ok) {
-            selectedImport.isInvoice = event.target.checked
-            if (selectedImport.isInvoice) {
-                invoiceTab.removeAttribute("disabled")
-            } else {
-                invoiceTab.setAttribute("disabled", "disabled")
-                bootstrap.Tab.getInstance(textTab).show()
-            }
-            bootstrap.Toast.getOrCreateInstance(savedToast).show()
-        }
-    })
-})
-
-languageSelect.addEventListener("change", async (event) => {
-    const doc = selectedImport
-    doc.language = event.target.value
-    await fetch(`/api/v1/import/doc/${selectedImport.id}`, {
-        method: "put",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(doc)
-    }).then(async result => {
-        if (result.ok) {
-            bootstrap.Toast.getOrCreateInstance(savedToast).show()
-        }
-    })
-})
-
-const datePickButton = document.getElementById("datePickButton")
+let pickingDate = false
 const datePickButtonIcon = document.getElementById("datePickButtonIcon")
 const datePickButtonSpinner = document.getElementById("datePickButtonSpinner")
-let pickingDate = false
+const datePickButton = document.getElementById("datePickButton")
+datePickButton.addEventListener("click", async () => {
+    if (pickingDate) {
+        await datePicked(null)
+    } else {
+        pickingDate = true
+        datePickButton.classList.add("active")
+    }
+})
+
+async function datePicked(date) {
+    pickingDate = false
+    if (date != null) {
+        const parts = date.split(".")
+        if (parts.length === 3) {
+            const day = parseInt(parts[0])
+            const month = parseInt(parts[1]) - 1
+            const year = parseInt(parts[2])
+            datePicker.datepicker("update", new Date(year, month, day))
+            datePickButton.classList.remove("active")
+            await setDocumentDate(new Date(year, month, day))
+        }
+    }
+}
 
 async function setDocumentDate(date) {
     const doc = selectedImport
@@ -313,19 +293,62 @@ async function setDocumentDate(date) {
     })
 }
 
-const canvasContainer = document.getElementById("canvasContainer")
-const showBlocksCheck = document.getElementById("showBlocksCheck")
-showBlocksCheck.checked = (document.cookie.indexOf("showBlocks=1") >= 0)
-const showLinesCheck = document.getElementById("showLinesCheck")
-showLinesCheck.checked = (document.cookie.indexOf("showLines=1") >= 0)
-const showWordsCheck = document.getElementById("showWordsCheck")
-showWordsCheck.checked = (document.cookie.indexOf("showWords=1") >= 0)
-const showWordConfidenceCheck = document.getElementById("showWordConfidenceCheck")
-showWordConfidenceCheck.checked = (document.cookie.indexOf("showWordConfidence=1") >= 0)
+//-------------------------------------------------------
+// Canvas
+//-------------------------------------------------------
 
 let currentBlocks = []
 let currentLines = []
 let currentWords = []
+
+const showBlocksCheck = document.getElementById("showBlocksCheck")
+showBlocksCheck.checked = (document.cookie.indexOf("showBlocks=1") >= 0)
+showBlocksCheck.addEventListener("change", async (event) => {
+    if (event.target.checked) {
+        currentBlocks.forEach(block => block.show())
+        document.cookie = "showBlocks=1; path=/; max-age=31536000"
+    } else {
+        currentBlocks.forEach(block => block.hide())
+        document.cookie = "showBlocks=0; path=/; max-age=31536000"
+    }
+})
+
+const showLinesCheck = document.getElementById("showLinesCheck")
+showLinesCheck.checked = (document.cookie.indexOf("showLines=1") >= 0)
+showLinesCheck.addEventListener("change", async (event) => {
+    if (event.target.checked) {
+        currentLines.forEach(line => line.show())
+        document.cookie = "showLines=1; path=/; max-age=31536000"
+    } else {
+        currentLines.forEach(line => line.hide())
+        document.cookie = "showLines=0; path=/; max-age=31536000"
+    }
+})
+
+const showWordsCheck = document.getElementById("showWordsCheck")
+showWordsCheck.checked = (document.cookie.indexOf("showWords=1") >= 0)
+showWordsCheck.addEventListener("change", async (event) => {
+    if (event.target.checked) {
+        currentWords.forEach(word => word.show())
+        document.cookie = "showWords=1; path=/; max-age=31536000"
+    } else {
+        currentWords.forEach(word => word.hide())
+        document.cookie = "showWords=0; path=/; max-age=31536000"
+    }
+})
+
+const showWordConfidenceCheck = document.getElementById("showWordConfidenceCheck")
+showWordConfidenceCheck.checked = (document.cookie.indexOf("showWordConfidence=1") >= 0)
+showWordConfidenceCheck.addEventListener("change", async (event) => {
+    const wordSpans = document.querySelectorAll("[data-confidence]")
+    if (event.target.checked) {
+        wordSpans.forEach(wordSpan => wordSpan.style.backgroundColor = getConfidenceColor(wordSpan.dataset.confidence))
+        document.cookie = "showWordConfidence=1; path=/; max-age=31536000"
+    } else {
+        wordSpans.forEach(wordSpan => wordSpan.style.backgroundColor = "transparent")
+        document.cookie = "showWordConfidence=0; path=/; max-age=31536000"
+    }
+})
 
 let canvasPosition = {x: 0, y: 0}
 let canvasScale = 1
@@ -335,7 +358,10 @@ let containerHeight = 0
 
 let stage = null
 
+const pageText = document.getElementById("pageText")
+
 async function loadImageCanvas(page, reset = false) {
+    const canvasContainer = document.getElementById("canvasContainer")
     canvasContainer.innerHTML = ""
     pageText.innerHTML = ""
     currentBlocks = []
@@ -541,33 +567,11 @@ async function loadImageCanvas(page, reset = false) {
     })
 }
 
-datePickButton.addEventListener("click", async () => {
-    if (pickingDate) {
-        await datePicked(null)
-    } else {
-        pickingDate = true
-        datePickButton.classList.add("active")
-    }
-})
-
-async function datePicked(date) {
-    pickingDate = false
-    if (date != null) {
-        const parts = date.split(".")
-        if (parts.length === 3) {
-            const day = parseInt(parts[0])
-            const month = parseInt(parts[1]) - 1
-            const year = parseInt(parts[2])
-            datePicker.datepicker("update", new Date(year, month, day))
-            datePickButton.classList.remove("active")
-            await setDocumentDate(new Date(year, month, day))
-        }
-    }
+function getConfidenceColor(conf) {
+    return conf > 0.88 ? "rgba(0, 128, 0, 0.6)" : (conf > 0.65 ? "rgba(255, 165, 0, 0.6)" : "rgba(255, 0, 0, 0.6)")
 }
 
 const alignHorizontalButton = document.getElementById("alignHorizontalButton")
-const alignVerticalButton = document.getElementById("alignVerticalButton")
-
 alignHorizontalButton.addEventListener("click", () => {
     canvasPosition = {x: 0, y: 0}
     canvasScale = containerWidth / selectedPage.width
@@ -575,6 +579,7 @@ alignHorizontalButton.addEventListener("click", () => {
     stage.scale({x: canvasScale, y: canvasScale})
 })
 
+const alignVerticalButton = document.getElementById("alignVerticalButton")
 alignVerticalButton.addEventListener("click", () => {
     canvasScale = containerHeight / selectedPage.height
     if (selectedPage.width * canvasScale < containerWidth) {
@@ -586,9 +591,12 @@ alignVerticalButton.addEventListener("click", () => {
     stage.scale({x: canvasScale, y: canvasScale})
 })
 
-const refreshTextButton = document.getElementById("refreshTextButton")
-const refreshTextSpinner = document.getElementById("refreshTextSpinner")
+//-------------------------------------------------------
+// Document Data
+//-------------------------------------------------------
 
+const refreshTextSpinner = document.getElementById("refreshTextSpinner")
+const refreshTextButton = document.getElementById("refreshTextButton")
 refreshTextButton.addEventListener("click", async () => {
     if (selectedImport != null && selectedPage != null) {
         refreshTextSpinner.classList.remove("d-none")
@@ -602,50 +610,8 @@ refreshTextButton.addEventListener("click", async () => {
     }
 })
 
-showBlocksCheck.addEventListener("change", async (event) => {
-    if (event.target.checked) {
-        currentBlocks.forEach(block => block.show())
-        document.cookie = "showBlocks=1; path=/; max-age=31536000"
-    } else {
-        currentBlocks.forEach(block => block.hide())
-        document.cookie = "showBlocks=0; path=/; max-age=31536000"
-    }
-})
-
-showLinesCheck.addEventListener("change", async (event) => {
-    if (event.target.checked) {
-        currentLines.forEach(line => line.show())
-        document.cookie = "showLines=1; path=/; max-age=31536000"
-    } else {
-        currentLines.forEach(line => line.hide())
-        document.cookie = "showLines=0; path=/; max-age=31536000"
-    }
-})
-
-showWordsCheck.addEventListener("change", async (event) => {
-    if (event.target.checked) {
-        currentWords.forEach(word => word.show())
-        document.cookie = "showWords=1; path=/; max-age=31536000"
-    } else {
-        currentWords.forEach(word => word.hide())
-        document.cookie = "showWords=0; path=/; max-age=31536000"
-    }
-})
-
-showWordConfidenceCheck.addEventListener("change", async (event) => {
-    const wordSpans = document.querySelectorAll("[data-confidence]")
-    if (event.target.checked) {
-        wordSpans.forEach(wordSpan => wordSpan.style.backgroundColor = getConfidenceColor(wordSpan.dataset.confidence))
-        document.cookie = "showWordConfidence=1; path=/; max-age=31536000"
-    } else {
-        wordSpans.forEach(wordSpan => wordSpan.style.backgroundColor = "transparent")
-        document.cookie = "showWordConfidence=0; path=/; max-age=31536000"
-    }
-})
-
-const deleteButton = document.getElementById("deleteButton")
 const deleteButtonSpinner = document.getElementById("deleteButtonSpinner")
-
+const deleteButton = document.getElementById("deleteButton")
 deleteButton.addEventListener("click", async () => {
     if (selectedImport != null) {
         deleteButtonSpinner.classList.remove("d-none")
@@ -659,12 +625,13 @@ deleteButton.addEventListener("click", async () => {
     }
 })
 
-const imageModal = new bootstrap.Modal("#imageModal")
-const imageModalDiv = document.getElementById("imageModal")
-const imageModalBody = document.getElementById("imageModalBody")
+//-------------------------------------------------------
+// Image Modal
+//-------------------------------------------------------
 
-imageModalDiv.addEventListener("show.bs.modal", () => {
+document.getElementById("imageModal").addEventListener("show.bs.modal", () => {
     if (selectedImport != null) {
+        const imageModalBody = document.getElementById("imageModalBody")
         imageModalBody.innerHTML = ""
         const map = new Map()
         selectedImport.pages.sort((a, b) => a.page - b.page).map(page => page.id).forEach(async id => {
@@ -678,58 +645,20 @@ imageModalDiv.addEventListener("show.bs.modal", () => {
                         </div>
                         <div class="col">
                             <div style="height: 60px">
-                                <label for="sliderDeskew${page.page}" class="form-label">Deskew: <span id="sliderDeskewValue${page.page}">${page.deskew}</span></label>
+                                <label for="sliderCleanFuzz${page.page}" class="form-label">Crop: <span id="sliderCleanFuzzValue${page.page}">${page.cropFuzz}</span></label>
                                 <input 
                                     type="range" 
                                     class="form-range" 
-                                    id="sliderDeskew${page.page}" 
-                                    min="0" 
-                                    max="100" 
-                                    step="1" 
-                                    value="${page.deskew}"
-                                    oninput="setSliderText('sliderDeskewValue${page.page}', this.value)"
-                                    onchange="deskewImg(${page.page}, ${page.id})">
-                            </div>
-                            <img id="imgDeskew${page.page}" src="/api/v1/import/page/${id}/img?type=deskewed&${new Date().getTime()}" class="img-fluid" alt="deskewed">
-                            <div id="deskewImageSpinner${page.page}" class="d-flex justify-content-center d-none">
-                                <div class="spinner-border" role="status"></div>
-                            </div>
-                        </div>
-                        <div class="col">
-                            <div style="height: 60px">
-                                <label for="sliderColorFuzz${page.page}" class="form-label">Color: <span id="sliderColorFuzzValue${page.page}">${page.colorFuzz}</span></label>
-                                <input 
-                                    type="range" 
-                                    class="form-range" 
-                                    id="sliderColorFuzz${page.page}" 
-                                    min="0" 
-                                    max="100" 
-                                    step="1" 
-                                    value="${page.colorFuzz}"
-                                    oninput="setSliderText('sliderColorFuzzValue${page.page}', this.value)"
-                                    onchange="colorImg(${page.page}, ${page.id})">
-                            </div>
-                            <img id="imgColor${page.page}" src="/api/v1/import/page/${id}/img?type=color&${new Date().getTime()}" class="img-fluid" alt="color adjusted">
-                            <div id="colorImageSpinner${page.page}" class="d-flex justify-content-center d-none">
-                                <div class="spinner-border" role="status"></div>
-                            </div>
-                        </div>
-                        <div class="col">
-                            <div style="height: 60px">
-                                <label for="sliderCropFuzz${page.page}" class="form-label">Crop: <span id="sliderCropFuzzValue${page.page}">${page.cropFuzz}</span></label>
-                                <input 
-                                    type="range" 
-                                    class="form-range" 
-                                    id="sliderCropFuzz${page.page}" 
+                                    id="sliderCleanFuzz${page.page}" 
                                     min="0" 
                                     max="100" 
                                     step="1" 
                                     value="${page.cropFuzz}" 
-                                    oninput="setSliderText('sliderCropFuzzValue${page.page}', this.value)"
-                                    onchange="cropImg(${page.page}, ${page.id})">
+                                    oninput="setSliderText('sliderCleanFuzzValue${page.page}', this.value)"
+                                    onchange="cleanImage(${page.page}, ${page.id})">
                             </div>
-                            <img id="imgCrop${page.page}" src="/api/v1/import/page/${id}/img?${new Date().getTime()}" class="img-fluid" alt="cropped">
-                            <div id="cropImageSpinner${page.page}" class="d-flex justify-content-center d-none">
+                            <img id="imgClean${page.page}" src="/api/v1/import/page/${id}/img?${new Date().getTime()}" class="img-fluid" alt="cropped">
+                            <div id="cleanImageSpinner${page.page}" class="d-flex justify-content-center d-none">
                                 <div class="spinner-border" role="status"></div>
                             </div>
                         </div>`
@@ -750,9 +679,8 @@ function setSliderText(spanId, value) {
     span.innerText = value
 }
 
+const imageModal = new bootstrap.Modal("#imageModal")
 const imageEditorConfirmButton = document.getElementById("imageEditConfirmButton")
-const imageEditorCloseButton = document.getElementById("imageEditCloseButton")
-
 imageEditorConfirmButton.addEventListener("click", async () => {
     if (selectedImport != null) {
         let first = true
@@ -771,6 +699,8 @@ imageEditorConfirmButton.addEventListener("click", async () => {
     }
 })
 
+const imageEditorCloseButton = document.getElementById("imageEditCloseButton")
+
 function imageEditorChanged(changed) {
     if (changed) {
         imageEditorConfirmButton.classList.remove("d-none")
@@ -781,46 +711,15 @@ function imageEditorChanged(changed) {
     }
 }
 
-async function deskewImg(pageNr, pageId) {
+async function cleanImage(pageNr, pageId) {
     imageEditorChanged(true)
-    const img = document.getElementById(`imgDeskew${pageNr}`)
-    const spinner = document.getElementById(`deskewImageSpinner${pageNr}`)
-    const deskew = document.getElementById(`sliderDeskew${pageNr}`).value
+    const img = document.getElementById(`imgClean${pageNr}`)
+    const spinner = document.getElementById(`cleanImageSpinner${pageNr}`)
+    //const crop = document.getElementById(`sliderCropFuzz${pageNr}`).value
     img.src = ""
     spinner.classList.remove("d-none")
-    await fetch(`/api/v1/import/page/${pageId}/edit/deskew?deskew=${deskew}`, {method: "post"}).then(async result => {
-        if (result.ok) {
-            spinner.classList.add("d-none")
-            img.src = `/api/v1/import/page/${pageId}/img?type=deskewed&${new Date().getTime()}`
-            await colorImg(pageNr, pageId)
-        }
-    })
-}
-
-async function colorImg(pageNr, pageId) {
-    imageEditorChanged(true)
-    const img = document.getElementById(`imgColor${pageNr}`)
-    const spinner = document.getElementById(`colorImageSpinner${pageNr}`)
-    const color = document.getElementById(`sliderColorFuzz${pageNr}`).value
-    img.src = ""
-    spinner.classList.remove("d-none")
-    await fetch(`/api/v1/import/page/${pageId}/edit/color?fuzz=${color}`, {method: "post"}).then(async result => {
-        if (result.ok) {
-            spinner.classList.add("d-none")
-            img.src = `/api/v1/import/page/${pageId}/img?type=color&${new Date().getTime()}`
-            await cropImg(pageNr, pageId)
-        }
-    })
-}
-
-async function cropImg(pageNr, pageId) {
-    imageEditorChanged(true)
-    const img = document.getElementById(`imgCrop${pageNr}`)
-    const spinner = document.getElementById(`cropImageSpinner${pageNr}`)
-    const crop = document.getElementById(`sliderCropFuzz${pageNr}`).value
-    img.src = ""
-    spinner.classList.remove("d-none")
-    await fetch(`/api/v1/import/page/${pageId}/edit/crop?fuzz=${crop}`, {method: "post"}).then(async result => {
+    //TODO: update
+    await fetch(`/api/v1/import/page/${pageId}/edit/clean`, {method: "post"}).then(async result => {
         if (result.ok) {
             spinner.classList.add("d-none")
             img.src = `/api/v1/import/page/${pageId}/img?${new Date().getTime()}`
@@ -828,21 +727,18 @@ async function cropImg(pageNr, pageId) {
     })
 }
 
+//-------------------------------------------------------
+// Word Modal
+//-------------------------------------------------------
+
 const wordModal = new bootstrap.Modal("#wordModal")
-const wordModalDiv = document.getElementById("wordModal")
 const wordEditText = document.getElementById("wordEditText")
-const wordEditConfidenceText = document.getElementById("wordEditConfidenceText")
-const wordEditConfirmButton = document.getElementById("wordEditConfirmButton")
-const wordEditConfirmButtonSpinner = document.getElementById("wordEditConfirmButtonSpinner")
-const wordEditDeleteButton = document.getElementById("wordEditDeleteButton")
-const wordEditDeleteButtonSpinner = document.getElementById("wordEditDeleteButtonSpinner")
-const wordCanvasContainer = document.getElementById("wordCanvasContainer")
-const suggestionsCollapse = document.getElementById("suggestionsCollapse")
-const suggestionsButton = document.getElementById("suggestionsButton")
 let selectedWord = null
 
+const wordEditConfirmButton = document.getElementById("wordEditConfirmButton")
 wordEditConfirmButton.addEventListener("click", async () => {
     if (selectedWord != null && wordEditText.value) {
+        const wordEditConfirmButtonSpinner = document.getElementById("wordEditConfirmButtonSpinner")
         wordEditConfirmButtonSpinner.classList.remove("d-none")
         await fetch(`/api/v1/import/word/${selectedWord.id}/text`, {method: "post", body: wordEditText.value}).then(async result => {
             if (result.ok) {
@@ -857,8 +753,9 @@ wordEditConfirmButton.addEventListener("click", async () => {
     }
 })
 
-wordEditDeleteButton.addEventListener("click", async () => {
+document.getElementById("wordEditDeleteButton").addEventListener("click", async () => {
     if (selectedWord != null) {
+        const wordEditDeleteButtonSpinner = document.getElementById("wordEditDeleteButtonSpinner")
         wordEditDeleteButtonSpinner.classList.remove("d-none")
         await fetch(`/api/v1/import/word/${selectedWord.id}`, {method: "delete"}).then(async result => {
             if (result.ok) {
@@ -873,11 +770,25 @@ wordEditDeleteButton.addEventListener("click", async () => {
     }
 })
 
+const suggestionsCollapse = document.getElementById("suggestionsCollapse")
+const suggestionsButton = document.getElementById("suggestionsButton")
+suggestionsButton.addEventListener("click", () => {
+    if (!suggestionsCollapse.classList.contains("d-none")) {
+        suggestionsCollapse.classList.add("d-none")
+        suggestionsButton.innerHTML = `<span class="badge text-bg-secondary">${selectedWord.spellingSuggestions.length}</span> Show Suggestions`
+    } else {
+        suggestionsCollapse.classList.remove("d-none")
+        suggestionsButton.innerHTML = `<span class="badge text-bg-secondary">${selectedWord.spellingSuggestions.length}</span> Hide Suggestions`
+    }
+})
+
 function showWordModal(word) {
     selectedWord = word
     wordEditText.value = word.text
-    wordEditConfidenceText.innerText = `Confidence: ${word.ocrConfidence * 100}%`
+    document.getElementById("wordEditConfidenceText").innerText = `Confidence: ${word.ocrConfidence * 100}%`
     wordModal.show()
+
+    const wordCanvasContainer = document.getElementById("wordCanvasContainer")
     wordCanvasContainer.innerHTML = ""
     const containerWidth = wordCanvasContainer.offsetWidth
     const scale = Math.min(containerWidth / word.width, 4.0)
@@ -939,23 +850,9 @@ function showWordModal(word) {
     wordEditText.focus()
 }
 
-suggestionsButton.addEventListener("click", () => {
-    if (!suggestionsCollapse.classList.contains("d-none")) {
-        suggestionsCollapse.classList.add("d-none")
-        suggestionsButton.innerHTML = `<span class="badge text-bg-secondary">${selectedWord.spellingSuggestions.length}</span> Show Suggestions`
-    } else {
-        suggestionsCollapse.classList.remove("d-none")
-        suggestionsButton.innerHTML = `<span class="badge text-bg-secondary">${selectedWord.spellingSuggestions.length}</span> Hide Suggestions`
-    }
-})
-
-wordModalDiv.addEventListener("show.bs.modal", () => {
-    wordEditText.addEventListener("keyup", handleEnterPress)
-})
-
-wordModalDiv.addEventListener("hide.bs.modal", () => {
-    wordEditText.removeEventListener("keyup", handleEnterPress)
-})
+const wordModalDiv = document.getElementById("wordModal")
+wordModalDiv.addEventListener("show.bs.modal", () => wordEditText.addEventListener("keyup", handleEnterPress))
+wordModalDiv.addEventListener("hide.bs.modal", () => wordEditText.removeEventListener("keyup", handleEnterPress))
 
 function handleEnterPress(event) {
     if (event.key === "Enter") {
@@ -963,6 +860,39 @@ function handleEnterPress(event) {
     }
 }
 
-function getConfidenceColor(conf) {
-    return conf > 0.88 ? "rgba(0, 128, 0, 0.6)" : (conf > 0.65 ? "rgba(255, 165, 0, 0.6)" : "rgba(255, 0, 0, 0.6)")
-}
+//-------------------------------------------------------
+// Upload Modal
+//-------------------------------------------------------
+
+const inputFile = document.getElementById("formFileMultiple")
+
+document.getElementById("uploadModal").addEventListener("shown.bs.modal", () => inputFile.value = "")
+
+inputFile.addEventListener("change", () => {
+    const fileList = document.getElementById("fileList")
+    fileList.innerHTML = ""
+    for (const file of inputFile.files) {
+        const li = document.createElement("li")
+        li.innerHTML = file.name
+        li.id = file.name
+        li.classList.add("list-group-item")
+        fileList.appendChild(li)
+    }
+})
+
+const uploadModal = new bootstrap.Modal("#uploadModal")
+
+document.getElementById("uploadButton").addEventListener("click", async () => {
+    for (const file of inputFile.files) {
+        const formData = new FormData()
+        formData.append("file", file)
+        await fetch("/api/v1/upload", {method: "post", body: formData}).then(result => {
+            if (result.ok) {
+                const li = document.getElementById(file.name)
+                li.classList.add("list-group-item-success")
+            }
+        }).catch((error) => console.log(`Something went wrong. ${error}`))
+    }
+    uploadModal.hide()
+    await fetch("/api/v1/upload/collect", {method: "post"})
+})

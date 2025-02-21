@@ -2,7 +2,6 @@ package de.axl.web.importing
 
 import de.axl.importing.ImportService
 import de.axl.serialization.api.ExposedImportPage
-import de.axl.serialization.api.OcrResult
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -62,9 +61,7 @@ fun Route.importPageRoute(importService: ImportService) {
                 val type = call.request.queryParameters["type"]
                 when (type) {
                     "original" -> call.respondFile(importService.getImageOriginal(page))
-                    "deskewed" -> call.respondFile(importService.getImageDeskewed(page))
-                    "color" -> call.respondFile(importService.getImageColorAdjusted(page))
-                    else -> call.respondFile(importService.getImage(page))
+                    else -> call.respondFile(importService.getImageCleaned(page))
                 }
             }
         }
@@ -81,26 +78,10 @@ fun Route.importPageRoute(importService: ImportService) {
             call.respondText(importService.findPageTextById(call.parameters["id"]?.toIntOrNull() ?: 0) ?: "")
         }
 
-        post("/edit/deskew") {
+        post("/edit/clean") {
             val page = findById(this, call.parameters["id"]?.toIntOrNull())
             if (page != null) {
-                importService.createDeskewedImage(page, call.request.queryParameters["deskew"]?.toIntOrNull() ?: 40)
-                call.respond(HttpStatusCode.OK)
-            }
-        }
-
-        post("/edit/color") {
-            var page = findById(this, call.parameters["id"]?.toIntOrNull())
-            if (page != null) {
-                importService.createColorAdjustedImage(page, call.request.queryParameters["fuzz"]?.toIntOrNull() ?: 10)
-                call.respond(HttpStatusCode.OK)
-            }
-        }
-
-        post("/edit/crop") {
-            var page = findById(this, call.parameters["id"]?.toIntOrNull())
-            if (page != null) {
-                importService.createCroppedImage(page, call.request.queryParameters["fuzz"]?.toIntOrNull() ?: 10)
+                importService.createCleanedImage(page)
                 call.respond(HttpStatusCode.OK)
             }
         }
@@ -117,8 +98,7 @@ fun Route.importPageRoute(importService: ImportService) {
             val page = findById(this, call.parameters["id"]?.toIntOrNull())
             if (page != null) {
                 importService.extractTextAndCreateDbObjects(page)
-                val text = importService.findPageTextById(page.id)
-                call.respond(HttpStatusCode.OK, OcrResult(text ?: ""))
+                call.respond(HttpStatusCode.OK)
             }
         }
     }

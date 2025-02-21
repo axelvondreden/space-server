@@ -225,12 +225,8 @@ paths:
         required: false
         schema:
           type: string
-          enum:
-            - original
-            - deskewed
-            - color
-            - final
-          default: final
+          enum: [original, cleaned]
+          default: cleaned
         description: "the image type"
     get:
       summary: Get the Image for the specified type
@@ -297,66 +293,11 @@ paths:
                 type: string
         "401":
           $ref: "#/components/responses/Unauthorized"
-  /import/page/{id}/edit/deskew:
+  /import/page/{id}/edit/clean:
     parameters:
       - $ref: "#/components/parameters/idParam"
-      - in: query
-        name: deskew
-        required: false
-        schema:
-          type: integer
-          minimum: 0
-          maximum: 100
-          default: 40
-        description: deskew value
     post:
-      summary: Run deskew on original image of page
-      tags:
-        - Import Page
-      responses:
-        "200":
-          description: Operation successfull
-        "404":
-          description: Import page not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-  /import/page/{id}/edit/color:
-    parameters:
-      - $ref: "#/components/parameters/idParam"
-      - in: query
-        name: fuzz
-        required: false
-        schema:
-          type: integer
-          minimum: 0
-          maximum: 100
-          default: 10
-        description: fuzz value for removing background color
-    post:
-      summary: Run color adjustments on deskewed image of page
-      tags:
-        - Import Page
-      responses:
-        "200":
-          description: Operation successfull
-        "404":
-          description: Import page not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-  /import/page/{id}/edit/crop:
-    parameters:
-      - $ref: "#/components/parameters/idParam"
-      - in: query
-        name: fuzz
-        required: false
-        schema:
-          type: integer
-          minimum: 0
-          maximum: 100
-          default: 20
-        description: fuzz value for cropping background
-    post:
-      summary: Run background removal on color adjusted image of page
+      summary: Run 'textcleaner' on image
       tags:
         - Import Page
       responses:
@@ -389,11 +330,7 @@ paths:
         - Import Page
       responses:
         "200":
-          description: Returns the text
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ImportOcrResult"
+          description: Operation successfull
         "404":
           description: Import page not found
         "401":
@@ -680,12 +617,43 @@ components:
           type: integer
         height:
           type: integer
-        deskew:
+        layout:
+          type: string
+          enum: [portrait, landscape]
+        crop:
+          $ref: "#/components/schemas/ImportPageCrop"
+        grayscale:
+          type: boolean
+          default: false
+        enhance:
+          type: boolean
+          default: true
+        backgroundFilter:
           type: integer
-        colorFuzz:
+          minimum: 0
+          default: 15
+        noiseFilter:
           type: integer
-        cropFuzz:
+          minimum: 0
+          default: 5
+        unrotate:
+          type: boolean
+          default: true
+        preserveSize:
+          type: boolean
+          default: false
+        textSmoothing:
           type: integer
+          minimum: 0
+          maximum: 100
+          nullable: true
+        trimBackground:
+          type: boolean
+          default: true
+        borderPadding:
+          type: integer
+          minimum: 0
+          default: 0
         documentId:
           type: integer
         blocks:
@@ -698,6 +666,27 @@ components:
         - width
         - height
         - documentId
+
+    ImportPageCrop:
+      type: object
+      properties:
+        left:
+          type: integer
+          minimum: 0
+        top:
+          type: integer
+          minimum: 0
+        right:
+          type: integer
+          minimum: 0
+        bottom:
+          type: integer
+          minimum: 0
+      required:
+        - left
+        - top
+        - right
+        - bottom
 
     ImportBlock:
       type: object

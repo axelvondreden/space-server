@@ -1,6 +1,7 @@
 package de.axl.serialization.api
 
-import de.axl.db.OCRLanguage
+import de.axl.db.ImportDocumentDbService.OCRLanguage
+import de.axl.db.ImportPageDbService
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
@@ -28,12 +29,23 @@ data class ExposedImportPage(
     val page: Int,
     val width: Int = 0,
     val height: Int = 0,
-    val deskew: Int = 40,
-    val colorFuzz: Int = 10,
-    val cropFuzz: Int = 20,
+    val layout: String = ImportPageDbService.Orientation.PORTRAIT.name.lowercase(),
+    val crop: ImportPageCrop? = null,
+    val grayscale: Boolean = false,
+    val enhance: Boolean = true,
+    val backgroundFilter: Int = 15,
+    val noiseFilter: Int = 5,
+    val unrotate: Boolean = true,
+    val preserveSize: Boolean = false,
+    val textSmoothing: Int? = null,
+    val trimBackground: Boolean = true,
+    val borderPadding: Int = 0,
     val documentId: Int = 0,
     val blocks: List<Int> = emptyList()
 )
+
+@Serializable
+data class ImportPageCrop(val left: Int, val top: Int, val right: Int, val bottom: Int)
 
 @Serializable
 data class ExposedImportBlock(
