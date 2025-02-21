@@ -138,16 +138,14 @@ class ImportPageDbService(database: Database) {
                 it[width] = page.width
                 it[height] = page.height
                 it[layout] = Orientation.valueOf(page.layout.uppercase())
-                page.crop?.let { crop ->
-                    it[ImportPage.crop] = listOf(crop.left, crop.top, crop.right, crop.bottom)
-                }
+                it[crop] = page.crop?.let { crop -> listOf(crop.left, crop.top, crop.right, crop.bottom) }
                 it[grayscale] = page.grayscale
                 it[enhance] = page.enhance
                 it[backgroundFilter] = page.backgroundFilter
                 it[noiseFilter] = page.noiseFilter
                 it[unrotate] = page.unrotate
                 it[preserveSize] = page.preserveSize
-                page.textSmoothing?.let { smoothing -> it[textSmoothing] = smoothing }
+                it[textSmoothing] = page.textSmoothing
                 it[trimBackground] = page.trimBackground
                 it[borderPadding] = page.borderPadding
             }

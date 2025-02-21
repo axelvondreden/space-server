@@ -673,11 +673,26 @@ const getImageRow = page => `
                             <button id="imageCleanButton${page.page}" type="button" class="btn btn-primary my-2" onclick="cleanImage(${page.page}, ${page.id})">
                                 <i class="bi bi-magic"></i>&nbsp;Clean Image
                             </button>
+                            
                             <label for="imageLayoutSelect${page.page}">Layout</label>
                             <select id="imageLayoutSelect${page.page}" class="form-select mb-2">
                                 <option value="portrait" ${page.layout === "portrait" ? "selected" : ""}>Portrait</option>
                                 <option value="landscape" ${page.layout === "landscape" ? "selected" : ""}>Landscape</option>
                             </select>
+                            
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" id="imageCropCheck${page.page}" ${page.crop ? "checked" : ""}>
+                                <label class="form-check-label" for="imageCropCheck${page.page}">Crop</label>
+                            </div>
+                            <div class="d-flex flex-column align-items-center mb-2">
+                                <input type="number" class="form-control w-50" id="imageCropTop${page.page}" min="0" placeholder="Top" ${page.crop ? "value='" + page.crop.top + "'" : ""}>
+                                <div class="d-flex flex-row">
+                                    <input type="number" class="form-control w-50" id="imageCropLeft${page.page}" min="0" placeholder="Left" ${page.crop ? "value='" + page.crop.left + "'" : ""}>
+                                    <input type="number" class="form-control w-50" id="imageCropRight${page.page}" min="0" placeholder="Right" ${page.crop ? "value='" + page.crop.right + "'" : ""}>
+                                </div>
+                                <input type="number" class="form-control w-50" id="imageCropBottom${page.page}" min="0" placeholder="Bottom" ${page.crop ? "value='" + page.crop.bottom + "'" : ""}>
+                            </div>
+                            
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" value="" id="imageGrayscaleCheck${page.page}" ${page.grayscale ? "checked" : ""}>
                                 <label class="form-check-label" for="imageGrayscaleCheck${page.page}">Grayscale</label>
@@ -686,21 +701,24 @@ const getImageRow = page => `
                                 <input class="form-check-input" type="checkbox" value="" id="imageEnhanceCheck${page.page}" ${page.enhance ? "checked" : ""}>
                                 <label class="form-check-label" for="imageEnhanceCheck${page.page}">Enhance</label>
                             </div>
+                            
                             <label for="imageBackgroundFilterSlider${page.page}">
                                 Background Filter: <span id="imageBackgroundFilterSliderValue${page.page}">${page.backgroundFilter}</span>
                             </label>
                             <input type="range" class="form-range mb-2" id="imageBackgroundFilterSlider${page.page}"
                                 min="1" max="50" step="1" value="${page.backgroundFilter}" 
                                 oninput="setSliderText('imageBackgroundFilterSliderValue${page.page}', this.value)">
+                                
                             <label for="imageNoiseFilterSlider${page.page}">
                                 Noise Filter: <span id="imageNoiseFilterSliderValue${page.page}">${page.noiseFilter}</span>
                             </label>
                             <input type="range" class="form-range mb-2" id="imageNoiseFilterSlider${page.page}"
                                 min="0" max="50" step="1" value="${page.noiseFilter}" 
                                 oninput="setSliderText('imageNoiseFilterSliderValue${page.page}', this.value)">
+                                
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" id="imageTextSmoothingCheck${page.page}" ${page.textSmoothing ? "checked" : ""}
-                                    value="" onchange="document.getElementById('imageTextSmoothingSlider${page.page}').disabled = !this.checked">
+                                    onchange="document.getElementById('imageTextSmoothingSlider${page.page}').disabled = !this.checked">
                                 <label class="form-check-label" for="imageTextSmoothingCheck${page.page}">Text Smoothing</label>
                             </div>
                             <label for="imageTextSmoothingSlider${page.page}">
@@ -709,6 +727,7 @@ const getImageRow = page => `
                             <input type="range" class="form-range mb-2" id="imageTextSmoothingSlider${page.page}"
                                 min="0" max="100" step="1" value="${page.textSmoothing ? page.textSmoothing : 50}" 
                                 oninput="setSliderText('imageTextSmoothingSliderValue${page.page}', this.value)" ${page.textSmoothing ? "" : "disabled"}>
+                            
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" value="" id="imageUnrotateCheck${page.page}" ${page.unrotate ? "checked" : ""}>
                                 <label class="form-check-label" for="imageUnrotateCheck${page.page}">Unrotate</label>
@@ -717,10 +736,12 @@ const getImageRow = page => `
                                 <input class="form-check-input" type="checkbox" value="" id="imagePreserveSizeCheck${page.page}" ${page.preserveSize ? "checked" : ""}>
                                 <label class="form-check-label" for="imagePreserveSizeCheck${page.page}">Preserve Size</label>
                             </div>
+                            
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" value="" id="imageTrimBackgroundCheck${page.page}" ${page.trimBackground ? "checked" : ""}>
                                 <label class="form-check-label" for="imageTrimBackgroundCheck${page.page}">Trim Background</label>
                             </div>
+                            
                             <label for="imageBorderPaddingSlider${page.page}">
                                 Border Padding: <span id="imageBorderPaddingSliderValue${page.page}">${page.borderPadding}</span>
                             </label>
@@ -776,6 +797,12 @@ async function cleanImage(pageNr, pageId) {
         const page = await result.json()
 
         page.layout = document.getElementById(`imageLayoutSelect${pageNr}`).value
+        page.crop = document.getElementById(`imageCropCheck${pageNr}`).checked ? {
+            top: document.getElementById(`imageCropTop${pageNr}`).value || 0,
+            left: document.getElementById(`imageCropLeft${pageNr}`).value || 0,
+            right: document.getElementById(`imageCropRight${pageNr}`).value || 0,
+            bottom: document.getElementById(`imageCropBottom${pageNr}`).value || 0
+        } : null
         page.grayscale = document.getElementById(`imageGrayscaleCheck${pageNr}`).checked
         page.enhance = document.getElementById(`imageEnhanceCheck${pageNr}`).checked
         page.backgroundFilter = document.getElementById(`imageBackgroundFilterSlider${pageNr}`).value
@@ -786,9 +813,6 @@ async function cleanImage(pageNr, pageId) {
         page.trimBackground = document.getElementById(`imageTrimBackgroundCheck${pageNr}`).checked
         page.borderPadding = document.getElementById(`imageBorderPaddingSlider${pageNr}`).value
 
-        /*
-        val crop: ImportPageCrop? = null,
-         */
         await fetch(`/api/v1/import/page/${pageId}`, {
             method: "put",
             headers: {"Content-Type": "application/json"},
