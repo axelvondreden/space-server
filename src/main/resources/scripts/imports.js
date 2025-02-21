@@ -639,27 +639,40 @@ document.getElementById("imageModal").addEventListener("show.bs.modal", () => {
                 if (result.ok) {
                     const page = await result.json()
                     const row = `
-                        <div class="col">
-                            <div style="height: 60px" class="d-flex align-items-center"><span class="form-label">Page ${page.page}:</span></div>
-                            <img src="/api/v1/import/page/${id}/img?type=original&${new Date().getTime()}" class="img-fluid" alt="original">
-                        </div>
-                        <div class="col">
-                            <div style="height: 60px">
-                                <label for="sliderCleanFuzz${page.page}" class="form-label">Crop: <span id="sliderCleanFuzzValue${page.page}">${page.cropFuzz}</span></label>
-                                <input 
-                                    type="range" 
-                                    class="form-range" 
-                                    id="sliderCleanFuzz${page.page}" 
-                                    min="0" 
-                                    max="100" 
-                                    step="1" 
-                                    value="${page.cropFuzz}" 
-                                    oninput="setSliderText('sliderCleanFuzzValue${page.page}', this.value)"
-                                    onchange="cleanImage(${page.page}, ${page.id})">
-                            </div>
-                            <img id="imgClean${page.page}" src="/api/v1/import/page/${id}/img?${new Date().getTime()}" class="img-fluid" alt="cropped">
-                            <div id="cleanImageSpinner${page.page}" class="d-flex justify-content-center d-none">
-                                <div class="spinner-border" role="status"></div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button ${page.page === 1 ? "" : "collapsed"}" type="button" data-bs-toggle="collapse" data-bs-target="#imageCollapse${page.page}">
+                                Page #${page.page}
+                                </button>
+                            </h2>
+                            <div id="imageCollapse${page.page}" class="accordion-collapse collapse ${page.page === 1 ? "show" : ""}" data-bs-parent="#imageModalBody">
+                                <div class="accordion-body">
+                                    <div class="row w-100 row-cols-2">
+                                        <div class="col">
+                                            <div style="height: 60px" class="d-flex align-items-center"><span class="form-label">Page ${page.page}:</span></div>
+                                            <img src="/api/v1/import/page/${id}/img?type=original&${new Date().getTime()}" class="img-fluid" alt="original">
+                                        </div>
+                                        <div class="col">
+                                            <div style="height: 60px">
+                                                <label for="sliderCleanFuzz${page.page}" class="form-label">Crop: <span id="sliderCleanFuzzValue${page.page}">${page.cropFuzz}</span></label>
+                                                <input 
+                                                    type="range" 
+                                                    class="form-range" 
+                                                    id="sliderCleanFuzz${page.page}" 
+                                                    min="0" 
+                                                    max="100" 
+                                                    step="1" 
+                                                    value="${page.cropFuzz}" 
+                                                    oninput="setSliderText('sliderCleanFuzzValue${page.page}', this.value)"
+                                                    onchange="cleanImage(${page.page}, ${page.id})">
+                                            </div>
+                                            <img id="imgClean${page.page}" src="/api/v1/import/page/${id}/img?${new Date().getTime()}" class="img-fluid" alt="cropped">
+                                            <div id="cleanImageSpinner${page.page}" class="d-flex justify-content-center d-none">
+                                                <div class="spinner-border" role="status"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>`
                     map.set(page.page, row)
@@ -718,12 +731,38 @@ async function cleanImage(pageNr, pageId) {
     //const crop = document.getElementById(`sliderCropFuzz${pageNr}`).value
     img.src = ""
     spinner.classList.remove("d-none")
-    //TODO: update
-    await fetch(`/api/v1/import/page/${pageId}/edit/clean`, {method: "post"}).then(async result => {
-        if (result.ok) {
-            spinner.classList.add("d-none")
-            img.src = `/api/v1/import/page/${pageId}/img?${new Date().getTime()}`
-        }
+
+    await fetch(`/api/v1/import/page/${pageId}`).then(async result => {
+        const page = await result.json()
+
+        /*
+        val layout: String = ImportPageDbService.Orientation.PORTRAIT.name.lowercase(),
+        val crop: ImportPageCrop? = null,
+        val grayscale: Boolean = false,
+        val enhance: Boolean = true,
+        val backgroundFilter: Int = 15,
+        val noiseFilter: Int = 5,
+        val unrotate: Boolean = true,
+        val preserveSize: Boolean = false,
+        val textSmoothing: Int? = null,
+        val trimBackground: Boolean = true,
+        val borderPadding: Int = 0,
+         */
+        await fetch(`/api/v1/import/page/${pageId}`, {
+            method: "put",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(page)
+        }).then(async result => {
+            if (result.ok) {
+                bootstrap.Toast.getOrCreateInstance(savedToast).show()
+                await fetch(`/api/v1/import/page/${pageId}/edit/clean`, {method: "post"}).then(async result => {
+                    if (result.ok) {
+                        spinner.classList.add("d-none")
+                        img.src = `/api/v1/import/page/${pageId}/img?${new Date().getTime()}`
+                    }
+                })
+            }
+        })
     })
 }
 
