@@ -880,7 +880,8 @@ wordEditConfirmButton.addEventListener("click", async () => {
     }
 })
 
-document.getElementById("wordEditDeleteButton").addEventListener("click", async () => {
+const wordEditDeleteButton = document.getElementById("wordEditDeleteButton")
+wordEditDeleteButton.addEventListener("click", async () => {
     if (selectedWord != null) {
         const wordEditDeleteButtonSpinner = document.getElementById("wordEditDeleteButtonSpinner")
         wordEditDeleteButtonSpinner.classList.remove("d-none")
@@ -978,12 +979,14 @@ function showWordModal(word) {
 }
 
 const wordModalDiv = document.getElementById("wordModal")
-wordModalDiv.addEventListener("show.bs.modal", () => wordEditText.addEventListener("keyup", handleEnterPress))
-wordModalDiv.addEventListener("hide.bs.modal", () => wordEditText.removeEventListener("keyup", handleEnterPress))
+wordModalDiv.addEventListener("show.bs.modal", () => wordEditText.addEventListener("keyup", handleKeyPress))
+wordModalDiv.addEventListener("hide.bs.modal", () => wordEditText.removeEventListener("keyup", handleKeyPress))
 
-function handleEnterPress(event) {
+function handleKeyPress(event) {
     if (event.key === "Enter") {
         wordEditConfirmButton.click()
+    } else if (event.key === "Delete") {
+        wordEditDeleteButton.click()
     }
 }
 
