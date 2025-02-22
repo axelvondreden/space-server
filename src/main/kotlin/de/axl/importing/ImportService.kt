@@ -225,6 +225,7 @@ class ImportService(
         private val datePatterns = mapOf(
             Regex("(3[01]|[12][0-9]|0?[1-9])\\.(1[012]|0?[1-9])\\.(\\d{4})") to "dd.MM.yyyy",
             Regex("(3[01]|[12][0-9]|0?[1-9])\\.(1[012]|0?[1-9])\\.(\\d{2})") to "dd.MM.yy",
+            Regex("(\\d{4})-(1[012]|0?[1-9])-(3[01]|[12][0-9]|0?[1-9])") to "yyyy-MM-dd",
         )
 
         private val invoiceTextPatterns = listOf("netto", "brutto", "zu zahlen", "gesamtpreis", "rechnungsdatum", "kartenzahlung")
