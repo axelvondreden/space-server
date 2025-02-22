@@ -227,7 +227,7 @@ class ImportService(
             Regex("(3[01]|[12][0-9]|0?[1-9])\\.(1[012]|0?[1-9])\\.(\\d{2})") to "dd.MM.yy",
         )
 
-        private val invoiceTextPatterns = listOf("netto", "brutto", "zu zahlen", "gesamtpreis", "rechnungsdatum")
+        private val invoiceTextPatterns = listOf("netto", "brutto", "zu zahlen", "gesamtpreis", "rechnungsdatum", "kartenzahlung")
 
         private val langSpellcheckMapping = mapOf<String, Language>(
             "ENG" to BritishEnglish(),
