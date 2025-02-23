@@ -632,7 +632,7 @@ components:
           $ref: "#/components/schemas/LocalDateTime"
         updatedAt:
           $ref: "#/components/schemas/LocalDateTime"
-        words:
+        pages:
           type: array
           items:
             $ref: "#/components/schemas/ImportDocumentPage"
