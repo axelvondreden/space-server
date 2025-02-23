@@ -356,6 +356,9 @@ let containerHeight = 0
 
 let stage = null
 
+let addingWord = false
+let addingWordPosition = {x: 0, y: 0}
+
 const pageText = document.getElementById("pageText")
 
 async function loadImageCanvas(page, reset = false) {
@@ -409,6 +412,14 @@ async function loadImageCanvas(page, reset = false) {
     const layer = new Konva.Layer()
     stage.add(layer)
 
+    const selectionRect = new Konva.Rect({
+        fill: "rgba(0, 0, 255, 0.2)",
+        stroke: "blue",
+        strokeWidth: 1,
+        visible: false,
+        listening: false,
+    })
+
     const imageObj = new Image()
     imageObj.onload = () => {
         const konvaImage = new Konva.Image({
@@ -417,6 +428,51 @@ async function loadImageCanvas(page, reset = false) {
             image: imageObj,
             width: page.width,
             height: page.height,
+        })
+        konvaImage.on("dblclick", () => {
+            const scale = stage.scaleX()
+            const pointer = stage.getPointerPosition()
+            addingWordPosition = {
+                x: (pointer.x - stage.x()) / scale,
+                y: (pointer.y - stage.y()) / scale
+            }
+            addingWord = true
+        })
+        konvaImage.on("click", () => {
+            if (addingWord) {
+                addingWord = false
+                selectionRect.visible(false)
+                const scale = stage.scaleX()
+                const pointer = stage.getPointerPosition()
+                const targetPos = {
+                    x: (pointer.x - stage.x()) / scale,
+                    y: (pointer.y - stage.y()) / scale
+                }
+                const info = {
+                    x: Math.min(addingWordPosition.x, targetPos.x),
+                    y: Math.min(addingWordPosition.y, targetPos.y),
+                    width: Math.abs(targetPos.x - addingWordPosition.x),
+                    height: Math.abs(targetPos.y - addingWordPosition.y)
+                }
+                showAddWordModal(info)
+            }
+        })
+        konvaImage.on("mousemove", () => {
+            if (addingWord) {
+                const scale = stage.scaleX()
+                const pointer = stage.getPointerPosition()
+                const targetPos = {
+                    x: (pointer.x - stage.x()) / scale,
+                    y: (pointer.y - stage.y()) / scale
+                }
+                selectionRect.setAttrs({
+                    visible: true,
+                    x: Math.min(addingWordPosition.x, targetPos.x),
+                    y: Math.min(addingWordPosition.y, targetPos.y),
+                    width: Math.abs(targetPos.x - addingWordPosition.x),
+                    height: Math.abs(targetPos.y - addingWordPosition.y)
+                })
+            }
         })
         if (reset) {
             canvasScale = containerWidth / page.width
@@ -429,6 +485,7 @@ async function loadImageCanvas(page, reset = false) {
 
     const boxLayer = new Konva.Layer()
     stage.add(boxLayer)
+    boxLayer.add(selectionRect)
     const textLayer = new Konva.Layer()
     stage.add(textLayer)
 
@@ -599,7 +656,7 @@ refreshTextButton.addEventListener("click", async () => {
     if (selectedImport != null && selectedPage != null) {
         refreshTextSpinner.classList.remove("d-none")
         pageText.innerHTML = ""
-        await fetch(`/api/v1/import/page/${selectedPage.id}/edit/ocr`, {method: "post"}).then(async result => {
+        await fetch(`/api/v1/import/page/${selectedPage.id}/ocr/full`, {method: "post"}).then(async result => {
             if (result.ok) {
                 await loadImageCanvas(selectedPage)
                 refreshTextSpinner.classList.add("d-none")
@@ -836,7 +893,7 @@ async function cleanImage(pageNr, pageId) {
 
                                 imageStatusProgress.firstElementChild.style.width = "90%"
                                 imageStatusProgress.firstElementChild.innerHTML = "Running OCR..."
-                                await fetch(`/api/v1/import/page/${pageId}/edit/ocr`, {method: "post"}).then(async result => {
+                                await fetch(`/api/v1/import/page/${pageId}/ocr/full`, {method: "post"}).then(async result => {
                                     if (result.ok) {
                                         if (pageId === selectedPage.id) {
                                             await pageSelected(pageId)
@@ -855,7 +912,7 @@ async function cleanImage(pageNr, pageId) {
 }
 
 //-------------------------------------------------------
-// Word Modal
+// Word Edit Modal
 //-------------------------------------------------------
 
 const wordModal = new bootstrap.Modal("#wordModal")
@@ -978,6 +1035,30 @@ function showWordModal(word) {
     wordEditText.focus()
 }
 
+const wordEditOcrButton = document.getElementById("wordEditOcrButton")
+wordEditOcrButton.addEventListener("click", async () => {
+    if (selectedWord != null) {
+        const wordEditOcrButtonSpinner = document.getElementById("wordEditOcrButtonSpinner")
+        wordEditOcrButtonSpinner.classList.remove("d-none")
+        const rect = {
+            x: selectedWord.x,
+            y: selectedWord.y,
+            width: selectedWord.width,
+            height: selectedWord.height
+        }
+        await fetch(`/api/v1/import/page/${selectedPage.id}/ocr/part`, {
+            method: "post",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(rect)
+        }).then(async result => {
+            if (result.ok) {
+                wordEditText.value = await result.text()
+                wordEditOcrButtonSpinner.classList.add("d-none")
+            }
+        })
+    }
+})
+
 const wordModalDiv = document.getElementById("wordModal")
 wordModalDiv.addEventListener("show.bs.modal", () => wordEditText.addEventListener("keyup", handleKeyPress))
 wordModalDiv.addEventListener("hide.bs.modal", () => wordEditText.removeEventListener("keyup", handleKeyPress))
@@ -989,6 +1070,95 @@ function handleKeyPress(event) {
         wordEditDeleteButton.click()
     }
 }
+
+
+//-------------------------------------------------------
+// Word Add Modal
+//-------------------------------------------------------
+
+let addWordInfo = null
+const wordAddModal = new bootstrap.Modal("#wordAddModal")
+const wordAddText = document.getElementById("wordAddText")
+const wordAddButton = document.getElementById("wordAddButton")
+wordAddButton.addEventListener("click", async () => {
+    if (wordAddText.value) {
+        const wordAddButtonSpinner = document.getElementById("wordAddButtonSpinner")
+        wordAddButtonSpinner.classList.remove("d-none")
+        addWordInfo.text = wordAddText.value
+        await fetch(`/api/v1/import/page/${selectedPage.id}/word`, {
+            method: "post",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(addWordInfo)
+        }).then(async result => {
+            if (result.ok) {
+                await fetch(`/api/v1/import/page/${selectedPage.id}`).then(async result => {
+                    selectedPage = await result.json()
+                    wordAddButtonSpinner.classList.add("d-none")
+                    wordAddModal.hide()
+                    await loadImageCanvas(selectedPage)
+                })
+            }
+        })
+    }
+})
+
+function showAddWordModal(wordData) {
+    wordAddModal.show()
+    addWordInfo = wordData
+
+    const wordCanvasContainer = document.getElementById("wordAddCanvasContainer")
+    wordCanvasContainer.innerHTML = ""
+    const containerWidth = wordCanvasContainer.offsetWidth
+    const scale = Math.min(containerWidth / wordData.width, 4.0)
+    wordCanvasContainer.style.height = `${(wordData.height + 20) * scale}px`
+    const containerHeight = wordCanvasContainer.offsetHeight
+    const stage = new Konva.Stage({
+        container: "wordAddCanvasContainer",
+        width: Math.min(containerWidth, wordData.width * scale),
+        height: containerHeight,
+        scaleX: scale,
+        scaleY: scale
+    })
+
+    const layer = new Konva.Layer()
+    stage.add(layer)
+
+    const imageObj = new Image()
+    imageObj.onload = () => {
+        const konvaImage = new Konva.Image({
+            x: -wordData.x,
+            y: -wordData.y + 10,
+            image: imageObj,
+            width: selectedPage.width,
+            height: selectedPage.height
+        })
+        layer.add(konvaImage)
+        layer.batchDraw()
+    }
+    imageObj.src = `/api/v1/import/page/${selectedPage.id}/img`
+
+    wordAddText.value = ""
+    wordAddOcrButton.click()
+    wordAddText.focus()
+}
+
+const wordAddOcrButton = document.getElementById("wordAddOcrButton")
+wordAddOcrButton.addEventListener("click", async () => {
+    if (addWordInfo != null) {
+        const wordAddOcrButtonSpinner = document.getElementById("wordAddOcrButtonSpinner")
+        wordAddOcrButtonSpinner.classList.remove("d-none")
+        await fetch(`/api/v1/import/page/${selectedPage.id}/ocr/part`, {
+            method: "post",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(addWordInfo)
+        }).then(async result => {
+            if (result.ok) {
+                wordAddText.value = await result.text()
+                wordAddOcrButtonSpinner.classList.add("d-none")
+            }
+        })
+    }
+})
 
 //-------------------------------------------------------
 // Upload Modal

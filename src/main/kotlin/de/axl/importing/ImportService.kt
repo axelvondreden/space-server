@@ -47,6 +47,7 @@ class ImportService(
     suspend fun deletePage(id: Int) = pageService.delete(id)
 
     suspend fun findBlockById(id: Int): ExposedImportBlock? = blockService.findById(id)
+    suspend fun getBlocksForPage(page: ExposedImportPage): List<ExposedImportBlock> = blockService.findByPageId(page.id)
     suspend fun getFullBlocksForPage(page: ExposedImportPage): List<ExposedImportBlockFull> = blockService.findByPageIdFull(page.id)
     suspend fun deleteBlock(id: Int) = blockService.delete(id)
     suspend fun findLineById(id: Int): ExposedImportLine? = lineService.findById(id)
@@ -187,12 +188,27 @@ class ImportService(
         return dbPage to text
     }
 
+    suspend fun extractText(page: ExposedImportPage, rect: Rectangle): String {
+        val document = docService.findById(page.documentId)!!
+        val imageFile = fileManager.getImage(page.guid)
+        logger.info("Cropping image ${imageFile.name} to ${rect.x}, ${rect.y}, ${rect.width}, ${rect.height}")
+        val croppedFile = File(imageFile.parentFile, "ocrtmp.png")
+        ImageIO.write(ImageIO.read(imageFile).getSubimage(rect.x, rect.y, rect.width, rect.height), "png", croppedFile)
+        logger.info("Running OCR (${document.language.name}) on page ${page.page}: ${croppedFile.name}")
+        return getTextForImage(croppedFile, document.language.name)
+    }
+
     private fun getAltoForImage(file: File, lang: String): String {
         runCommand(file.parentFile, "tesseract ${file.name} ${file.nameWithoutExtension} -l ${lang.lowercase()} alto", logger)
         val xml = File(file.parentFile, file.nameWithoutExtension + ".xml")
         val text = xml.readText()
         xml.delete()
         return text
+    }
+
+    private fun getTextForImage(file: File, lang: String): String {
+        runCommand(file.parentFile, "tesseract ${file.name} ${file.nameWithoutExtension} -l ${lang.lowercase()} --psm 8", logger)
+        return File(file.parentFile, file.nameWithoutExtension + ".txt").readText()
     }
 
     private fun findDateFromText(text: String): LocalDate? {
@@ -217,6 +233,31 @@ class ImportService(
 
     private fun guessIsInvoice(text: String) = text.lines().any { line ->
         invoiceTextPatterns.any { line.contains(Regex("\\b$it\\b", RegexOption.IGNORE_CASE)) }
+    }
+
+    suspend fun addWordToPage(page: ExposedImportPage, newWord: NewWord) {
+        val blockId = findBlockForWord(page, newWord)?.id ?: run {
+            logger.info("Creating new block for word '${newWord.text}' on page ${page.page} (${page.guid})")
+            blockService.create(ExposedImportBlock(x = newWord.x, y = newWord.y, width = newWord.width, height = newWord.height), page.id)
+        }
+        val lineId = findLineForWord(blockId, newWord)?.id ?: run {
+            logger.info("Creating new line for word '${newWord.text}' on block $blockId")
+            lineService.create(ExposedImportLine(x = newWord.x, y = newWord.y, width = newWord.width, height = newWord.height), blockId)
+        }
+        val word = ExposedImportWord(text = newWord.text, x = newWord.x, y = newWord.y, width = newWord.width, height = newWord.height)
+        wordService.create(word, lineId)
+    }
+
+    private suspend fun findBlockForWord(page: ExposedImportPage, word: NewWord): ExposedImportBlock? {
+        val blocks = getBlocksForPage(page)
+        logger.info("Searching for block for word '${word.text}' on page ${page.page} (${page.guid})")
+        return blocks.find { word.x >= it.x && word.x + word.width <= it.x + it.width && word.y >= it.y && word.y + word.height <= it.y + it.height }
+    }
+
+    private suspend fun findLineForWord(blockId: Int, word: NewWord): ExposedImportLine? {
+        val lines = lineService.findByBlockId(blockId)
+        logger.info("Searching for line for word '${word.text}' on block $blockId")
+        return lines.find { word.x >= it.x && word.x + word.width <= it.x + it.width && word.y >= it.y && word.y + word.height <= it.y + it.height }
     }
 
     companion object {

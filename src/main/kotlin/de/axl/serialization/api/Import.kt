@@ -48,6 +48,12 @@ data class ExposedImportPage(
 data class ImportPageCrop(val left: Int, val top: Int, val right: Int, val bottom: Int)
 
 @Serializable
+data class Rectangle(val x: Int, val y: Int, val width: Int, val height: Int)
+
+@Serializable
+data class NewWord(val text: String, val x: Int, val y: Int, val width: Int, val height: Int)
+
+@Serializable
 data class ExposedImportBlock(
     val id: Int = 0,
     val x: Int = 0,
@@ -100,7 +106,7 @@ data class ExposedImportWord(
     val width: Int = 0,
     val height: Int = 0,
     val ocrConfidence: Double? = 0.0,
-    val spellingSuggestions: List<ExposedImportSpellingSuggestion>,
+    val spellingSuggestions: List<ExposedImportSpellingSuggestion> = emptyList(),
     val lineId: Int = 0
 )
 

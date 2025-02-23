@@ -2,6 +2,8 @@ package de.axl.web.importing
 
 import de.axl.importing.ImportService
 import de.axl.serialization.api.ExposedImportPage
+import de.axl.serialization.api.NewWord
+import de.axl.serialization.api.Rectangle
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -94,10 +96,30 @@ fun Route.importPageRoute(importService: ImportService) {
             }
         }
 
-        post("/edit/ocr") {
+        route("/ocr") {
+            post("/full") {
+                val page = findById(this, call.parameters["id"]?.toIntOrNull())
+                if (page != null) {
+                    importService.extractTextAndCreateDbObjects(page)
+                    call.respond(HttpStatusCode.OK)
+                }
+            }
+
+            post("/part") {
+                val page = findById(this, call.parameters["id"]?.toIntOrNull())
+                if (page != null) {
+                    val rect = call.receive<Rectangle>()
+                    val result = importService.extractText(page, rect)
+                    call.respond(HttpStatusCode.OK, result)
+                }
+            }
+        }
+
+        post("/word") {
             val page = findById(this, call.parameters["id"]?.toIntOrNull())
             if (page != null) {
-                importService.extractTextAndCreateDbObjects(page)
+                val newWord = call.receive<NewWord>()
+                importService.addWordToPage(page, newWord)
                 call.respond(HttpStatusCode.OK)
             }
         }

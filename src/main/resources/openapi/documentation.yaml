@@ -321,13 +321,57 @@ paths:
           description: Import page not found
         "401":
           $ref: "#/components/responses/Unauthorized"
-  /import/page/{id}/edit/ocr:
+  /import/page/{id}/ocr/full:
     parameters:
       - $ref: "#/components/parameters/idParam"
     post:
       summary: Run OCR on page
       tags:
         - Import Page
+      responses:
+        "200":
+          description: Operation successfull
+        "404":
+          description: Import page not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /import/page/{id}/ocr/part:
+    parameters:
+      - $ref: "#/components/parameters/idParam"
+    post:
+      summary: Run OCR on provided area
+      tags:
+        - Import Page
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Rectangle"
+      responses:
+        "200":
+          description: Operation successfull
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: Import page not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /import/page/{id}/word:
+    parameters:
+      - $ref: "#/components/parameters/idParam"
+    post:
+      summary: Add a new word to the page
+      tags:
+        - Import Page
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewWord"
       responses:
         "200":
           description: Operation successfull
@@ -816,6 +860,26 @@ components:
         - height
         - lineId
 
+    NewWord:
+      type: object
+      properties:
+        text:
+          type: string
+        x:
+          type: integer
+        y:
+          type: integer
+        width:
+          type: integer
+        height:
+          type: integer
+      required:
+        - text
+        - x
+        - y
+        - width
+        - height
+
     ImportSpellingSuggestion:
       type: object
       properties:
@@ -827,13 +891,26 @@ components:
         - id
         - suggestion
 
-    ImportOcrResult:
+    Rectangle:
       type: object
       properties:
-        text:
-          type: string
+        x:
+          type: integer
+          minimum: 0
+        y:
+          type: integer
+          minimum: 0
+        width:
+          type: integer
+          minimum: 0
+        height:
+          type: integer
+          minimum: 0
       required:
-        - text
+        - x
+        - y
+        - width
+        - height
 
     LocalDateTime:
       type: array
