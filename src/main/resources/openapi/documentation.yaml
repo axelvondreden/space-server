@@ -628,8 +628,6 @@ components:
           type: string
         date:
           $ref: "#/components/schemas/LocalDate"
-        isInvoice:
-          type: boolean
         createdAt:
           $ref: "#/components/schemas/LocalDateTime"
         updatedAt:
