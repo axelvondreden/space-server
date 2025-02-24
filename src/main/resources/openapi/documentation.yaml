@@ -520,6 +520,38 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  /import/invoice/{id}:
+    parameters:
+      - $ref: "#/components/parameters/idParam"
+    get:
+      summary: Get a specific import invoice
+      tags:
+        - Import Invoice
+      responses:
+        "200":
+          description: The import invoice
+        "404":
+          description: Import invoice not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    put:
+      summary: Update an import invoice
+      tags:
+        - Import Invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportInvoice"
+      responses:
+        "200":
+          description: Import invoice updated successfully
+        "404":
+          description: Import invoice not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
   /users:
     get:
       summary: Get all users
@@ -921,6 +953,32 @@ components:
       required:
         - id
         - suggestion
+
+    ImportInvoice:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 0
+        recipient:
+          type: string
+        invoiceNumber:
+          type: string
+        date:
+          $ref: "#/components/schemas/LocalDate"
+        amount:
+          type: number
+        positions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImportInvoicePos"
+
+    ImportInvoicePos:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 0
 
     Rectangle:
       type: object

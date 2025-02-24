@@ -50,6 +50,8 @@ fun Route.importRoute(importService: ImportService, importFlow: MutableSharedFlo
         importLineRoute(importService)
         importWordRoute(importService)
 
+        importInvoiceRoute(importService)
+
         webSocket("/events") {
             importFlow.collect { event ->
                 send(jacksonObjectMapper().writeValueAsString(event))

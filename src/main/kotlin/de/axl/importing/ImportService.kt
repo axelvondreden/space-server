@@ -58,8 +58,10 @@ class ImportService(
     suspend fun updateWordText(id: Int, text: String) {
         wordService.updateText(id, text)
     }
-
     suspend fun deleteWord(id: Int) = wordService.delete(id)
+
+    suspend fun findInvoiceById(id: Int): ExposedImportInvoice? = invoiceService.findById(id)
+    suspend fun updateInvoice(invoice: ExposedImportInvoice) = invoiceService.update(invoice)
 
     fun createCleanedImage(page: ExposedImportPage) {
         fileManager.createCleanedImage(page)
