@@ -152,8 +152,13 @@ datePicker.datepicker().on("changeDate", async function (e) {
 })
 
 const savedToast = document.getElementById("savedToast")
-
 const pagination = document.getElementById("pagination")
+
+//-------------------------------------------------------
+// Document Data
+//-------------------------------------------------------
+
+let selectedInvoice = null
 
 const textTab = document.getElementById("tabText")
 const tagsTab = document.getElementById("tabTags")
@@ -178,67 +183,6 @@ tabInvoiceCheck.addEventListener("change", async (event) => {
         })
     }
 })
-
-async function docSelected(imp) {
-    const importDocArea = document.getElementById("importDocArea")
-    const importNoDocSelected = document.getElementById("importNoDocSelected")
-    selectedImport = imp
-    datePicker.datepicker("update", null)
-    importNoDocSelected.classList.add("d-none")
-    importDocArea.classList.remove("d-none")
-    if (imp == null) {
-        selectedPage = null
-        importNoDocSelected.classList.remove("d-none")
-        importDocArea.classList.add("d-none")
-        return
-    }
-    if (imp.date) {
-        datePicker.datepicker("update", new Date(imp.date[0], imp.date[1] - 1, imp.date[2]))
-    }
-
-    languageSelect.value = selectedImport.language
-    document.getElementById("importGuid").innerHTML = selectedImport.guid
-
-    await pageSelected(imp.pages.find(p => p.page === 1).id)
-
-    bootstrap.Tab.getInstance(textTab).show()
-    if (imp.invoiceId != null && imp.invoiceId > 0) {
-        invoiceTab.removeAttribute("disabled")
-        tabInvoiceCheck.checked = true
-    } else {
-        invoiceTab.setAttribute("disabled", "disabled")
-        tabInvoiceCheck.checked = false
-    }
-
-    pagination.innerHTML = ""
-    imp.pages.forEach(page => {
-        const li = document.createElement("li")
-        li.className = page.page === 1 ? "page-item active" : "page-item";
-        li.innerHTML = `<a class="page-link" href="#" onclick="pageSelected(${page.id})">${page.page}</a>`
-        pagination.appendChild(li)
-    })
-}
-
-async function pageSelected(pageId) {
-    await fetch(`/api/v1/import/page/${pageId}`).then(async result => {
-        if (result.ok) {
-            const page = await result.json()
-            selectedPage = page
-
-            await loadImageCanvas(page, true)
-
-            pagination.childNodes.forEach(node => {
-                if (node.className === "page-item active") {
-                    node.className = "page-item"
-                }
-                // noinspection EqualityComparisonWithCoercionJS
-                if (node.children[0].innerText == page.page) {
-                    node.className = "page-item active"
-                }
-            })
-        }
-    })
-}
 
 let pickingDate = false
 const datePickButton = document.getElementById("datePickButton")
@@ -286,11 +230,94 @@ async function setDocumentDate(date) {
     })
 }
 
-//-------------------------------------------------------
-// Invoice Data
-//-------------------------------------------------------
+const invoiceRecipientText = document.getElementById("invoiceRecipientText")
+invoiceRecipientText.addEventListener("change", async () => await saveInvoiceData())
 
+async function saveInvoiceData() {
+    if (selectedInvoice == null) return
+    selectedInvoice.recipient = invoiceRecipientText.value
 
+    await fetch(`/api/v1/import/invoice/${selectedInvoice.id}`, {
+        method: "put",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(selectedInvoice)
+    }).then(async result => {
+        if (result.ok) {
+            bootstrap.Toast.getOrCreateInstance(savedToast).show()
+        }
+    })
+}
+
+async function fillInvoiceData() {
+    await fetch(`/api/v1/import/invoice/${selectedImport.invoiceId}`).then(async result => {
+        if (result.ok) {
+            selectedInvoice = await result.json()
+            invoiceRecipientText.value = selectedInvoice.recipient
+        }
+    })
+}
+
+async function docSelected(imp) {
+    const importDocArea = document.getElementById("importDocArea")
+    const importNoDocSelected = document.getElementById("importNoDocSelected")
+    selectedImport = imp
+    datePicker.datepicker("update", null)
+    importNoDocSelected.classList.add("d-none")
+    importDocArea.classList.remove("d-none")
+    if (imp == null) {
+        selectedPage = null
+        importNoDocSelected.classList.remove("d-none")
+        importDocArea.classList.add("d-none")
+        return
+    }
+    if (imp.date) {
+        datePicker.datepicker("update", new Date(imp.date[0], imp.date[1] - 1, imp.date[2]))
+    }
+
+    languageSelect.value = selectedImport.language
+    document.getElementById("importGuid").innerHTML = selectedImport.guid
+
+    await pageSelected(imp.pages.find(p => p.page === 1).id)
+
+    bootstrap.Tab.getInstance(textTab).show()
+    if (imp.invoiceId != null && imp.invoiceId > 0) {
+        invoiceTab.removeAttribute("disabled")
+        tabInvoiceCheck.checked = true
+        await fillInvoiceData()
+    } else {
+        invoiceTab.setAttribute("disabled", "disabled")
+        tabInvoiceCheck.checked = false
+    }
+
+    pagination.innerHTML = ""
+    imp.pages.forEach(page => {
+        const li = document.createElement("li")
+        li.className = page.page === 1 ? "page-item active" : "page-item";
+        li.innerHTML = `<a class="page-link" href="#" onclick="pageSelected(${page.id})">${page.page}</a>`
+        pagination.appendChild(li)
+    })
+}
+
+async function pageSelected(pageId) {
+    await fetch(`/api/v1/import/page/${pageId}`).then(async result => {
+        if (result.ok) {
+            const page = await result.json()
+            selectedPage = page
+
+            await loadImageCanvas(page, true)
+
+            pagination.childNodes.forEach(node => {
+                if (node.className === "page-item active") {
+                    node.className = "page-item"
+                }
+                // noinspection EqualityComparisonWithCoercionJS
+                if (node.children[0].innerText == page.page) {
+                    node.className = "page-item active"
+                }
+            })
+        }
+    })
+}
 
 //-------------------------------------------------------
 // Canvas
