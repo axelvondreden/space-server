@@ -29,7 +29,8 @@ class ImportService(
     private val pageService: ImportPageDbService,
     private val blockService: ImportBlockDbService,
     private val lineService: ImportLineDbService,
-    private val wordService: ImportWordDbService
+    private val wordService: ImportWordDbService,
+    private val invoiceService: ImportInvoiceDbService
 ) {
 
     private var importing = false
@@ -122,7 +123,7 @@ class ImportService(
         val isInvoice = guessIsInvoice(dbPages.map { it.second }.joinToString("\n") { it.trim() })
         logger.info("Guessed Invoice: $isInvoice")
 
-        docService.update(document.copy(date = date, isInvoice = isInvoice))
+        docService.update(document.copy(date = date))
 
         importFlow.emit(state.copy(progress = 1.0, message = "Import complete", completedDocId = document.id))
     }
@@ -233,6 +234,17 @@ class ImportService(
 
     private fun guessIsInvoice(text: String) = text.lines().any { line ->
         invoiceTextPatterns.any { line.contains(Regex("\\b$it\\b", RegexOption.IGNORE_CASE)) }
+    }
+
+    suspend fun createInvoice(document: ExposedImportDocument): Int {
+        if (document.invoiceId != null) return document.invoiceId
+        val id = invoiceService.create(ExposedImportInvoice())
+        docService.update(document.copy(invoiceId = id))
+        return id
+    }
+
+    suspend fun deleteInvoice(document: ExposedImportDocument) {
+        document.invoiceId?.let { invoiceService.delete(it) }
     }
 
     suspend fun addWordToPage(page: ExposedImportPage, newWord: NewWord) {

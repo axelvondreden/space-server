@@ -150,6 +150,36 @@ paths:
           description: Import document not found
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /import/doc/{id}/invoice:
+    parameters:
+      - $ref: "#/components/parameters/idParam"
+    post:
+      summary: Create a new invoice for the document
+      tags:
+        - Import Document
+      responses:
+        "200":
+          description: Returns the invoice ID
+          content:
+            text/plain:
+              schema:
+                type: integer
+                minimum: 0
+        "404":
+          description: Import document not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      summary: Delete the invoice for the document
+      tags:
+        - Import Document
+      responses:
+        "200":
+          description: Invoice deleted
+        "404":
+          description: Import document not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /import/page/{id}:
     parameters:
@@ -632,6 +662,9 @@ components:
           $ref: "#/components/schemas/LocalDateTime"
         updatedAt:
           $ref: "#/components/schemas/LocalDateTime"
+        invoiceId:
+          type: integer
+          minimum: 0
         pages:
           type: array
           items:

@@ -40,15 +40,13 @@
         </div>
         <div id="importDocDataArea" class="split d-flex flex-md-column px-3 overflow-y-scroll">
             <h4 class="my-3" id="importGuid">GUID</h4>
-            <div class="mb-3">
-                <label for="importDate" class="form-label">Document Date</label>
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="datePickButton">
-                    <i id="datePickButtonIcon" class="bi bi-crosshair"></i>
-                    <span id="datePickButtonSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
-                </button>
+            <label for="importDate" class="form-label">Document Date</label>
+            <div class="input-group mb-2">
+                <button class="btn btn-outline-secondary" type="button" id="datePickButton"><i class="bi bi-crosshair"></i></button>
                 <input type="text" class="form-control" id="importDate"/>
             </div>
-            <div class="mb-3">
+
+            <div class="mb-2">
                 <label for="languageSelect" class="form-label">Language</label>
                 <select id="languageSelect" class="form-select">
                     <option value="DEU">German</option>
@@ -77,19 +75,41 @@
                         <span id="refreshTextSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
                     </button>
                     <span class="btn-group-sm" role="group">
-                    <input type="checkbox" class="btn-check" id="showBlocksCheck" autocomplete="off">
-                    <label class="btn btn-outline-secondary" for="showBlocksCheck">Show Blocks</label>
-                    <input type="checkbox" class="btn-check" id="showLinesCheck" autocomplete="off">
-                    <label class="btn btn-outline-secondary" for="showLinesCheck">Show Lines</label>
-                    <input type="checkbox" class="btn-check" id="showWordsCheck" autocomplete="off">
-                    <label class="btn btn-outline-secondary" for="showWordsCheck">Show Words</label>
-                    <input type="checkbox" class="btn-check" id="showWordConfidenceCheck" autocomplete="off">
-                    <label class="btn btn-outline-secondary" for="showWordConfidenceCheck">Show Word Confidence</label>
-                </span>
+                        <input type="checkbox" class="btn-check" id="showBlocksCheck" autocomplete="off">
+                        <label class="btn btn-outline-secondary" for="showBlocksCheck">Show Blocks</label>
+                        <input type="checkbox" class="btn-check" id="showLinesCheck" autocomplete="off">
+                        <label class="btn btn-outline-secondary" for="showLinesCheck">Show Lines</label>
+                        <input type="checkbox" class="btn-check" id="showWordsCheck" autocomplete="off">
+                        <label class="btn btn-outline-secondary" for="showWordsCheck">Show Words</label>
+                        <input type="checkbox" class="btn-check" id="showWordConfidenceCheck" autocomplete="off">
+                        <label class="btn btn-outline-secondary" for="showWordConfidenceCheck">Show Word Confidence</label>
+                    </span>
                     <div id="pageText" class="bg-body-tertiary p-2 mt-1 overflow-y-scroll" style="height: 50vh"></div>
                 </div>
                 <div class="tab-pane" id="tabTagsContent" role="tabpanel" tabindex="0">Tags</div>
-                <div class="tab-pane" id="tabInvoiceContent" role="tabpanel" tabindex="0">Invoice</div>
+                <div class="tab-pane" id="tabInvoiceContent" role="tabpanel" tabindex="0">
+                    <label for="invoiceRecipient" class="form-label">Recipient</label>
+                    <input id="invoiceRecipient" class="form-control mb-1" type="text">
+
+                    <label for="invoiceNumber" class="form-label">Invoice Number</label>
+                    <div class="input-group mb-1">
+                        <button class="btn btn-outline-secondary" type="button" id="invoiceNumberPickButton"><i class="bi bi-crosshair"></i></button>
+                        <input id="invoiceNumber" class="form-control" type="text">
+                    </div>
+
+                    <label for="invoiceDate" class="form-label">Invoice Date</label>
+                    <div class="input-group mb-1">
+                        <button class="btn btn-outline-secondary" type="button" id="invoiceDatePickButton"><i class="bi bi-crosshair"></i></button>
+                        <input id="invoiceDate" class="form-control" type="text">
+                    </div>
+
+                    <label for="invoiceAmount" class="form-label">Amount Total</label>
+                    <div class="input-group mb-1">
+                        <button class="btn btn-outline-secondary" type="button" id="invoiceAmountPickButton"><i class="bi bi-crosshair"></i></button>
+                        <span class="input-group-text">€</span>
+                        <input id="invoiceAmount" class="form-control" type="text">
+                    </div>
+                </div>
             </div>
 
             <button type="button" class="btn btn-secondary mb-2 mt-auto" data-bs-toggle="modal" data-bs-target="#imageModal"><i class="bi bi-image"></i>

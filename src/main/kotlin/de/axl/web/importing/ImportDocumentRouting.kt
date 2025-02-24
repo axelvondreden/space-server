@@ -57,6 +57,24 @@ fun Route.importDocumentRoute(importService: ImportService) {
                     call.respondFile(importService.getPdfOriginal(doc.guid))
                 }
             }
+
+            route("/invoice") {
+                post {
+                    val doc = findById(this, call.parameters["id"]?.toIntOrNull())
+                    if (doc != null) {
+                        val id = importService.createInvoice(doc)
+                        call.respond(HttpStatusCode.OK, id)
+                    }
+                }
+
+                delete {
+                    val doc = findById(this, call.parameters["id"]?.toIntOrNull())
+                    if (doc != null) {
+                        importService.deleteInvoice(doc)
+                        call.respond(HttpStatusCode.OK)
+                    }
+                }
+            }
         }
     }
 }

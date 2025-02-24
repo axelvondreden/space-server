@@ -1,5 +1,6 @@
 package de.axl.db
 
+import de.axl.db.ImportInvoiceDbService.ImportInvoice
 import de.axl.dbQuery
 import de.axl.serialization.api.ExposedImportDocument
 import de.axl.serialization.api.ExposedImportDocumentPage
@@ -16,6 +17,7 @@ class ImportDocumentDbService(database: Database) {
         val guid = varchar("guid", length = 36)
         val language = enumerationByName("language", 10, OCRLanguage::class).default(OCRLanguage.DEU)
         val date = date("date").nullable()
+        val invoice = reference("invoice", ImportInvoice.id, onDelete = ReferenceOption.SET_NULL).nullable()
         val createdAt = datetime("createdAt")
         val updatedAt = datetime("updatedAt").nullable()
 
@@ -56,6 +58,7 @@ class ImportDocumentDbService(database: Database) {
             ImportDocument.update({ ImportDocument.id eq import.id }) {
                 it[language] = import.language
                 it[date] = import.date
+                it[invoice] = import.invoiceId
                 it[updatedAt] = LocalDateTime.now()
             }
         }
@@ -75,6 +78,7 @@ class ImportDocumentDbService(database: Database) {
             it[ImportDocument.date],
             it[ImportDocument.createdAt],
             it[ImportDocument.updatedAt],
+            it[ImportDocument.invoice],
             dbQuery {
                 ImportPageDbService.ImportPage.selectAll()
                     .where { ImportPageDbService.ImportPage.document eq it[ImportDocument.id] }

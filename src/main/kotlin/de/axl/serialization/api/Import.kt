@@ -15,11 +15,21 @@ data class ExposedImportDocument(
     @Contextual val date: LocalDate? = null,
     @Contextual val createdAt: LocalDateTime = LocalDateTime.now(),
     @Contextual val updatedAt: LocalDateTime? = null,
+    val invoiceId: Int? = null,
     val pages: List<ExposedImportDocumentPage> = emptyList()
 )
 
 @Serializable
 data class ExposedImportDocumentPage(val page: Int, val id: Int)
+
+@Serializable
+data class ExposedImportInvoice(
+    val id: Int = 0,
+    val recipient: String? = null,
+    val invoiceNumber: String? = null,
+    @Contextual val date: LocalDate? = null,
+    val amount: Double? = null
+)
 
 @Serializable
 data class ExposedImportPage(

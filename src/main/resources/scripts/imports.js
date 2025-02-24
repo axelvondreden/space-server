@@ -160,24 +160,23 @@ const tagsTab = document.getElementById("tabTags")
 const invoiceTab = document.getElementById("tabInvoice")
 const tabInvoiceCheck = document.getElementById("tabInvoiceCheck")
 tabInvoiceCheck.addEventListener("change", async (event) => {
-    const doc = selectedImport
-    doc.isInvoice = event.target.checked
-    await fetch(`/api/v1/import/doc/${selectedImport.id}`, {
-        method: "put",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(doc)
-    }).then(async result => {
-        if (result.ok) {
-            selectedImport.isInvoice = event.target.checked
-            if (selectedImport.isInvoice) {
+    if (event.target.checked) {
+        await fetch(`/api/v1/import/doc/${selectedImport.id}/invoice`, {method: "post"}).then(async result => {
+            if (result.ok) {
+                const id = await result.text().then(id => parseInt(id))
+                selectedImport.invoiceId = id
                 invoiceTab.removeAttribute("disabled")
-            } else {
+            }
+        })
+    } else {
+        await fetch(`/api/v1/import/doc/${selectedImport.id}/invoice`, {method: "delete"}).then(async result => {
+            if (result.ok) {
+                selectedImport.invoiceId = null
                 invoiceTab.setAttribute("disabled", "disabled")
                 bootstrap.Tab.getInstance(textTab).show()
             }
-            bootstrap.Toast.getOrCreateInstance(savedToast).show()
-        }
-    })
+        })
+    }
 })
 
 async function docSelected(imp) {
@@ -203,7 +202,7 @@ async function docSelected(imp) {
     await pageSelected(imp.pages.find(p => p.page === 1).id)
 
     bootstrap.Tab.getInstance(textTab).show()
-    if (imp.isInvoice) {
+    if (imp.invoiceId != null && imp.invoiceId > 0) {
         invoiceTab.removeAttribute("disabled")
         tabInvoiceCheck.checked = true
     } else {
@@ -242,8 +241,6 @@ async function pageSelected(pageId) {
 }
 
 let pickingDate = false
-const datePickButtonIcon = document.getElementById("datePickButtonIcon")
-const datePickButtonSpinner = document.getElementById("datePickButtonSpinner")
 const datePickButton = document.getElementById("datePickButton")
 datePickButton.addEventListener("click", async () => {
     if (pickingDate) {
@@ -256,6 +253,7 @@ datePickButton.addEventListener("click", async () => {
 
 async function datePicked(date) {
     pickingDate = false
+    datePickButton.classList.remove("active")
     if (date != null) {
         const parts = date.split(".")
         if (parts.length === 3) {
@@ -263,7 +261,6 @@ async function datePicked(date) {
             const month = parseInt(parts[1]) - 1
             const year = parseInt(parts[2])
             datePicker.datepicker("update", new Date(year, month, day))
-            datePickButton.classList.remove("active")
             await setDocumentDate(new Date(year, month, day))
         }
     }
@@ -271,8 +268,7 @@ async function datePicked(date) {
 
 async function setDocumentDate(date) {
     const doc = selectedImport
-    datePickButtonSpinner.classList.remove("d-none")
-    datePickButtonIcon.classList.add("d-none")
+    datePickButton.innerHTML = `<span class="spinner-border spinner-border-sm"></span>`
     doc.date = [date.getFullYear(), date.getMonth() + 1, date.getDate()]
     await fetch(`/api/v1/import/doc/${selectedImport.id}`, {
         method: "put",
@@ -281,8 +277,7 @@ async function setDocumentDate(date) {
     }).then(async result => {
         if (result.ok) {
             selectedImport.date = doc.date
-            datePickButtonSpinner.classList.add("d-none")
-            datePickButtonIcon.classList.remove("d-none")
+            datePickButton.innerHTML = `<i class="bi bi-crosshair"></i>`
             const sidebarEntry = document.getElementById(`${doc.guid}-date`)
             sidebarEntry.innerText = `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`
             datePicker.datepicker("hide")
@@ -290,6 +285,12 @@ async function setDocumentDate(date) {
         }
     })
 }
+
+//-------------------------------------------------------
+// Invoice Data
+//-------------------------------------------------------
+
+
 
 //-------------------------------------------------------
 // Canvas
